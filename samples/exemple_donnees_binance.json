@@ -1,0 +1,452 @@
+{
+  "_metadonnees": {
+    "projet": "jul26_bde_crypto - Etape 1 : decouverte des sources de donnees",
+    "genere_le": "2026-08-28T14:46:34.054106+00:00",
+    "source": "https://api.binance.com",
+    "paires_du_projet": [
+      "BTCUSDT",
+      "ETHUSDT",
+      "BNBUSDT",
+      "SOLUSDT",
+      "XRPUSDT"
+    ],
+    "intervalle": "1h"
+  },
+  "1_rest_klines_brut": {
+    "endpoint": "GET /api/v3/klines",
+    "parametres": {
+      "symbol": "BTCUSDT",
+      "interval": "1h",
+      "limit": 3
+    },
+    "poids_requete": 2,
+    "remarque": "Tableau POSITIONNEL sans noms de champs ; prix envoyes en chaines.",
+    "ordre_des_champs": [
+      "open_time",
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume",
+      "close_time",
+      "quote_volume",
+      "nb_trades",
+      "taker_buy_base",
+      "taker_buy_quote",
+      "ignore"
+    ],
+    "reponse": [
+      [
+        1787918400000,
+        "79604.12000000",
+        "79727.36000000",
+        "79306.11000000",
+        "79421.05000000",
+        "400.05317000",
+        1787921999999,
+        "31801379.67835110",
+        113842,
+        "172.31828000",
+        "13699285.03758190",
+        "0"
+      ],
+      [
+        1787922000000,
+        "79421.04000000",
+        "79635.01000000",
+        "79034.56000000",
+        "79330.75000000",
+        "843.22470000",
+        1787925599999,
+        "66877783.00563640",
+        217173,
+        "461.17816000",
+        "36584174.98766420",
+        "0"
+      ],
+      [
+        1787925600000,
+        "79330.34000000",
+        "79706.64000000",
+        "78423.03000000",
+        "79324.01000000",
+        "2629.31677000",
+        1787929199999,
+        "207758566.70237590",
+        557790,
+        "1228.98029000",
+        "97181633.78137260",
+        "0"
+      ]
+    ]
+  },
+  "2_rest_klines_normalise": {
+    "remarque": "Champs nommes, prix en float, horodatages en datetime UTC, champ 'ignore' supprime.",
+    "resultat": {
+      "symbol": "BTCUSDT",
+      "interval": "1h",
+      "open_time": "2026-08-28T12:00:00.000Z",
+      "close_time": "2026-08-28T12:59:59.999Z",
+      "open": 79604.12,
+      "high": 79727.36,
+      "low": 79306.11,
+      "close": 79421.05,
+      "volume": 400.05317,
+      "quote_volume": 31801379.6783511,
+      "nb_trades": 113842,
+      "taker_buy_base": 172.31828,
+      "taker_buy_quote": 13699285.0375819
+    }
+  },
+  "3_websocket_kline_brut": {
+    "flux": "btcusdt@kline_1m",
+    "remarque": "Cles d'une lettre. 'x' indique si la bougie est cloturee : seul x=true est definitif (~1 message sur 15).",
+    "bougie_cloturee": false,
+    "message": {
+      "e": "kline",
+      "E": 1787928388017,
+      "s": "BTCUSDT",
+      "k": {
+        "t": 1787928360000,
+        "T": 1787928419999,
+        "s": "BTCUSDT",
+        "i": "1m",
+        "f": 6631768302,
+        "L": 6631770986,
+        "o": "79381.99000000",
+        "c": "79324.01000000",
+        "h": "79388.00000000",
+        "l": "79324.00000000",
+        "v": "23.17412000",
+        "n": 2685,
+        "x": false,
+        "q": "1839248.51048450",
+        "V": "19.47550000",
+        "Q": "1545760.80992160",
+        "B": "0"
+      }
+    }
+  },
+  "4_websocket_normalise": {
+    "remarque": "Schema IDENTIQUE au REST normalise : les deux sources convergent.",
+    "resultat": {
+      "symbol": "BTCUSDT",
+      "interval": "1m",
+      "open_time": "2026-08-28T14:46:00+00:00",
+      "close_time": "2026-08-28T14:46:59.999000+00:00",
+      "open": 79381.99,
+      "high": 79388.0,
+      "low": 79324.0,
+      "close": 79324.01,
+      "volume": 23.17412,
+      "quote_volume": 1839248.5104845,
+      "nb_trades": 2685,
+      "taker_buy_base": 19.4755,
+      "taker_buy_quote": 1545760.8099216
+    }
+  },
+  "5_exchange_info": {
+    "endpoint": "GET /api/v3/exchangeInfo",
+    "remarque": "Metadonnees de reference : alimenteront la table 'symboles' a l'etape 2.",
+    "limites_api": [
+      {
+        "rateLimitType": "REQUEST_WEIGHT",
+        "interval": "MINUTE",
+        "intervalNum": 1,
+        "limit": 6000
+      },
+      {
+        "rateLimitType": "ORDERS",
+        "interval": "SECOND",
+        "intervalNum": 10,
+        "limit": 100
+      },
+      {
+        "rateLimitType": "ORDERS",
+        "interval": "DAY",
+        "intervalNum": 1,
+        "limit": 200000
+      },
+      {
+        "rateLimitType": "RAW_REQUESTS",
+        "interval": "MINUTE",
+        "intervalNum": 5,
+        "limit": 300000
+      }
+    ],
+    "symboles": [
+      {
+        "symbol": "BTCUSDT",
+        "baseAsset": "BTC",
+        "quoteAsset": "USDT",
+        "status": "TRADING",
+        "filtres_cles": {
+          "PRICE_FILTER": {
+            "filterType": "PRICE_FILTER",
+            "minPrice": "0.01000000",
+            "maxPrice": "1000000.00000000",
+            "tickSize": "0.01000000"
+          },
+          "LOT_SIZE": {
+            "filterType": "LOT_SIZE",
+            "minQty": "0.00001000",
+            "maxQty": "9000.00000000",
+            "stepSize": "0.00001000"
+          }
+        }
+      },
+      {
+        "symbol": "ETHUSDT",
+        "baseAsset": "ETH",
+        "quoteAsset": "USDT",
+        "status": "TRADING",
+        "filtres_cles": {
+          "PRICE_FILTER": {
+            "filterType": "PRICE_FILTER",
+            "minPrice": "0.01000000",
+            "maxPrice": "1000000.00000000",
+            "tickSize": "0.01000000"
+          },
+          "LOT_SIZE": {
+            "filterType": "LOT_SIZE",
+            "minQty": "0.00010000",
+            "maxQty": "9000.00000000",
+            "stepSize": "0.00010000"
+          }
+        }
+      },
+      {
+        "symbol": "BNBUSDT",
+        "baseAsset": "BNB",
+        "quoteAsset": "USDT",
+        "status": "TRADING",
+        "filtres_cles": {
+          "PRICE_FILTER": {
+            "filterType": "PRICE_FILTER",
+            "minPrice": "0.01000000",
+            "maxPrice": "100000.00000000",
+            "tickSize": "0.01000000"
+          },
+          "LOT_SIZE": {
+            "filterType": "LOT_SIZE",
+            "minQty": "0.00100000",
+            "maxQty": "900000.00000000",
+            "stepSize": "0.00100000"
+          }
+        }
+      },
+      {
+        "symbol": "XRPUSDT",
+        "baseAsset": "XRP",
+        "quoteAsset": "USDT",
+        "status": "TRADING",
+        "filtres_cles": {
+          "PRICE_FILTER": {
+            "filterType": "PRICE_FILTER",
+            "minPrice": "0.00010000",
+            "maxPrice": "10000.00000000",
+            "tickSize": "0.00010000"
+          },
+          "LOT_SIZE": {
+            "filterType": "LOT_SIZE",
+            "minQty": "0.10000000",
+            "maxQty": "9222449.00000000",
+            "stepSize": "0.10000000"
+          }
+        }
+      },
+      {
+        "symbol": "SOLUSDT",
+        "baseAsset": "SOL",
+        "quoteAsset": "USDT",
+        "status": "TRADING",
+        "filtres_cles": {
+          "PRICE_FILTER": {
+            "filterType": "PRICE_FILTER",
+            "minPrice": "0.01000000",
+            "maxPrice": "10000.00000000",
+            "tickSize": "0.01000000"
+          },
+          "LOT_SIZE": {
+            "filterType": "LOT_SIZE",
+            "minQty": "0.00100000",
+            "maxQty": "90000.00000000",
+            "stepSize": "0.00100000"
+          }
+        }
+      }
+    ]
+  },
+  "6_ticker_24h": {
+    "endpoint": "GET /api/v3/ticker/24hr",
+    "remarque": "Statistiques glissantes, utilisees ici pour comparer la liquidite des paires.",
+    "reponse": [
+      {
+        "symbol": "BTCUSDT",
+        "priceChange": "-927.41000000",
+        "priceChangePercent": "-1.156",
+        "weightedAvgPrice": "79928.67380040",
+        "prevClosePrice": "80251.43000000",
+        "lastPrice": "79324.01000000",
+        "lastQty": "0.00491000",
+        "bidPrice": "79324.00000000",
+        "bidQty": "2.98063000",
+        "askPrice": "79324.01000000",
+        "askQty": "1.56205000",
+        "openPrice": "80251.42000000",
+        "highPrice": "81478.87000000",
+        "lowPrice": "78423.03000000",
+        "volume": "18103.48235000",
+        "quoteVolume": "1446987335.40442210",
+        "openTime": 1787841985008,
+        "closeTime": 1787928385008,
+        "firstId": 6627144040,
+        "lastId": 6631770960,
+        "count": 4626921
+      },
+      {
+        "symbol": "ETHUSDT",
+        "priceChange": "-11.97000000",
+        "priceChangePercent": "-0.475",
+        "weightedAvgPrice": "2505.13821022",
+        "prevClosePrice": "2518.58000000",
+        "lastPrice": "2506.61000000",
+        "lastQty": "0.11180000",
+        "bidPrice": "2506.61000000",
+        "bidQty": "7.47840000",
+        "askPrice": "2506.62000000",
+        "askQty": "11.53570000",
+        "openPrice": "2518.58000000",
+        "highPrice": "2535.05000000",
+        "lowPrice": "2468.00000000",
+        "volume": "294229.16530000",
+        "quoteVolume": "737084724.55421200",
+        "openTime": 1787841985002,
+        "closeTime": 1787928385002,
+        "firstId": 4311993749,
+        "lastId": 4314958697,
+        "count": 2964949
+      },
+      {
+        "symbol": "BNBUSDT",
+        "priceChange": "-7.47000000",
+        "priceChangePercent": "-1.051",
+        "weightedAvgPrice": "709.08351064",
+        "prevClosePrice": "710.91000000",
+        "lastPrice": "703.44000000",
+        "lastQty": "0.10300000",
+        "bidPrice": "703.43000000",
+        "bidQty": "27.07300000",
+        "askPrice": "703.44000000",
+        "askQty": "4.65200000",
+        "openPrice": "710.91000000",
+        "highPrice": "719.99000000",
+        "lowPrice": "696.00000000",
+        "volume": "123418.81200000",
+        "quoteVolume": "87514244.49249000",
+        "openTime": 1787841984901,
+        "closeTime": 1787928384901,
+        "firstId": 1570885515,
+        "lastId": 1571650358,
+        "count": 764844
+      },
+      {
+        "symbol": "XRPUSDT",
+        "priceChange": "-0.04010000",
+        "priceChangePercent": "-2.737",
+        "weightedAvgPrice": "1.43644219",
+        "prevClosePrice": "1.46510000",
+        "lastPrice": "1.42500000",
+        "lastQty": "433.90000000",
+        "bidPrice": "1.42500000",
+        "bidQty": "11472.50000000",
+        "askPrice": "1.42510000",
+        "askQty": "10162.80000000",
+        "openPrice": "1.46510000",
+        "highPrice": "1.47400000",
+        "lowPrice": "1.38660000",
+        "volume": "156341798.60000000",
+        "quoteVolume": "224575956.33314000",
+        "openTime": 1787841984315,
+        "closeTime": 1787928384315,
+        "firstId": 1693507732,
+        "lastId": 1694817733,
+        "count": 1310002
+      },
+      {
+        "symbol": "SOLUSDT",
+        "priceChange": "-1.21000000",
+        "priceChangePercent": "-1.128",
+        "weightedAvgPrice": "107.22217038",
+        "prevClosePrice": "107.26000000",
+        "lastPrice": "106.04000000",
+        "lastQty": "1.03600000",
+        "bidPrice": "106.04000000",
+        "bidQty": "324.24700000",
+        "askPrice": "106.05000000",
+        "askQty": "148.07100000",
+        "openPrice": "107.25000000",
+        "highPrice": "110.60000000",
+        "lowPrice": "103.63000000",
+        "volume": "4637862.43700000",
+        "quoteVolume": "497281676.40979000",
+        "openTime": 1787841984783,
+        "closeTime": 1787928384783,
+        "firstId": 2038080508,
+        "lastId": 2040106073,
+        "count": 2025566
+      }
+    ]
+  },
+  "7_carnet_ordres": {
+    "endpoint": "GET /api/v3/depth",
+    "remarque": "Profondeur de marche a l'instant t. Non conserve en historique (volume trop important), documente pour justifier ce choix.",
+    "reponse": {
+      "lastUpdateId": 99333947355,
+      "bids": [
+        [
+          "79324.00000000",
+          "3.13144000"
+        ],
+        [
+          "79323.99000000",
+          "0.00027000"
+        ],
+        [
+          "79323.98000000",
+          "0.00013000"
+        ],
+        [
+          "79322.61000000",
+          "0.00007000"
+        ],
+        [
+          "79322.60000000",
+          "0.98082000"
+        ]
+      ],
+      "asks": [
+        [
+          "79324.01000000",
+          "1.32853000"
+        ],
+        [
+          "79324.02000000",
+          "0.00076000"
+        ],
+        [
+          "79324.03000000",
+          "0.00013000"
+        ],
+        [
+          "79324.25000000",
+          "0.00014000"
+        ],
+        [
+          "79324.29000000",
+          "0.00007000"
+        ]
+      ]
+    }
+  }
+}
