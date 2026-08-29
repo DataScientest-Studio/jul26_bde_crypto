@@ -2,14 +2,14 @@
 
 Principe directeur : AUCUNE fonction ne connait "BTCUSDT". Le symbole,
 l'intervalle et la fenetre temporelle sont toujours des parametres. Ajouter
-une 6e paire = une ligne dans config.PAIRES, zero ligne de code.
+une 6e paire = une ligne dans config.PAIRS, zero ligne de code.
 """
 from __future__ import annotations
 
 import json
 import logging
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import requests
 
@@ -18,7 +18,7 @@ from . import config
 logger = logging.getLogger(__name__)
 
 
-def vers_ms(date: str | int | datetime) -> int:
+def to_millis(date: str | int | datetime) -> int:
     """Convertit une date en timestamp milliseconde UTC (format attendu par Binance)."""
     if isinstance(date, int):
         return date
@@ -29,7 +29,22 @@ def vers_ms(date: str | int | datetime) -> int:
     return int(date.timestamp() * 1000)
 
 
-class ClientBinance:
+def start_date_for(history_days: int | None) -> str:
+    """Traduit une profondeur en jours vers une date de debut.
+
+    `None` signifie "tout l'historique disponible" : on retombe alors sur la
+    date plancher du projet, imposee par SOLUSDT.
+    """
+    if history_days is None:
+        return config.HISTORY_START
+
+    start = datetime.now(timezone.utc) - timedelta(days=history_days)
+    # Jamais avant le plancher du projet : au-dela, certaines paires n'existent pas.
+    floor = datetime.fromisoformat(config.HISTORY_START).replace(tzinfo=timezone.utc)
+    return max(start, floor).strftime("%Y-%m-%d")
+
+
+class BinanceClient:
     """Client REST avec gestion du quota, des erreurs et bascule sur miroir.
 
     On instancie une seule fois et on reutilise : `requests.Session` garde la
@@ -37,15 +52,15 @@ class ClientBinance:
     milliers d'appels successifs.
     """
 
-    def __init__(self, base: str = config.BASE_REST, timeout: int = 15):
-        self.base = base
+    def __init__(self, base_url: str = config.REST_BASE_URL, timeout: int = 15):
+        self.base_url = base_url
         self.timeout = timeout
         self.session = requests.Session()
         self.session.headers.update({"User-Agent": "jul26_bde_crypto/etape1"})
-        self.poids_utilise = 0
+        self.used_weight = 0
 
     # -- couche bas niveau --------------------------------------------------
-    def _get(self, chemin: str, params: dict | None = None, tentatives: int = 4):
+    def _get(self, path: str, params: dict | None = None, attempts: int = 4):
         """GET avec backoff exponentiel, respect du quota et bascule sur miroir.
 
         Codes Binance a connaitre :
@@ -53,83 +68,110 @@ class ClientBinance:
           418 = IP bannie temporairement (on a ignore un 429 de trop)
           5xx = probleme cote Binance
         """
-        for tentative in range(tentatives):
-            self._respecter_quota()
+        for attempt in range(attempts):
+            self._respect_quota()
             try:
-                r = self.session.get(f"{self.base}{chemin}", params=params, timeout=self.timeout)
-            except requests.RequestException as e:
-                attente = 2 ** tentative
-                logger.warning("Erreur reseau (%s), nouvel essai dans %ss", type(e).__name__, attente)
-                time.sleep(attente)
-                self._basculer_miroir()
+                response = self.session.get(
+                    f"{self.base_url}{path}", params=params, timeout=self.timeout
+                )
+            except requests.RequestException as exc:
+                delay = 2 ** attempt
+                logger.warning(
+                    "Erreur reseau (%s), nouvel essai dans %ss", type(exc).__name__, delay
+                )
+                time.sleep(delay)
+                self._switch_host()
                 continue
 
             # Binance publie le quota consomme a chaque reponse : on le lit
             # plutot que de compter nos requetes nous-memes (source de verite).
-            entete = r.headers.get("x-mbx-used-weight-1m")
-            if entete:
-                self.poids_utilise = int(entete)
+            header = response.headers.get("x-mbx-used-weight-1m")
+            if header:
+                self.used_weight = int(header)
 
-            if r.status_code == 200:
-                return r.json()
+            if response.status_code == 200:
+                return response.json()
 
-            if r.status_code in (429, 418):
-                attente = int(r.headers.get("Retry-After", 2 ** (tentative + 4)))
-                logger.warning("Quota atteint (HTTP %s). Pause de %ss.", r.status_code, attente)
-                time.sleep(attente)
+            if response.status_code in (429, 418):
+                delay = int(response.headers.get("Retry-After", 2 ** (attempt + 4)))
+                logger.warning(
+                    "Quota atteint (HTTP %s). Pause de %ss.", response.status_code, delay
+                )
+                time.sleep(delay)
                 continue
 
-            if 500 <= r.status_code < 600:
-                attente = 2 ** tentative
-                logger.warning("Erreur serveur %s, nouvel essai dans %ss", r.status_code, attente)
-                time.sleep(attente)
-                self._basculer_miroir()
+            if 500 <= response.status_code < 600:
+                delay = 2 ** attempt
+                logger.warning(
+                    "Erreur serveur %s, nouvel essai dans %ss", response.status_code, delay
+                )
+                time.sleep(delay)
+                self._switch_host()
                 continue
 
             # 4xx autre que quota : la requete est fautive, reessayer ne sert a rien.
-            raise RuntimeError(f"Requete refusee HTTP {r.status_code} : {r.text[:200]}")
+            raise RuntimeError(
+                f"Requete refusee HTTP {response.status_code} : {response.text[:200]}"
+            )
 
-        raise RuntimeError(f"Echec de {chemin} apres {tentatives} tentatives")
+        raise RuntimeError(f"Echec de {path} apres {attempts} tentatives")
 
-    def _respecter_quota(self):
+    def _respect_quota(self):
         """Pause preventive avant de froler la limite (evite le ban 418)."""
-        if self.poids_utilise >= config.SEUIL_POIDS_PAUSE:
-            logger.info("Poids a %s/%s : pause 10s.", self.poids_utilise, config.LIMITE_POIDS_MINUTE)
+        if self.used_weight >= config.WEIGHT_PAUSE_THRESHOLD:
+            logger.info(
+                "Poids a %s/%s : pause 10s.",
+                self.used_weight,
+                config.WEIGHT_LIMIT_PER_MINUTE,
+            )
             time.sleep(10)
-            self.poids_utilise = 0
+            self.used_weight = 0
 
-    def _basculer_miroir(self):
+    def _switch_host(self):
         """Alterne entre l'hote principal et le miroir public en cas de panne."""
-        self.base = config.BASE_REST_REPLI if self.base == config.BASE_REST else config.BASE_REST
-        logger.info("Bascule sur %s", self.base)
+        self.base_url = (
+            config.REST_FALLBACK_URL
+            if self.base_url == config.REST_BASE_URL
+            else config.REST_BASE_URL
+        )
+        logger.info("Bascule sur %s", self.base_url)
 
     # -- endpoints publics --------------------------------------------------
     def ping(self) -> bool:
         self._get("/api/v3/ping")
         return True
 
-    def infos_marches(self, symboles: list[str] | None = None) -> dict:
+    def exchange_info(self, symbols: list[str] | None = None) -> dict:
         """Metadonnees des paires : statut, precisions, filtres de trading."""
         params = {}
-        if symboles:
+        if symbols:
             # ATTENTION : Binance refuse (HTTP 400) le JSON contenant des espaces.
-            params["symbols"] = json.dumps(symboles, separators=(",", ":"))
+            params["symbols"] = json.dumps(symbols, separators=(",", ":"))
         return self._get("/api/v3/exchangeInfo", params)
 
-    def klines(self, symbole: str, intervalle: str, debut=None, fin=None, limite: int = 1000) -> list[list]:
+    def klines(
+        self,
+        symbol: str,
+        interval: str,
+        start=None,
+        end=None,
+        limit: int = 1000,
+    ) -> list[list]:
         """Un lot de bougies brutes (max 1000). Brique de base de la pagination."""
         params = {
-            "symbol": symbole,
-            "interval": intervalle,
-            "limit": min(limite, config.KLINES_MAX_PAR_REQUETE),
+            "symbol": symbol,
+            "interval": interval,
+            "limit": min(limit, config.KLINES_MAX_PER_REQUEST),
         }
-        if debut is not None:
-            params["startTime"] = vers_ms(debut)
-        if fin is not None:
-            params["endTime"] = vers_ms(fin)
+        if start is not None:
+            params["startTime"] = to_millis(start)
+        if end is not None:
+            params["endTime"] = to_millis(end)
         return self._get("/api/v3/klines", params)
 
-    def klines_historique(self, symbole: str, intervalle: str, debut, fin=None) -> list[list]:
+    def fetch_klines_history(
+        self, symbol: str, interval: str, start, end=None
+    ) -> list[list]:
         """Historique COMPLET sur une periode, en enchainant les lots de 1000.
 
         Point critique : on avance sur le timestamp d'ouverture de la derniere
@@ -137,29 +179,34 @@ class ClientBinance:
         silencieusement a 1000 resultats ; un compteur supposerait le lot plein
         et sauterait des donnees sans jamais lever d'erreur.
         """
-        debut_ms = vers_ms(debut)
-        fin_ms = vers_ms(fin) if fin is not None else int(time.time() * 1000)
-        toutes, curseur = [], debut_ms
+        start_ms = to_millis(start)
+        end_ms = to_millis(end) if end is not None else int(time.time() * 1000)
+        candles, cursor = [], start_ms
 
-        while curseur < fin_ms:
-            lot = self.klines(symbole, intervalle, debut=curseur, fin=fin_ms)
-            if not lot:
+        while cursor < end_ms:
+            batch = self.klines(symbol, interval, start=cursor, end=end_ms)
+            if not batch:
                 break  # plus rien a lire : on a rattrape le present
-            toutes.extend(lot)
-            dernier_debut = lot[-1][0]
-            if dernier_debut <= curseur:
+            candles.extend(batch)
+            last_open_time = batch[-1][0]
+            if last_open_time <= cursor:
                 break  # securite anti-boucle infinie
-            curseur = dernier_debut + 1
+            cursor = last_open_time + 1
 
-        logger.info("%s %s : %d bougies recuperees (poids consomme %s)",
-                    symbole, intervalle, len(toutes), self.poids_utilise)
-        return toutes
+        logger.info(
+            "%s %s : %d bougies recuperees (poids consomme %s)",
+            symbol,
+            interval,
+            len(candles),
+            self.used_weight,
+        )
+        return candles
 
-    def ticker_24h(self, symboles: list[str] | None = None):
+    def ticker_24h(self, symbols: list[str] | None = None):
         params = {}
-        if symboles:
-            params["symbols"] = json.dumps(symboles, separators=(",", ":"))
+        if symbols:
+            params["symbols"] = json.dumps(symbols, separators=(",", ":"))
         return self._get("/api/v3/ticker/24hr", params)
 
-    def carnet_ordres(self, symbole: str, profondeur: int = 100) -> dict:
-        return self._get("/api/v3/depth", {"symbol": symbole, "limit": profondeur})
+    def order_book(self, symbol: str, depth: int = 100) -> dict:
+        return self._get("/api/v3/depth", {"symbol": symbol, "limit": depth})

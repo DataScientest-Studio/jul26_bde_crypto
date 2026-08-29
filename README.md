@@ -3,18 +3,31 @@
 Bot de trading crypto piloté par Machine Learning.
 Projet fil rouge — cursus Data Engineer.
 
-## Étape 1 — Découverte des sources de données ✅
+## Étape 1 — Récupération des données ✅
 
 Collecte de données de marché Binance sur 5 paires majeures, via API REST
-(historique) et WebSocket (temps réel).
+(historique) et WebSocket (temps réel), pour trois profils de trading.
 
 **Livrables** :
-- [`docs/rapport_etape1.md`](docs/rapport_etape1.md) — rapport explicatif complet
-- [`samples/exemple_donnees_binance.json`](samples/exemple_donnees_binance.json) — exemple de données commenté
+- [`docs/rapport_etape1.pdf`](docs/rapport_etape1.pdf) — rapport explicatif
+- [`samples/exemple_donnees_binance.json`](samples/exemple_donnees_binance.json) — exemple de données collectées
 - [`docs/rapport_qualite.json`](docs/rapport_qualite.json) — contrôle qualité automatisé
 
-**Résultats** : 262 415 bougies horaires sur 6 ans (2020-09 → 2026-08),
-complétude 99,96 %, 0 doublon, 0 valeur nulle, 0 incohérence OHLC.
+## Profils de trading
+
+Un bot ne regarde pas le marché à la même échelle selon la stratégie visée.
+Chaque profil définit ses intervalles **et** sa profondeur d'historique.
+
+| Profil | Intervalles | Historique | Pourquoi cette profondeur |
+|---|---|---|---|
+| `scalping` | 1m, 5m, 15m | 180 jours | Au-delà de quelques mois, la microstructure du marché a trop changé pour rester pertinente à cette échelle |
+| `day_trading` | 15m, 1h, 4h | 730 jours | Deux ans couvrent plusieurs régimes de marché sans noyer le modèle sous le bruit |
+| `swing` | 4h, 1d, 1w | tout (depuis sept. 2020) | Une bougie hebdomadaire ne produit que ~50 lignes par an : il faut tout l'historique |
+
+Quand deux profils réclament le même intervalle avec des profondeurs
+différentes — `15m` en scalping (180 j) et en day trading (730 j) — la
+**profondeur la plus longue l'emporte**. Collecter large satisfait les deux
+profils ; l'inverse laisserait le second à court de données.
 
 ## Installation
 
@@ -28,15 +41,20 @@ publics de données de marché.
 ## Utilisation
 
 ```bash
-# Historique complet (paires et intervalle définis dans src/config.py)
-python -m scripts.collect_history
+# Décrire les profils disponibles
+python -m scripts.collect_history --list
 
-# À la demande — le code est générique, rien n'est codé en dur
-python -m scripts.collect_history --paires ADAUSDT DOGEUSDT --intervalle 4h
-python -m scripts.collect_history --debut 2024-01-01
+# Collecter selon un profil
+python -m scripts.collect_history --profile day_trading
+python -m scripts.collect_history --profile scalping swing
+python -m scripts.collect_history --profile all
 
-# Temps réel (WebSocket), 1 heure
-python -m scripts.collect_stream --duree 3600
+# Collecte ponctuelle, hors profil
+python -m scripts.collect_history --pairs ADAUSDT --intervals 4h --start 2024-01-01
+
+# Temps réel (WebSocket)
+python -m scripts.collect_stream --duration 3600
+python -m scripts.collect_stream --stream kline_5m --duration 600
 
 # Régénérer le fichier d'exemple du livrable
 python -m scripts.make_samples
@@ -48,36 +66,57 @@ python -m pytest tests/ -v
 ## Architecture
 
 ```
-REST /api/v3/klines  ──┐
-   (le passé)          │
-                       ├──> preprocessing.py ──> data/raw     (JSON brut)
-                       │    SCHÉMA PIVOT           data/processed (Parquet)
-WebSocket @kline_1m  ──┘                                │
-   (le présent)                                         ▼
-                                                  ÉTAPE 2 : bases de données
+API REST  ──┐
+(le passé)  │
+            ├──> preprocessing.py ──> data/raw       (JSON brut)
+            │    SCHÉMA PIVOT         data/processed (Parquet)
+WebSocket ──┘                                │
+(le présent)                                 ▼
+                                     ÉTAPE 2 : bases de données
 ```
 
-Les deux sources arrivent dans des formats incompatibles (tableau positionnel
-vs objet à clés d'une lettre) et convergent vers **un schéma unique**. Tout ce
-qui est en aval ignore la provenance de la donnée.
+Les deux sources arrivent dans des formats incompatibles — tableau positionnel
+côté REST, objet à clés d'une lettre côté WebSocket — et convergent vers **un
+schéma unique**. Tout ce qui est en aval ignore la provenance de la donnée.
 
 ## Organisation
 
 | Chemin | Rôle |
 |---|---|
-| `src/config.py` | Paires, intervalles, endpoints, quotas — **seul endroit à modifier** |
+| `src/config.py` | Paires, profils, endpoints, quotas — **seul endroit à modifier** |
 | `src/binance_rest.py` | Client REST : pagination, gestion du quota, bascule sur miroir |
 | `src/binance_ws.py` | Collecteur WebSocket : filtre `x=true`, reconnexion automatique |
-| `src/preprocessing.py` | Normalisation vers le schéma pivot + contrôle qualité |
+| `src/preprocessing.py` | Normalisation vers le schéma pivot, contrôle qualité |
 | `scripts/` | Points d'entrée exécutables |
-| `data/raw/` | Réponses API intactes (rejouables) |
-| `data/processed/` | Parquet normalisé |
+| `data/raw/` | Réponses API intactes (rejouables, non versionnées) |
+| `data/processed/` | Parquet normalisé (non versionné) |
+
+Les données collectées ne sont pas versionnées : elles se régénèrent avec
+`python -m scripts.collect_history`.
+
+## Convention de code
+
+**Le code est en anglais, les commentaires et la documentation en français.**
+
+Noms de variables, de fonctions, de colonnes et de fichiers en anglais — c'est
+la convention universelle en Python et ça évite les mélanges du type
+`normaliser_klines()`. Les commentaires, docstrings et messages de log restent
+en français, parce qu'ils servent à expliquer nos choix à l'équipe et au jury.
+
+```python
+def normalize_klines(raw: list[list], symbol: str, interval: str) -> pd.DataFrame:
+    """Transforme la reponse brute de /api/v3/klines en DataFrame exploitable.
+
+    Binance envoie les prix en CHAINES de caracteres pour ne pas perdre de
+    precision en JSON. Les laisser ainsi ferait echouer tout calcul.
+    """
+```
 
 ## Feuille de route
 
 | Étape | Objet | Échéance | État |
 |---|---|---|---|
-| 1 | Découverte des sources de données | 24 août | ✅ |
+| 1 | Récupération des données | 24 août | ✅ |
 | 2 | Organisation des données (SQL + NoSQL, UML) | 4 septembre | ⏳ |
 | 3 | Consommation — modèle de ML | 11 septembre | — |
 | 4 | Déploiement — API, Docker, dérive | 21 septembre | — |

@@ -9,7 +9,7 @@ Contraintes de l'API relevees en mesure directe le 2026-08-28 :
   - `@trade`      sur BTCUSDT : ~136 msg/s
   - `@kline_1m`               : ~0,4 msg/s (soit ~15 messages par bougie)
   Un seul de ces 15 messages porte `x: true` : la bougie cloturee, definitive.
-  Ecrire les 14 autres en base reviendrait a stocker ~93 % de doublons.
+  Ecrire les 14 autres en base reviendrait a stocker ~96 % de doublons.
 
   - Binance ferme toute connexion au bout de 24 h : la reconnexion n'est pas
     une precaution, c'est une certitude a gerer.
@@ -28,66 +28,84 @@ from . import config
 logger = logging.getLogger(__name__)
 
 
-def construire_url(symboles: list[str], flux: str = "kline_1m") -> str:
+def build_stream_url(symbols: list[str], stream: str = "kline_1m") -> str:
     """Assemble une URL de flux combine.
 
     Un flux combine multiplexe N paires sur UNE connexion. A l'inverse, ouvrir
     une connexion par paire consomme un quota de connexions et multiplie les
     points de panne pour un benefice nul.
     """
-    parties = [f"{s.lower()}@{flux}" for s in symboles]
-    return f"{config.BASE_WS}/stream?streams=" + "/".join(parties)
+    parts = [f"{symbol.lower()}@{stream}" for symbol in symbols]
+    return f"{config.WS_BASE_URL}/stream?streams=" + "/".join(parts)
 
 
-class CollecteurWebSocket:
+class WebSocketCollector:
     """Ecoute un flux combine et delegue chaque bougie CLOTUREE a un callback.
 
     Le callback recoit un dict deja normalise au schema commun : c'est le point
     d'accroche pour l'etape 2 (ecriture en base) sans toucher a ce fichier.
     """
 
-    def __init__(self, symboles: list[str], flux: str = "kline_1m",
-                 sur_bougie: Callable[[dict], None] | None = None):
-        self.symboles = symboles
-        self.flux = flux
-        self.sur_bougie = sur_bougie or (lambda b: None)
-        self.url = construire_url(symboles, flux)
-        self.stats = {"recus": 0, "cloturees": 0, "ignores": 0, "reconnexions": 0}
+    def __init__(
+        self,
+        symbols: list[str],
+        stream: str = "kline_1m",
+        on_candle: Callable[[dict], None] | None = None,
+    ):
+        self.symbols = symbols
+        self.stream = stream
+        self.on_candle = on_candle or (lambda candle: None)
+        self.url = build_stream_url(symbols, stream)
+        self.stats = {"received": 0, "closed": 0, "skipped": 0, "reconnections": 0}
 
-    async def ecouter(self, duree_max: float | None = None):
+    async def listen(self, max_duration: float | None = None):
         """Boucle d'ecoute avec reconnexion automatique et backoff exponentiel."""
-        from .preprocessing import normaliser_kline_websocket
+        from .preprocessing import normalize_ws_kline
 
-        attente = 1
-        debut = asyncio.get_event_loop().time()
+        delay = 1
+        started_at = asyncio.get_event_loop().time()
 
         while True:
             try:
-                async with websockets.connect(self.url, ping_interval=20, ping_timeout=60) as ws:
-                    logger.info("Connecte : %d paires, flux %s", len(self.symboles), self.flux)
-                    attente = 1  # connexion reussie : on remet le backoff a zero
+                async with websockets.connect(
+                    self.url, ping_interval=20, ping_timeout=60
+                ) as socket:
+                    logger.info(
+                        "Connecte : %d paires, flux %s", len(self.symbols), self.stream
+                    )
+                    delay = 1  # connexion reussie : on remet le backoff a zero
 
-                    async for brut in ws:
-                        message = json.loads(brut)
-                        donnees = message.get("data", message)
-                        self.stats["recus"] += 1
+                    async for raw in socket:
+                        message = json.loads(raw)
+                        payload = message.get("data", message)
+                        self.stats["received"] += 1
 
                         # Filtre central : on ne retient que les bougies figees.
-                        if donnees.get("e") == "kline" and donnees["k"]["x"]:
-                            self.stats["cloturees"] += 1
-                            self.sur_bougie(normaliser_kline_websocket(donnees))
+                        if payload.get("e") == "kline" and payload["k"]["x"]:
+                            self.stats["closed"] += 1
+                            self.on_candle(normalize_ws_kline(payload))
                         else:
-                            self.stats["ignores"] += 1
+                            self.stats["skipped"] += 1
 
-                        if duree_max and asyncio.get_event_loop().time() - debut > duree_max:
+                        if (
+                            max_duration
+                            and asyncio.get_event_loop().time() - started_at > max_duration
+                        ):
                             logger.info("Duree max atteinte. Statistiques : %s", self.stats)
                             return
 
-            except (websockets.ConnectionClosed, OSError) as e:
-                if duree_max and asyncio.get_event_loop().time() - debut > duree_max:
+            except (websockets.ConnectionClosed, OSError) as exc:
+                if (
+                    max_duration
+                    and asyncio.get_event_loop().time() - started_at > max_duration
+                ):
                     return
-                self.stats["reconnexions"] += 1
-                logger.warning("Connexion perdue (%s). Reconnexion dans %ss.", type(e).__name__, attente)
-                await asyncio.sleep(attente)
+                self.stats["reconnections"] += 1
+                logger.warning(
+                    "Connexion perdue (%s). Reconnexion dans %ss.",
+                    type(exc).__name__,
+                    delay,
+                )
+                await asyncio.sleep(delay)
                 # Backoff exponentiel plafonne : ne pas marteler un service en panne.
-                attente = min(attente * 2, 60)
+                delay = min(delay * 2, 60)
