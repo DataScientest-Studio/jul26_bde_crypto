@@ -1,0 +1,15 @@
+# Donnees collectees : volumineuses et regenerables via les scripts.
+# Seul le fichier d'exemple du livrable (samples/) est versionne.
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+.env
+.idea/
+.vscode/
