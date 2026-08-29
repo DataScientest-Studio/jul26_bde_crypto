@@ -9,9 +9,17 @@ Collecte de données de marché Binance sur 5 paires majeures, via API REST
 (historique) et WebSocket (temps réel), pour trois profils de trading.
 
 **Livrables** :
-- [`docs/rapport_etape1.pdf`](docs/rapport_etape1.pdf) — rapport explicatif
+- [`docs/rapport_etape1_v2.pdf`](docs/rapport_etape1_v2.pdf) — rapport explicatif (version courante)
 - [`samples/exemple_donnees_binance.json`](samples/exemple_donnees_binance.json) — exemple de données collectées
-- [`docs/rapport_qualite.json`](docs/rapport_qualite.json) — contrôle qualité automatisé
+- [`docs/rapport_qualite.json`](docs/rapport_qualite.json) — contrôle qualité des 35 jeux de données
+
+**Historique des rapports** — les versions précédentes sont conservées pour
+garder trace de l'évolution du projet :
+
+| Version | Date | Périmètre | Fichier |
+|---|---|---|---|
+| v1 | 28 août 2026 | 1 pas de temps (1h), 262 415 lignes | [`rapport_etape1_v1.pdf`](docs/rapport_etape1_v1.pdf) |
+| **v2** | 29 août 2026 | 7 pas de temps, 3 profils, 2 075 570 lignes | [`rapport_etape1_v2.pdf`](docs/rapport_etape1_v2.pdf) |
 
 ## Profils de trading
 
