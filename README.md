@@ -21,6 +21,30 @@ garder trace de l'évolution du projet :
 | v1 | 28 août 2026 | 1 pas de temps (1h), 262 415 lignes | [`rapport_etape1_v1.pdf`](docs/rapport_etape1_v1.pdf) |
 | **v2** | 29 août 2026 | 7 pas de temps, 3 profils, 2 075 570 lignes | [`rapport_etape1_v2.pdf`](docs/rapport_etape1_v2.pdf) |
 
+## Étape 2 — Organisation des données ⏳
+
+Choix des bases de données et modèle de données.
+
+**Livrable** : [`docs/architecture_etape2.pdf`](docs/architecture_etape2.pdf)
+
+| Base | Rôle | Ce qu'elle stocke |
+|---|---|---|
+| **PostgreSQL** | Couche exploitable | Bougies nettoyées (13 colonnes fixes), référentiel des paires, journal des collectes |
+| **MongoDB** | Couche brute | Réponses API intactes, `exchangeInfo` et ses filtres polymorphes, messages WebSocket de tous types |
+
+Le critère de répartition n'est pas la provenance mais **la forme de la donnée** :
+structure stable → relationnel, structure variable → document. Les deux bases sont
+reliées par la clé métier `symbol + interval + open_time`.
+
+Une table de faits par profil de trading, chaque pas de temps stocké une seule fois
+dans le profil qui le conserve le plus longtemps :
+
+| Table | Pas de temps | Lignes |
+|---|---|---:|
+| `candles_scalping` | 1m, 5m | 1 559 135 |
+| `candles_day_trading` | 15m, 1h | 438 275 |
+| `candles_swing` | 4h, 1d, 1w | 78 160 |
+
 ## Profils de trading
 
 Un bot ne regarde pas le marché à la même échelle selon la stratégie visée.
