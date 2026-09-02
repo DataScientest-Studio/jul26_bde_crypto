@@ -36,14 +36,15 @@ Le critère de répartition n'est pas la provenance mais **la forme de la donné
 structure stable → relationnel, structure variable → document. Les deux bases sont
 reliées par la clé métier `symbol + interval + open_time`.
 
-Une table de faits par profil de trading, chaque pas de temps stocké une seule fois
-dans le profil qui le conserve le plus longtemps :
+Une table de faits par profil de trading. Chaque pas de temps est stocké une seule
+fois, dans la table du profil qui le conserve le plus longtemps — mais **chaque profil
+utilise bien ses trois pas de temps**, le troisième étant lu par une vue :
 
-| Table | Pas de temps | Lignes |
-|---|---|---:|
-| `candles_scalping` | 1m, 5m | 1 559 135 |
-| `candles_day_trading` | 15m, 1h | 438 275 |
-| `candles_swing` | 4h, 1d, 1w | 78 160 |
+| Profil | Pas de temps utilisés | Stockés dans sa table | Lus par vue | Lignes stockées |
+|---|---|---|---|---:|
+| `scalping` | 1m, 5m, **15m** | 1m, 5m | 15m ← `day_trading` | 1 559 135 |
+| `day_trading` | 15m, 1h, **4h** | 15m, 1h | 4h ← `swing` | 438 275 |
+| `swing` | 4h, 1d, 1w | 4h, 1d, 1w | — | 78 160 |
 
 ## Profils de trading
 
