@@ -30,6 +30,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+import mlflow
 import numpy as np
 from sklearn.ensemble import HistGradientBoostingClassifier, RandomForestClassifier
 from sklearn.impute import SimpleImputer
@@ -48,6 +49,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 log = logging.getLogger("optimise")
 
 RESULTATS = config.DOCS / "optimisation_modeles.json"
+SUIVI = f"sqlite:///{(config.ROOT / 'mlflow.db').as_posix()}"
 
 # Le gagnant de chaque profil, d'apres scripts/compare_models.py. Aucun
 # modele ne dominant partout, on optimise celui qui convient a chacun.
@@ -115,6 +117,26 @@ def optimiser(profil: str) -> dict:
     prediction = recherche.best_estimator_.predict(X_test)
     mesures = resume(y_test, prediction)
 
+    # On enregistre CHAQUE combinaison, pas seulement la gagnante : c'est ce
+    # qui permet de montrer dans MLflow que la recherche a bien eu lieu, et
+    # de voir si les parametres changent quelque chose - ici, tres peu.
+    resultats_grille = recherche.cv_results_
+    for rang in range(len(resultats_grille["params"])):
+        with mlflow.start_run(run_name=f"grille_{profil}_{rang:02d}", nested=False):
+            mlflow.log_params({
+                "profil": profil,
+                "type": "grille",
+                "modele": type(modele).__name__,
+                **{k.replace("modele__", "hp_"): v
+                   for k, v in resultats_grille["params"][rang].items()},
+            })
+            mlflow.log_metrics({
+                "bon_sens_validation": float(resultats_grille["mean_test_score"][rang]),
+                "ecart_type_plis": float(resultats_grille["std_test_score"][rang]),
+                "rang": int(resultats_grille["rank_test_score"][rang]),
+                "gagnante": int(rang == recherche.best_index_),
+            })
+
     log.info("  meilleurs parametres : %s", recherche.best_params_)
     log.info("  bon sens en validation : %.4f", recherche.best_score_)
     log.info("  bon sens sur le test   : %.4f  (hasard = 0,5000)", mesures["bon_sens"])
@@ -145,6 +167,9 @@ def main():
         "validation": "TimeSeriesSplit a 5 decoupages",
         "profils": {},
     }
+    mlflow.set_tracking_uri(SUIVI)
+    mlflow.set_experiment("cryptobot_etape3")
+
     for profil in args.profils:
         log.info("=== %s ===", profil)
         resultats["profils"][profil] = optimiser(profil)
