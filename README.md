@@ -33,6 +33,7 @@ Choix des bases de données et modèle de données.
 docker compose up -d              # TimescaleDB + MongoDB
 python -m scripts.load_to_db --check   # vérifier les connexions
 python -m scripts.load_to_db           # charger les 35 jeux de données
+python -m scripts.check_db             # état des deux bases
 ```
 
 Les scripts de `sql/` et `mongo/` sont joués automatiquement à la création
@@ -47,6 +48,12 @@ des conteneurs. Pour les rejouer après modification : `docker compose down -v`.
 | `sql/04_policies.sql` | Compression (active) et rétention (commentée) |
 | `mongo/01_init.js` | Les 4 collections brutes et leurs index |
 | `scripts/load_to_db.py` | Pipeline d'ingestion Parquet → PostgreSQL, JSON → MongoDB |
+| `scripts/check_db.py` | État des bases : volumes, intégrité, retard de collecte |
+
+**Note sur la couche brute** : un document MongoDB contient **1 000 bougies**,
+soit exactement une réponse de l'API Binance. Ce n'est pas un compromis
+technique mais la structure réelle de la donnée — et c'est nécessaire, un
+document est plafonné à 16 Mo quand nos fichiers 1m en font 45.
 
 | Base | Rôle | Ce qu'elle stocke |
 |---|---|---|

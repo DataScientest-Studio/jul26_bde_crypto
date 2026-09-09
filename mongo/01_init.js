@@ -18,9 +18,18 @@ db = db.getSiblingDB(dbName);
 //  evolue, sans redemander six ans de donnees a Binance.
 // ---------------------------------------------------------------------
 db.createCollection("raw_klines");
+// Un document = un lot de 1000 bougies, soit UNE reponse de l'API Binance.
+// Le decoupage n'est pas arbitraire : c'est la taille maximale d'une reponse,
+// et un document unique par fichier depasserait la limite de 16 Mo (les
+// fichiers 1m font 45 Mo).
 db.raw_klines.createIndex(
-    { symbol: 1, interval: 1, fetched_at: -1 },
-    { name: "idx_symbol_interval_fetched" }
+    { symbol: 1, interval: 1, batch_index: 1 },
+    { name: "idx_symbol_interval_batch", unique: true }
+);
+// Retrouver le lot qui contient une bougie donnee, sans le parcourir.
+db.raw_klines.createIndex(
+    { symbol: 1, interval: 1, first_open_time: 1, last_open_time: 1 },
+    { name: "idx_bornes_temporelles" }
 );
 
 // ---------------------------------------------------------------------

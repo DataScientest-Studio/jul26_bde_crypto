@@ -28,6 +28,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import pandas as pd
 
 from src import config
+from src.binance_rest import BinanceClient
 from src.database import check_connections, mongo_client, postgres_connection
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -70,6 +71,33 @@ def owning_profile(conn, interval: str) -> str | None:
         )
         row = cur.fetchone()
     return row[0] if row else None
+
+
+def load_exchange_info_to_mongo(pairs: list[str]) -> int:
+    """Recupere les metadonnees des paires et les stocke telles quelles.
+
+    C'est l'exemple qui a motive le choix d'une base document : chaque type
+    de filtre a des cles differentes (PRICE_FILTER porte tickSize, LOT_SIZE
+    porte stepSize, NOTIONAL autre chose encore). En relationnel il faudrait
+    une table par type, ou une table cle-valeur generique.
+
+    On conserve un historique : Binance modifie ses filtres au fil du temps,
+    et savoir quand un pas de cotation a change a de la valeur.
+    """
+    client = BinanceClient()
+    info = client.exchange_info(pairs)
+    fetched_at = pd.Timestamp.now(tz="UTC").to_pydatetime()
+
+    documents = [
+        {**symbol_info, "fetched_at": fetched_at, "endpoint": "/api/v3/exchangeInfo"}
+        for symbol_info in info["symbols"]
+    ]
+    if not documents:
+        return 0
+
+    with mongo_client() as mongo:
+        mongo[config.MONGO_DB_NAME]["exchange_info"].insert_many(documents, ordered=False)
+    return len(documents)
 
 
 def sync_symbols(conn, pairs: list[str]) -> int:
@@ -120,36 +148,53 @@ def sync_symbols(conn, pairs: list[str]) -> int:
 
 
 def load_raw_to_mongo(symbol: str, interval: str) -> str | None:
-    """Charge la reponse brute dans MongoDB et retourne son identifiant.
+    """Charge la reponse brute dans MongoDB, en lots de 1000 bougies.
 
-    Un document par (paire, pas de temps) : on remplace au lieu d'empiler,
-    sinon relancer le pipeline dupliquerait des dizaines de Mo.
+    MongoDB plafonne un document a 16 Mo. Nos fichiers 1m font 45 Mo : ils ne
+    peuvent pas tenir dans un seul document.
+
+    On decoupe donc en lots de 1000 bougies, ce qui n'est pas un compromis
+    technique mais la structure REELLE de la donnee : Binance ne renvoie
+    jamais plus de 1000 bougies par appel, et notre collecte a justement
+    enchaine des lots de cette taille. Un document = une reponse de l'API.
+
+    Retourne la cle metier du groupe, pas un ObjectId : c'est elle qui relie
+    les deux bases (voir docs/architecture_etape2.pdf, section 07).
     """
     path = config.DATA_RAW / f"{symbol}_{interval}_raw.json"
     if not path.exists():
         return None
 
     payload = json.loads(path.read_text(encoding="utf-8"))
+    taille_lot = config.KLINES_MAX_PER_REQUEST
+    fetched_at = pd.Timestamp.now(tz="UTC").to_pydatetime()
+
+    documents = []
+    for index, debut in enumerate(range(0, len(payload), taille_lot)):
+        lot = payload[debut:debut + taille_lot]
+        documents.append({
+            "symbol": symbol,
+            "interval": interval,
+            "batch_index": index,
+            "fetched_at": fetched_at,
+            "source": "REST",
+            "endpoint": "/api/v3/klines",
+            # Bornes du lot, pour retrouver un document sans le parcourir.
+            "first_open_time": lot[0][0],
+            "last_open_time": lot[-1][0],
+            "candle_count": len(lot),
+            "payload": lot,
+        })
 
     with mongo_client() as client:
         collection = client[config.MONGO_DB_NAME]["raw_klines"]
-        result = collection.replace_one(
-            {"symbol": symbol, "interval": interval},
-            {
-                "symbol": symbol,
-                "interval": interval,
-                "fetched_at": pd.Timestamp.now(tz="UTC").to_pydatetime(),
-                "source": "REST",
-                "endpoint": "/api/v3/klines",
-                "candle_count": len(payload),
-                "payload": payload,
-            },
-            upsert=True,
-        )
-        if result.upserted_id is not None:
-            return str(result.upserted_id)
-        doc = collection.find_one({"symbol": symbol, "interval": interval}, {"_id": 1})
-        return str(doc["_id"]) if doc else None
+        # On remplace le groupe entier : rejouer le pipeline ne doit pas
+        # empiler des copies de plusieurs dizaines de Mo.
+        collection.delete_many({"symbol": symbol, "interval": interval})
+        if documents:
+            collection.insert_many(documents, ordered=False)
+
+    return f"{symbol}/{interval}"
 
 
 def load_candles_to_postgres(conn, symbol: str, interval: str, raw_ref: str | None) -> dict:
@@ -175,9 +220,9 @@ def load_candles_to_postgres(conn, symbol: str, interval: str, raw_ref: str | No
     df = df.copy()
     df["source"] = "REST"
     df["raw_ref"] = f"raw_klines/{raw_ref}" if raw_ref else None
-    # Les Timestamp pandas passent en datetime natifs pour psycopg2.
-    for column in ("open_time", "close_time"):
-        df[column] = df[column].dt.to_pydatetime()
+    # Pas de conversion de date : pd.Timestamp herite de datetime.datetime,
+    # psycopg2 l'adapte donc nativement en timestamptz. Passer par
+    # .dt.to_pydatetime() etait inutile et declenchait un FutureWarning.
 
     records = list(df[CANDLE_COLUMNS].itertuples(index=False, name=None))
 
@@ -213,7 +258,17 @@ def load_candles_to_postgres(conn, symbol: str, interval: str, raw_ref: str | No
             records,
             page_size=5000,
         )
-        inserted = cur.rowcount
+
+        # ATTENTION : apres execute_values, cur.rowcount ne compte que le
+        # DERNIER lot envoye (page_size), pas le total. Sur 70 124 lignes il
+        # renvoie 124. On interroge donc la table pour connaitre le nombre
+        # reellement stocke - c'est de toute facon la seule mesure qui a du
+        # sens pour un journal d'audit.
+        cur.execute(
+            f"SELECT count(*) FROM {table} WHERE symbol = %s AND interval = %s",
+            (symbol, interval),
+        )
+        inserted = cur.fetchone()[0]
 
         cur.execute(
             """
@@ -228,7 +283,7 @@ def load_candles_to_postgres(conn, symbol: str, interval: str, raw_ref: str | No
         "status": "ok",
         "table": table,
         "rows_read": len(df),
-        "rows_inserted": inserted,
+        "rows_stored": inserted,
         "seconds": round(time.time() - started, 1),
     }
 
@@ -270,24 +325,58 @@ def main():
     started = time.time()
 
     with postgres_connection() as conn:
+        if not args.skip_raw:
+            try:
+                n = load_exchange_info_to_mongo(args.pairs)
+                log.info("exchange_info : %d paires recuperees depuis Binance", n)
+            except Exception as exc:
+                log.warning("exchange_info indisponible (%s) : le referentiel "
+                            "sera minimal, sans les precisions de cotation",
+                            type(exc).__name__)
+
         count = sync_symbols(conn, args.pairs)
         log.info("Referentiel : %d paires synchronisees", count)
 
+        echecs = []
         for symbol, interval in plan:
-            raw_ref = None if args.skip_raw else load_raw_to_mongo(symbol, interval)
-            result = load_candles_to_postgres(conn, symbol, interval, raw_ref)
+            # Chaque jeu de donnees est valide independamment : un echec sur
+            # une paire ne doit pas annuler les 34 autres. Sans ce commit par
+            # jeu, une seule exception ramenerait la base a zero.
+            try:
+                raw_ref = None
+                if not args.skip_raw:
+                    try:
+                        raw_ref = load_raw_to_mongo(symbol, interval)
+                    except Exception as exc:
+                        # La couche brute est un confort, pas une dependance :
+                        # PostgreSQL reste alimentable sans elle.
+                        log.warning("%-9s %-4s : MongoDB indisponible (%s), "
+                                    "chargement PostgreSQL quand meme",
+                                    symbol, interval, type(exc).__name__)
+
+                result = load_candles_to_postgres(conn, symbol, interval, raw_ref)
+                conn.commit()
+            except Exception as exc:
+                conn.rollback()
+                echecs.append((symbol, interval, f"{type(exc).__name__}: {exc}"))
+                log.error("%-9s %-4s : ECHEC %s", symbol, interval, type(exc).__name__)
+                continue
 
             if result["status"] != "ok":
                 log.warning("%-9s %-4s : %s", symbol, interval, result["status"])
                 continue
 
-            total_rows += result["rows_inserted"]
-            log.info("%-9s %-4s -> %-20s %7d lignes en %ss",
+            total_rows += result["rows_stored"]
+            log.info("%-9s %-4s -> %-20s lu %7d | en base %7d | %ss",
                      symbol, interval, result["table"],
-                     result["rows_inserted"], result["seconds"])
+                     result["rows_read"], result["rows_stored"], result["seconds"])
 
-    log.info("Termine : %d lignes chargees en %.0f s",
-             total_rows, time.time() - started)
+    log.info("Termine : %d lignes chargees en %.0f s", total_rows, time.time() - started)
+    if echecs:
+        log.error("%d jeu(x) en echec :", len(echecs))
+        for symbol, interval, message in echecs:
+            log.error("  %s %s : %s", symbol, interval, message[:120])
+        sys.exit(1)
 
 
 if __name__ == "__main__":
