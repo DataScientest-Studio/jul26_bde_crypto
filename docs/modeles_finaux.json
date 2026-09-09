@@ -1,0 +1,65 @@
+{
+  "scalping": {
+    "mesures": {
+      "bon_sens": 0.5225,
+      "taux_activite": 0.4795,
+      "accuracy_globale": 0.4149,
+      "ordres_evalues": 11239
+    },
+    "backtest": {
+      "operations": 3811,
+      "capital_initial": 10000.0,
+      "capital_final": 5006.6,
+      "performance_pct": -49.93,
+      "taux_reussite_pct": 33.95,
+      "gain_moyen_brut_pct": 0.0186,
+      "gain_moyen_net_pct": -0.1813,
+      "cout_total_frais_pct": 762.2,
+      "perte_max_pct": -50.02,
+      "ratio_rendement_risque": -0.2818
+    },
+    "fichier": "scalping.joblib"
+  },
+  "day_trading": {
+    "mesures": {
+      "bon_sens": 0.5064,
+      "taux_activite": 0.7241,
+      "accuracy_globale": 0.4253,
+      "ordres_evalues": 16316
+    },
+    "backtest": {
+      "operations": 4564,
+      "capital_initial": 10000.0,
+      "capital_final": 3540.31,
+      "performance_pct": -64.6,
+      "taux_reussite_pct": 39.18,
+      "gain_moyen_brut_pct": -0.0272,
+      "gain_moyen_net_pct": -0.227,
+      "cout_total_frais_pct": 912.8,
+      "perte_max_pct": -64.75,
+      "ratio_rendement_risque": -0.2419
+    },
+    "fichier": "day_trading.joblib"
+  },
+  "swing": {
+    "mesures": {
+      "bon_sens": 0.516,
+      "taux_activite": 0.9589,
+      "accuracy_globale": 0.4475,
+      "ordres_evalues": 12639
+    },
+    "backtest": {
+      "operations": 923,
+      "capital_initial": 10000.0,
+      "capital_final": 8218.16,
+      "performance_pct": -17.82,
+      "taux_reussite_pct": 52.87,
+      "gain_moyen_brut_pct": 0.0162,
+      "gain_moyen_net_pct": -0.1838,
+      "cout_total_frais_pct": 184.6,
+      "perte_max_pct": -36.57,
+      "ratio_rendement_risque": -0.0242
+    },
+    "fichier": "swing.joblib"
+  }
+}

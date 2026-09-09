@@ -17,3 +17,10 @@ venv/
 # Extrait fige : volumineux, partage hors depot
 data/extract/*
 !data/extract/manifest.json
+
+# Modeles et suivi MLflow : volumineux et REGENERABLES depuis l'extrait fige
+# par `python -m scripts.train_final`. Les captures et les metriques JSON,
+# elles, sont versionnees car ce sont les livrables.
+models/*.joblib
+mlartifacts/
+mlflow.db
