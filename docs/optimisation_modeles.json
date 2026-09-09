@@ -1,0 +1,56 @@
+{
+  "critere": "bon sens directionnel sur les ordres passes",
+  "pourquoi": "L'accuracy globale recompense la detection des phases calmes, qui ne rapporte rien a un bot.",
+  "validation": "TimeSeriesSplit a 5 decoupages",
+  "profils": {
+    "scalping": {
+      "modele": "LogisticRegression",
+      "meilleurs_parametres": {
+        "modele__C": "1.0",
+        "modele__class_weight": "None"
+      },
+      "bon_sens_validation": 0.497,
+      "test": {
+        "bon_sens": 0.5225,
+        "taux_activite": 0.4795,
+        "accuracy_globale": 0.4149,
+        "ordres_evalues": 11239
+      },
+      "combinaisons": 6,
+      "secondes": 17
+    },
+    "day_trading": {
+      "modele": "HistGradientBoostingClassifier",
+      "meilleurs_parametres": {
+        "modele__learning_rate": "0.1",
+        "modele__max_iter": "100",
+        "modele__max_leaf_nodes": "31"
+      },
+      "bon_sens_validation": 0.5079,
+      "test": {
+        "bon_sens": 0.5064,
+        "taux_activite": 0.7241,
+        "accuracy_globale": 0.4253,
+        "ordres_evalues": 16316
+      },
+      "combinaisons": 8,
+      "secondes": 43
+    },
+    "swing": {
+      "modele": "RandomForestClassifier",
+      "meilleurs_parametres": {
+        "modele__min_samples_leaf": "20",
+        "modele__n_estimators": "100"
+      },
+      "bon_sens_validation": 0.5245,
+      "test": {
+        "bon_sens": 0.5121,
+        "taux_activite": 0.7342,
+        "accuracy_globale": 0.3984,
+        "ordres_evalues": 8624
+      },
+      "combinaisons": 6,
+      "secondes": 60
+    }
+  }
+}
