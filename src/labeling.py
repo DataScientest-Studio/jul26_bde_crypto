@@ -40,6 +40,7 @@ def triple_barriere(
     largeur: float = 2.0,
     horizon: int = 24,
     fenetre_vol: int = 24,
+    largeur_basse: float | None = None,
 ) -> pd.DataFrame:
     """Etiquette un DataFrame OHLC d'une seule paire et d'un seul pas de temps.
 
@@ -57,8 +58,11 @@ def triple_barriere(
     low = df["low"].to_numpy(dtype=np.float64)
 
     vol = volatilite_glissante(df["close"], fenetre_vol).to_numpy()
+    # Barrieres asymetriques possibles : un take profit a 3 sigma avec un
+    # stop loss a 1 sigma n'est pas la meme strategie qu'un couple symetrique.
+    basse_k = largeur if largeur_basse is None else largeur_basse
     haute = close * (1.0 + largeur * vol)
-    basse = close * (1.0 - largeur * vol)
+    basse = close * (1.0 - basse_k * vol)
 
     label = np.full(n, np.nan)
     sortie = np.full(n, np.nan)
@@ -155,3 +159,37 @@ def distribution(labels: pd.Series) -> dict:
         "neutre": round(parts.get(0.0, 0.0), 1),
         "n": len(valides),
     }
+
+
+def etiqueter_par_vote(
+    df: pd.DataFrame,
+    combinaisons: list[tuple[float, float]],
+    horizon: int = 48,
+    fenetre_vol: int = 24,
+) -> pd.Series:
+    """Etiquette binaire par VOTE MAJORITAIRE sur plusieurs couples TP/SL.
+
+    Methode de l'etude de reference (Forecast, 2026), qui agrege 54
+    combinaisons de take profit et stop loss.
+
+    L'idee : une seule configuration de barrieres produit une etiquette
+    fragile - il suffit d'une meche pour basculer le resultat. En faisant
+    voter des dizaines de configurations, on retient la direction sur
+    laquelle la plupart s'accordent, ce qui debruite la cible.
+
+    Retourne 1 (hausse), 0 (baisse), ou NaN si le vote ne tranche pas.
+    """
+    votes = []
+    for tp, sl in combinaisons:
+        resultat = triple_barriere(df, largeur=tp, horizon=horizon,
+                                   fenetre_vol=fenetre_vol, largeur_basse=sl)
+        votes.append(resultat["label"].to_numpy())
+
+    empiles = np.vstack(votes)
+    hausses = (empiles == 1).sum(axis=0)
+    baisses = (empiles == -1).sum(axis=0)
+
+    label = np.full(len(df), np.nan)
+    label[hausses > baisses] = 1.0
+    label[baisses > hausses] = 0.0
+    return pd.Series(label, index=df.index)
