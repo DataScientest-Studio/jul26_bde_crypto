@@ -13,3 +13,7 @@ venv/
 .env
 .idea/
 .vscode/
+
+# Extrait fige : volumineux, partage hors depot
+data/extract/*
+!data/extract/manifest.json

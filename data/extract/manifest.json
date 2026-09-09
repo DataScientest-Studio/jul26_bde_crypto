@@ -1,0 +1,68 @@
+{
+  "cree_le": "2026-09-09T13:51:22.283615+00:00",
+  "cutoff": "2026-08-24T00:00:00+00:00",
+  "source": "PostgreSQL / TimescaleDB, vues par profil",
+  "pourquoi": "Extrait fige : les resultats de ML doivent etre reproductibles a l'identique.",
+  "profils": {
+    "scalping": {
+      "fichier": "scalping.parquet",
+      "lignes": 1590455,
+      "sha256": "0fadfbd6e67cffdae96c2c2c1caaf3c363ec9473f09411935e9fadcbc3f81f78",
+      "taille_ko": 89395,
+      "pas_de_temps": [
+        "15m",
+        "1m",
+        "5m"
+      ],
+      "paires": [
+        "BNBUSDT",
+        "BTCUSDT",
+        "ETHUSDT",
+        "SOLUSDT",
+        "XRPUSDT"
+      ],
+      "debut": "2026-03-02 00:00:00+00:00",
+      "fin": "2026-08-24 00:00:00+00:00"
+    },
+    "day_trading": {
+      "fichier": "day_trading.parquet",
+      "lignes": 456415,
+      "sha256": "e7313c3291b11fba2abc3ea9b4fd83e13b00ef0fffacb2ec1b827bd6a6e0c2f0",
+      "taille_ko": 26460,
+      "pas_de_temps": [
+        "15m",
+        "1h",
+        "4h"
+      ],
+      "paires": [
+        "BNBUSDT",
+        "BTCUSDT",
+        "ETHUSDT",
+        "SOLUSDT",
+        "XRPUSDT"
+      ],
+      "debut": "2024-08-29 00:00:00+00:00",
+      "fin": "2026-08-24 00:00:00+00:00"
+    },
+    "swing": {
+      "fichier": "swing.parquet",
+      "lignes": 77975,
+      "sha256": "40908d49cd79f00eba65888ddc1cabd4751eeeab2b2996f5740f8ddbab47c9c1",
+      "taille_ko": 5468,
+      "pas_de_temps": [
+        "1d",
+        "1w",
+        "4h"
+      ],
+      "paires": [
+        "BNBUSDT",
+        "BTCUSDT",
+        "ETHUSDT",
+        "SOLUSDT",
+        "XRPUSDT"
+      ],
+      "debut": "2020-09-01 00:00:00+00:00",
+      "fin": "2026-08-24 00:00:00+00:00"
+    }
+  }
+}

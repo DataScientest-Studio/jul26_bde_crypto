@@ -1,0 +1,205 @@
+{
+  "largeur": 3.0,
+  "horizon": 12,
+  "plafond": 150000,
+  "profils": {
+    "scalping": {
+      "lignes": 150000,
+      "variables": 27,
+      "repartition": {
+        "-1": 0.3101,
+        "0": 0.3567,
+        "1": 0.3333
+      },
+      "modeles": [
+        {
+          "modele": "reference_majoritaire",
+          "accuracy": 0.324,
+          "f1_macro": 0.1631,
+          "secondes": 0.4,
+          "classes_predites": 1,
+          "gain_sur_reference": -0.0136
+        },
+        {
+          "modele": "reference_aleatoire",
+          "accuracy": 0.3376,
+          "f1_macro": 0.3367,
+          "secondes": 0.4,
+          "classes_predites": 3,
+          "gain_sur_reference": 0.0
+        },
+        {
+          "modele": "regression_logistique",
+          "accuracy": 0.4149,
+          "f1_macro": 0.3944,
+          "secondes": 2.0,
+          "classes_predites": 3,
+          "gain_sur_reference": 0.0773
+        },
+        {
+          "modele": "foret_aleatoire",
+          "accuracy": 0.3848,
+          "f1_macro": 0.3323,
+          "secondes": 7.6,
+          "classes_predites": 3,
+          "gain_sur_reference": 0.0472
+        },
+        {
+          "modele": "gradient_boosting",
+          "accuracy": 0.4013,
+          "f1_macro": 0.3843,
+          "secondes": 6.5,
+          "classes_predites": 3,
+          "gain_sur_reference": 0.0637
+        },
+        {
+          "modele": "sgd_lineaire",
+          "accuracy": 0.4016,
+          "f1_macro": 0.3651,
+          "secondes": 1.6,
+          "classes_predites": 3,
+          "gain_sur_reference": 0.064
+        }
+      ],
+      "familles": {
+        "tendance": 0.3641,
+        "momentum": 0.3545,
+        "volatilite": 0.3989,
+        "volume": 0.3555,
+        "flux": 0.3384
+      }
+    },
+    "day_trading": {
+      "lignes": 150000,
+      "variables": 27,
+      "repartition": {
+        "-1": 0.3412,
+        "0": 0.3355,
+        "1": 0.3233
+      },
+      "modeles": [
+        {
+          "modele": "reference_majoritaire",
+          "accuracy": 0.3171,
+          "f1_macro": 0.1605,
+          "secondes": 0.3,
+          "classes_predites": 1,
+          "gain_sur_reference": -0.0183
+        },
+        {
+          "modele": "reference_aleatoire",
+          "accuracy": 0.3354,
+          "f1_macro": 0.3354,
+          "secondes": 0.3,
+          "classes_predites": 3,
+          "gain_sur_reference": 0.0
+        },
+        {
+          "modele": "regression_logistique",
+          "accuracy": 0.4149,
+          "f1_macro": 0.415,
+          "secondes": 1.5,
+          "classes_predites": 3,
+          "gain_sur_reference": 0.0795
+        },
+        {
+          "modele": "foret_aleatoire",
+          "accuracy": 0.4174,
+          "f1_macro": 0.4203,
+          "secondes": 6.5,
+          "classes_predites": 3,
+          "gain_sur_reference": 0.082
+        },
+        {
+          "modele": "gradient_boosting",
+          "accuracy": 0.4233,
+          "f1_macro": 0.4263,
+          "secondes": 5.2,
+          "classes_predites": 3,
+          "gain_sur_reference": 0.0879
+        },
+        {
+          "modele": "sgd_lineaire",
+          "accuracy": 0.4102,
+          "f1_macro": 0.3914,
+          "secondes": 1.5,
+          "classes_predites": 3,
+          "gain_sur_reference": 0.0748
+        }
+      ],
+      "familles": {
+        "tendance": 0.374,
+        "momentum": 0.3751,
+        "volatilite": 0.4137,
+        "volume": 0.3819,
+        "flux": 0.3361
+      }
+    },
+    "swing": {
+      "lignes": 77435,
+      "variables": 27,
+      "repartition": {
+        "-1": 0.3427,
+        "0": 0.3091,
+        "1": 0.3482
+      },
+      "modeles": [
+        {
+          "modele": "reference_majoritaire",
+          "accuracy": 0.3475,
+          "f1_macro": 0.1719,
+          "secondes": 0.1,
+          "classes_predites": 1,
+          "gain_sur_reference": 0.0
+        },
+        {
+          "modele": "reference_aleatoire",
+          "accuracy": 0.3355,
+          "f1_macro": 0.3346,
+          "secondes": 0.2,
+          "classes_predites": 3,
+          "gain_sur_reference": -0.012
+        },
+        {
+          "modele": "regression_logistique",
+          "accuracy": 0.3901,
+          "f1_macro": 0.3855,
+          "secondes": 0.7,
+          "classes_predites": 3,
+          "gain_sur_reference": 0.0426
+        },
+        {
+          "modele": "foret_aleatoire",
+          "accuracy": 0.3972,
+          "f1_macro": 0.3985,
+          "secondes": 3.0,
+          "classes_predites": 3,
+          "gain_sur_reference": 0.0497
+        },
+        {
+          "modele": "gradient_boosting",
+          "accuracy": 0.395,
+          "f1_macro": 0.396,
+          "secondes": 3.6,
+          "classes_predites": 3,
+          "gain_sur_reference": 0.0475
+        },
+        {
+          "modele": "svm_lineaire",
+          "accuracy": 0.3903,
+          "f1_macro": 0.3849,
+          "secondes": 1.8,
+          "classes_predites": 3,
+          "gain_sur_reference": 0.0428
+        }
+      ],
+      "familles": {
+        "tendance": 0.3602,
+        "momentum": 0.3798,
+        "volatilite": 0.3891,
+        "volume": 0.3566,
+        "flux": 0.3409
+      }
+    }
+  }
+}
