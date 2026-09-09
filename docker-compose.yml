@@ -1,0 +1,65 @@
+# Les deux bases du projet, telles que decrites dans docs/architecture_etape2.pdf
+#
+#   TimescaleDB (PostgreSQL) : couche exploitable, les bougies nettoyees
+#   MongoDB                  : couche brute, les reponses API telles quelles
+#
+# Demarrage :  docker compose up -d
+# Arret      :  docker compose down            (les donnees survivent)
+# Remise a zero : docker compose down -v       (supprime les volumes)
+
+services:
+
+  postgres:
+    # Image TimescaleDB : c'est un PostgreSQL complet avec l'extension deja
+    # installee. On garde donc psycopg2, psql et tout l'ecosysteme habituel.
+    image: timescale/timescaledb:latest-pg16
+    container_name: crypto_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-cryptobot}
+      POSTGRES_USER: ${POSTGRES_USER:-cryptobot}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cryptobot}
+      # Fuseau force a UTC : toutes nos donnees sont en UTC depuis l'etape 1,
+      # un serveur en heure de Paris decalerait les horodatages a l'affichage.
+      TZ: UTC
+      PGTZ: UTC
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Tout script place ici est execute UNE SEULE FOIS, a la creation du
+      # volume. Pour les rejouer, il faut `docker compose down -v`.
+      - ./sql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      # Le pipeline attend que la base reponde vraiment avant d'ecrire.
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cryptobot} -d ${POSTGRES_DB:-cryptobot}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  mongo:
+    image: mongo:7
+    container_name: crypto_mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-cryptobot}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-cryptobot}
+      MONGO_INITDB_DATABASE: ${MONGO_DB:-cryptobot}
+      TZ: UTC
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+    volumes:
+      - mongo_data:/data/db
+      - ./mongo:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+volumes:
+  # Volumes nommes : les donnees survivent a un `docker compose down`.
+  postgres_data:
+  mongo_data:

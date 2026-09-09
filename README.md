@@ -21,11 +21,32 @@ garder trace de l'évolution du projet :
 | v1 | 28 août 2026 | 1 pas de temps (1h), 262 415 lignes | [`rapport_etape1_v1.pdf`](docs/rapport_etape1_v1.pdf) |
 | **v2** | 29 août 2026 | 7 pas de temps, 3 profils, 2 075 570 lignes | [`rapport_etape1_v2.pdf`](docs/rapport_etape1_v2.pdf) |
 
-## Étape 2 — Organisation des données ⏳
+## Étape 2 — Organisation des données ✅
 
 Choix des bases de données et modèle de données.
 
 **Livrable** : [`docs/architecture_etape2.pdf`](docs/architecture_etape2.pdf)
+
+### Démarrer les bases
+
+```bash
+docker compose up -d              # TimescaleDB + MongoDB
+python -m scripts.load_to_db --check   # vérifier les connexions
+python -m scripts.load_to_db           # charger les 35 jeux de données
+```
+
+Les scripts de `sql/` et `mongo/` sont joués automatiquement à la création
+des conteneurs. Pour les rejouer après modification : `docker compose down -v`.
+
+| Fichier | Rôle |
+|---|---|
+| `docker-compose.yml` | Les deux bases, avec healthchecks et volumes nommés |
+| `sql/01_schema.sql` | Tables, contraintes, hypertables TimescaleDB, index |
+| `sql/02_seed.sql` | Profils, pas de temps, règle de propriété |
+| `sql/03_views.sql` | `v_scalping`, `v_day_trading`, `v_swing`, `v_coverage` |
+| `sql/04_policies.sql` | Compression (active) et rétention (commentée) |
+| `mongo/01_init.js` | Les 4 collections brutes et leurs index |
+| `scripts/load_to_db.py` | Pipeline d'ingestion Parquet → PostgreSQL, JSON → MongoDB |
 
 | Base | Rôle | Ce qu'elle stocke |
 |---|---|---|

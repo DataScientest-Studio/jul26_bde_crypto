@@ -13,7 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src import config
 from src.binance_rest import start_date_for
-from src.preprocessing import INTERVAL_DURATIONS
+from src.preprocessing import INTERVAL_SECONDS
 
 
 def test_every_profile_interval_is_supported():
@@ -21,7 +21,7 @@ def test_every_profile_interval_is_supported():
     ne sait pas mesurer : la collecte echouerait au controle qualite."""
     for name, profile in config.TRADING_PROFILES.items():
         for interval in profile["intervals"]:
-            assert interval in INTERVAL_DURATIONS, f"{name} demande {interval}, non gere"
+            assert interval in INTERVAL_SECONDS, f"{name} demande {interval}, non gere"
 
 
 def test_default_profile_exists():

@@ -41,20 +41,26 @@ TARGET_SCHEMA = [
     "taker_buy_base", "taker_buy_quote",
 ]
 
-# Duree d'une bougie, par intervalle Binance. Sert au controle de completude :
-# sans elle, impossible de savoir combien de bougies on DEVRAIT avoir.
-INTERVAL_DURATIONS = {
-    "1m": "1min", "3m": "3min", "5m": "5min", "15m": "15min", "30m": "30min",
-    "1h": "1h", "2h": "2h", "4h": "4h", "6h": "6h", "8h": "8h", "12h": "12h",
-    "1d": "1D", "3d": "3D", "1w": "7D",
+# Duree d'une bougie, en SECONDES, par intervalle Binance. Sert au controle
+# de completude - sans elle, impossible de savoir combien de bougies on
+# DEVRAIT avoir - et alimente aussi intervals.duration_seconds en base.
+# Exprimer en secondes plutot qu'en chaines pandas evite toute ambiguite
+# d'unite et rend la comparaison avec le SQL directe.
+INTERVAL_SECONDS = {
+    "1m": 60, "3m": 180, "5m": 300, "15m": 900, "30m": 1800,
+    "1h": 3600, "2h": 7200, "4h": 14400, "6h": 21600, "8h": 28800, "12h": 43200,
+    "1d": 86400, "3d": 259200, "1w": 604800,
 }
 
 
 def interval_to_timedelta(interval: str) -> pd.Timedelta:
     """Traduit un intervalle Binance ("15m", "1w") en duree pandas."""
-    if interval not in INTERVAL_DURATIONS:
+    if interval not in INTERVAL_SECONDS:
         raise ValueError(f"Intervalle non gere : {interval!r}")
-    return pd.Timedelta(INTERVAL_DURATIONS[interval])
+    # unit="s" explicite : avec numpy >= 2.5, les formes implicites
+    # (seconds=... ou la chaine "604800s") sont depreciees et leveront
+    # une erreur dans une version future.
+    return pd.Timedelta(INTERVAL_SECONDS[interval], unit="s")
 
 
 def normalize_klines(raw: list[list], symbol: str, interval: str) -> pd.DataFrame:

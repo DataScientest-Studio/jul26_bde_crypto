@@ -4,6 +4,7 @@ Tout ce qui est "parametre du projet" vit ici et nulle part ailleurs :
 changer de paires ou d'intervalles ne doit jamais demander de toucher au
 code de collecte. C'est ce qui rend la fonction de recuperation generique.
 """
+import os
 from pathlib import Path
 
 # --- Chemins ---------------------------------------------------------------
@@ -60,6 +61,11 @@ TRADING_PROFILES = {
 
 # Profil utilise par defaut si aucun n'est precise en ligne de commande.
 DEFAULT_PROFILE = "day_trading"
+
+# --- Bases de donnees ------------------------------------------------------
+# Les identifiants complets vivent dans src/database.py ; on n'expose ici que
+# le nom de la base Mongo, dont le pipeline a besoin pour cibler ses collections.
+MONGO_DB_NAME = os.getenv("MONGO_DB", "cryptobot")
 
 # --- Endpoints Binance -----------------------------------------------------
 # api.binance.com est joignable depuis la France (verifie le 2026-08-28).
