@@ -230,3 +230,55 @@ def test_distribution_somme_a_cent():
     d = distribution(triple_barriere(serie(prix), largeur=2.0, horizon=10)["label"])
     assert abs(d["achat"] + d["vente"] + d["neutre"] - 100) < 0.5
     assert d["n"] > 0
+
+
+# --- Contexte multi-echelles : la fuite la plus couteuse du projet ---------
+
+def test_le_contexte_lent_n_utilise_que_des_bougies_CLOSES():
+    """Une bougie lente ne doit etre visible qu'une fois TERMINEE.
+
+    Cette regression a reellement eu lieu : en rattachant sur l'ouverture de
+    la bougie lente plutot que sur sa cloture, une bougie 4h de midi recevait
+    les indicateurs de la journaliere en cours - dont la cloture survient a
+    minuit, soit 12 heures dans son futur.
+
+    Le bon sens directionnel passait alors de 0,5193 a 0,6136. Un gain de
+    9 points entierement fictif, invisible pour tous les autres tests.
+    """
+    from src.features import ajouter_contexte_lent
+    from src.preprocessing import INTERVAL_SECONDS
+
+    rng = np.random.default_rng(11)
+    lignes = []
+    for pas, freq, n in (("4h", "4h", 600), ("1d", "1D", 100)):
+        prix = 60000 * (1 + rng.normal(0, 0.01, n)).cumprod()
+        d = serie(prix)
+        d["symbol"] = "BTCUSDT"
+        d["interval"] = pas
+        d["open_time"] = pd.date_range("2026-01-01", periods=n, freq=freq, tz="UTC")
+        lignes.append(d)
+    brut = pd.concat(lignes, ignore_index=True)
+
+    from src.features import construire_groupes
+    # Seules les familles calculables depuis l'OHLC : la serie synthetique
+    # n'a ni nb_trades ni taker_buy_*.
+    variables = construire_groupes(brut, ("tendance", "momentum", "volatilite"))
+    avec_contexte = ajouter_contexte_lent(variables)
+
+    lent = variables[variables["interval"] == "1d"][["open_time", "rsi_14"]].dropna()
+    duree = pd.Timedelta(INTERVAL_SECONDS["1d"], unit="s")
+
+    rapide = avec_contexte[
+        (avec_contexte["interval"] == "4h") & avec_contexte["rsi_14_ctx_1d"].notna()
+    ]
+    assert len(rapide) > 50, "pas assez de lignes pour conclure"
+
+    for _, ligne in rapide.iterrows():
+        origine = lent[np.isclose(lent["rsi_14"], ligne["rsi_14_ctx_1d"])]
+        if origine.empty:
+            continue
+        cloture = origine["open_time"].iloc[0] + duree
+        assert cloture <= ligne["open_time"], (
+            f"fuite : la bougie 4h du {ligne['open_time']} utilise une "
+            f"journaliere qui ne ferme qu'au {cloture}"
+        )

@@ -165,3 +165,74 @@ def colonnes_explicatives(df: pd.DataFrame) -> list[str]:
     """Colonnes a donner au modele : tout sauf les identifiants."""
     exclues = {"symbol", "interval", "open_time", "label"}
     return [c for c in df.columns if c not in exclues]
+
+
+# ---------------------------------------------------------------------------
+#  Contexte multi-echelles
+# ---------------------------------------------------------------------------
+#  L'etude de reference sur Bitcoin (Forecast, 2025) obtient son meilleur
+#  ROC-AUC avec une chaine "hierarchique multi-echelles" : chaque bougie
+#  recoit aussi l'etat des pas de temps PLUS LENTS.
+#
+#  L'intuition est celle d'un trader : avant d'acheter sur un graphique 4h,
+#  on regarde ou en est la tendance journaliere. Une hausse de 4h contre une
+#  tendance journaliere baissiere ne vaut pas la meme chose qu'une hausse
+#  alignee avec elle.
+# ---------------------------------------------------------------------------
+
+CONTEXTE = ("ecart_sma_30", "rsi_14", "atr_relatif", "position_bollinger")
+
+
+def ajouter_contexte_lent(
+    variables: pd.DataFrame, colonnes: tuple[str, ...] = CONTEXTE
+) -> pd.DataFrame:
+    """Ajoute a chaque ligne l'etat des pas de temps plus lents.
+
+    Le rattachement se fait par `merge_asof`, qui prend la DERNIERE bougie
+    lente CLOTUREE avant l'instant courant. C'est le point critique : prendre
+    la bougie lente en cours ferait entrer de l'information future, puisque
+    sa cloture n'est pas encore connue.
+    """
+    from src.preprocessing import INTERVAL_SECONDS
+
+    pas_tries = sorted(
+        variables["interval"].unique(), key=lambda i: INTERVAL_SECONDS[i]
+    )
+    morceaux = []
+
+    for symbole, groupe_symbole in variables.groupby("symbol", sort=False):
+        for rang, pas in enumerate(pas_tries):
+            rapide = groupe_symbole[groupe_symbole["interval"] == pas].sort_values(
+                "open_time"
+            )
+            if rapide.empty:
+                continue
+
+            for pas_lent in pas_tries[rang + 1:]:
+                lent = groupe_symbole[groupe_symbole["interval"] == pas_lent]
+                if lent.empty:
+                    continue
+                lent = lent[["open_time", *colonnes]].copy()
+
+                # POINT CRITIQUE : on rattache sur la date de CLOTURE de la
+                # bougie lente, pas sur son ouverture.
+                #
+                # Une bougie journaliere ouverte a 00h00 ne ferme qu'a 24h00.
+                # La rattacher a une bougie 4h de midi donnerait a celle-ci la
+                # cloture du jour en cours, soit 12 heures dans son futur.
+                # Mesure faite : cette erreur faisait passer le bon sens de
+                # 0,5193 a 0,6136 - un gain entierement fictif.
+                duree = pd.Timedelta(INTERVAL_SECONDS[pas_lent], unit="s")
+                lent["disponible_a"] = lent["open_time"] + duree
+                lent = lent.sort_values("disponible_a")
+                lent = lent.rename(
+                    columns={c: f"{c}_ctx_{pas_lent}" for c in colonnes}
+                )
+                rapide = pd.merge_asof(
+                    rapide, lent.drop(columns=["open_time"]),
+                    left_on="open_time", right_on="disponible_a",
+                    direction="backward", allow_exact_matches=True,
+                ).drop(columns=["disponible_a"])
+            morceaux.append(rapide)
+
+    return pd.concat(morceaux, ignore_index=True)
