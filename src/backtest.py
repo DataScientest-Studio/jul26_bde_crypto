@@ -34,6 +34,7 @@ def simuler(
     capital_initial: float = 10_000.0,
     frais: float = FRAIS_PAR_ORDRE,
     fraction_engagee: float = 1.0,
+    retourner_courbe: bool = False,
 ) -> dict:
     """Rejoue une suite de signaux et retourne le resultat financier.
 
@@ -80,7 +81,12 @@ def simuler(
         # On saute jusqu'a la sortie : pas de positions superposees.
         i += max(int(delais[i]), 1)
 
-    return _resultat(capital_initial, capital, courbe, operations, frais)
+    resultat = _resultat(capital_initial, capital, courbe, operations, frais)
+    if retourner_courbe:
+        # Pour tracer l'evolution du capital. Absent par defaut : les JSON de
+        # resultats n'ont pas a porter des milliers de valeurs.
+        resultat["courbe"] = [round(float(c), 2) for c in courbe]
+    return resultat
 
 
 def _resultat(capital_initial, capital, courbe, operations, frais) -> dict:
