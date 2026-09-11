@@ -74,6 +74,27 @@ utilise bien ses trois pas de temps**, le troisième étant lu par une vue :
 | `day_trading` | 15m, 1h, **4h** | 15m, 1h | 4h ← `swing` | 438 275 |
 | `swing` | 4h, 1d, 1w | 4h, 1d, 1w | — | 78 160 |
 
+## Étape 3 — Machine learning ✅
+
+**Livrable** : [`docs/rapport_etape3.pdf`](docs/rapport_etape3.pdf)
+
+Étiquetage par trois barrières (stop loss / take profit intégrés), 26 variables
+sans échelle, 6 modèles comparés par profil avec deux références, GridSearchCV
+en découpage chronologique, backtest en euros, suivi MLflow et export `.joblib`.
+
+**Résultat** : la volatilité se prédit, la direction non. Le bon sens
+directionnel reste proche de 50 % et les trois profils perdent au backtest une
+fois les frais de 0,2 % pris en compte.
+
+```bash
+python -m scripts.make_extract --verify   # l'extrait fige est-il intact ?
+python -m scripts.compare_models          # comparaison des modeles
+python -m scripts.optimize_model          # GridSearchCV
+python -m scripts.train_final             # entrainement final, MLflow, .joblib
+python -m scripts.backtest_models         # backtest
+mlflow ui --backend-store-uri sqlite:///mlflow.db
+```
+
 ## Profils de trading
 
 Un bot ne regarde pas le marché à la même échelle selon la stratégie visée.
@@ -178,8 +199,8 @@ def normalize_klines(raw: list[list], symbol: str, interval: str) -> pd.DataFram
 | Étape | Objet | Échéance | État |
 |---|---|---|---|
 | 1 | Récupération des données | 24 août | ✅ |
-| 2 | Organisation des données (SQL + NoSQL, UML) | 4 septembre | ⏳ |
-| 3 | Consommation — modèle de ML | 11 septembre | — |
+| 2 | Organisation des données (SQL + NoSQL, UML) | 4 septembre | ✅ |
+| 3 | Consommation — modèle de ML | 11 septembre | ✅ |
 | 4 | Déploiement — API, Docker, dérive | 21 septembre | — |
 | 5 | Automatisation & monitoring — CI, Airflow | soutenance | — |
 | 6 | Soutenance | semaine du 5 octobre | — |

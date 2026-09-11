@@ -160,12 +160,16 @@ def main():
     parser.add_argument("--profils", nargs="+", default=list(GAGNANTS))
     args = parser.parse_args()
 
+    # Fusion avec les resultats existants : optimiser un seul profil ne doit
+    # pas effacer ceux des autres (c'est arrive).
+    anciens = (json.loads(RESULTATS.read_text(encoding="utf-8"))
+               if RESULTATS.exists() else {})
     resultats = {
         "critere": "bon sens directionnel sur les ordres passes",
         "pourquoi": "L'accuracy globale recompense la detection des phases "
                     "calmes, qui ne rapporte rien a un bot.",
         "validation": "TimeSeriesSplit a 5 decoupages",
-        "profils": {},
+        "profils": anciens.get("profils", {}),
     }
     mlflow.set_tracking_uri(SUIVI)
     mlflow.set_experiment("cryptobot_etape3")
