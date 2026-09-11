@@ -76,7 +76,13 @@ utilise bien ses trois pas de temps**, le troisième étant lu par une vue :
 
 ## Étape 3 — Machine learning ✅
 
-**Livrable** : [`docs/rapport_etape3.pdf`](docs/rapport_etape3.pdf)
+**Livrables** :
+- [`notebooks/etape3_modelisation.ipynb`](notebooks/etape3_modelisation.ipynb) —
+  le notebook complet, exécuté, lisible directement sur GitHub : vérification de
+  l'extrait figé, EDA, étiquetage, variables `ta`, comparaison des modèles,
+  métriques (accuracy, bon sens directionnel, R²), GridSearchCV, backtest,
+  MLflow et export `.joblib`
+- [`docs/rapport_etape3.pdf`](docs/rapport_etape3.pdf) — le rapport de synthèse
 
 Étiquetage par trois barrières (stop loss / take profit intégrés), 26 variables
 sans échelle, 6 modèles comparés par profil avec deux références, GridSearchCV
@@ -93,6 +99,9 @@ python -m scripts.optimize_model          # GridSearchCV
 python -m scripts.train_final             # entrainement final, MLflow, .joblib
 python -m scripts.backtest_models         # backtest
 mlflow ui --backend-store-uri sqlite:///mlflow.db
+
+# ré-exécuter le notebook de bout en bout (quelques minutes)
+python -m nbconvert --to notebook --execute --inplace notebooks/etape3_modelisation.ipynb
 ```
 
 ## Profils de trading
