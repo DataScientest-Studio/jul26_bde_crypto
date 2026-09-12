@@ -50,7 +50,9 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 from src import config
-from src.features import FAMILLES, colonnes_explicatives, construire_groupes
+from src.features import (
+    FAMILLES, ajouter_contexte_lent, colonnes_explicatives, construire_groupes,
+)
 from src.preprocessing import INTERVAL_SECONDS
 
 warnings.filterwarnings("ignore")
@@ -87,11 +89,16 @@ def etiqueter_direction(brut: pd.DataFrame) -> pd.DataFrame:
     return pd.concat(morceaux, ignore_index=True)
 
 
-def preparer(profil: str) -> pd.DataFrame:
+def preparer(profil: str, contexte: bool = False) -> pd.DataFrame:
     """Variables explicatives + sens de la prochaine bougie."""
     brut = pd.read_parquet(EXTRACT / f"{profil}.parquet")
     cible = etiqueter_direction(brut)
     variables = construire_groupes(brut, FAMILLES)
+    if contexte:
+        # Chaque bougie recoit l'etat des pas de temps plus lents. Le
+        # rattachement se fait sur leur CLOTURE, sinon c'est une fuite :
+        # voir le commentaire dans src/features.py.
+        variables = ajouter_contexte_lent(variables)
 
     cle = ["symbol", "interval", "open_time"]
     jeu = variables.merge(cible, on=cle, how="inner")
@@ -145,8 +152,8 @@ def par_confiance(probabilites: np.ndarray, y_vrai: np.ndarray,
     return lignes
 
 
-def evaluer(profil: str, part_test: float = 0.2) -> dict:
-    jeu = preparer(profil)
+def evaluer(profil: str, contexte: bool = False, part_test: float = 0.2) -> dict:
+    jeu = preparer(profil, contexte)
     hors_variables = {"rendement_suivant", "label"}
     colonnes = [c for c in colonnes_explicatives(jeu) if c not in hors_variables]
 
@@ -212,12 +219,27 @@ def evaluer(profil: str, part_test: float = 0.2) -> dict:
 def main():
     parser = argparse.ArgumentParser(description="Prediction du sens de la prochaine bougie")
     parser.add_argument("--profils", nargs="+", default=["day_trading"])
+    parser.add_argument("--contexte", action="store_true",
+                        help="Ajouter l'etat des pas de temps plus lents")
     args = parser.parse_args()
 
-    resultats = {"cible": "sens de la prochaine bougie", "profils": {}}
+    # Le fichier FUSIONNE les variantes : lancer la version avec contexte ne
+    # doit pas effacer celle sans contexte, sinon les deux ne sont plus
+    # comparables. Meme precaution que pour le rapport qualite de l'etape 1.
+    resultats = {"cible": "sens de la prochaine bougie", "variantes": {}}
+    if RESULTATS.exists():
+        resultats = json.loads(RESULTATS.read_text(encoding="utf-8"))
+        resultats.setdefault("variantes", {})
+        # Restes de l'ancien format, a plat.
+        resultats.pop("profils", None)
+        resultats.pop("contexte_multi_echelles", None)
+
+    variante = "avec_contexte" if args.contexte else "sans_contexte"
+    profils = resultats["variantes"].setdefault(variante, {})
+
     for profil in args.profils:
-        log.info("=== %s ===", profil)
-        resultats["profils"][profil] = evaluer(profil)
+        log.info("=== %s (contexte : %s) ===", profil, "oui" if args.contexte else "non")
+        profils[profil] = evaluer(profil, args.contexte)
 
     RESULTATS.write_text(json.dumps(resultats, indent=2), encoding="utf-8")
     log.info("Resultats ecrits : %s", RESULTATS)

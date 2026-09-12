@@ -1,269 +1,539 @@
 {
   "cible": "sens de la prochaine bougie",
-  "profils": {
-    "day_trading": {
-      "lignes": 453821,
-      "variables": 27,
-      "part_hausse_test": 0.4998,
-      "reference_toujours_meme_sens": 0.5002,
-      "modeles": {
-        "reference_majoritaire": {
-          "secondes": 1.1,
-          "par_confiance": [
-            {
-              "activite_pct": 100.0,
-              "bougies": 90765,
-              "accuracy": 0.4998,
-              "seuil_confiance": 1.0,
-              "rendement_moyen_brut_pct": 0.0031,
-              "rendement_moyen_net_pct": -0.1969
-            },
-            {
-              "activite_pct": 50.0,
-              "bougies": 45382,
-              "accuracy": 0.4979,
-              "seuil_confiance": 1.0,
-              "rendement_moyen_brut_pct": -0.0035,
-              "rendement_moyen_net_pct": -0.2035
-            },
-            {
-              "activite_pct": 20.0,
-              "bougies": 18153,
-              "accuracy": 0.5051,
-              "seuil_confiance": 1.0,
-              "rendement_moyen_brut_pct": 0.0052,
-              "rendement_moyen_net_pct": -0.1948
-            },
-            {
-              "activite_pct": 10.0,
-              "bougies": 9076,
-              "accuracy": 0.5065,
-              "seuil_confiance": 1.0,
-              "rendement_moyen_brut_pct": 0.0095,
-              "rendement_moyen_net_pct": -0.1905
-            },
-            {
-              "activite_pct": 5.0,
-              "bougies": 4538,
-              "accuracy": 0.5015,
-              "seuil_confiance": 1.0,
-              "rendement_moyen_brut_pct": 0.0063,
-              "rendement_moyen_net_pct": -0.1937
-            },
-            {
-              "activite_pct": 2.0,
-              "bougies": 1815,
-              "accuracy": 0.492,
-              "seuil_confiance": 1.0,
-              "rendement_moyen_brut_pct": -0.0129,
-              "rendement_moyen_net_pct": -0.2129
-            },
-            {
-              "activite_pct": 1.0,
-              "bougies": 907,
-              "accuracy": 0.5237,
-              "seuil_confiance": 1.0,
-              "rendement_moyen_brut_pct": 0.0051,
-              "rendement_moyen_net_pct": -0.1949
+  "variantes": {
+    "sans_contexte": {
+      "day_trading": {
+        "lignes": 453821,
+        "variables": 27,
+        "part_hausse_test": 0.4998,
+        "reference_toujours_meme_sens": 0.5002,
+        "modeles": {
+          "reference_majoritaire": {
+            "secondes": 1.1,
+            "par_confiance": [
+              {
+                "activite_pct": 100.0,
+                "bougies": 90765,
+                "accuracy": 0.4998,
+                "seuil_confiance": 1.0,
+                "rendement_moyen_brut_pct": 0.0031,
+                "rendement_moyen_net_pct": -0.1969
+              },
+              {
+                "activite_pct": 50.0,
+                "bougies": 45382,
+                "accuracy": 0.4979,
+                "seuil_confiance": 1.0,
+                "rendement_moyen_brut_pct": -0.0035,
+                "rendement_moyen_net_pct": -0.2035
+              },
+              {
+                "activite_pct": 20.0,
+                "bougies": 18153,
+                "accuracy": 0.5051,
+                "seuil_confiance": 1.0,
+                "rendement_moyen_brut_pct": 0.0052,
+                "rendement_moyen_net_pct": -0.1948
+              },
+              {
+                "activite_pct": 10.0,
+                "bougies": 9076,
+                "accuracy": 0.5065,
+                "seuil_confiance": 1.0,
+                "rendement_moyen_brut_pct": 0.0095,
+                "rendement_moyen_net_pct": -0.1905
+              },
+              {
+                "activite_pct": 5.0,
+                "bougies": 4538,
+                "accuracy": 0.5015,
+                "seuil_confiance": 1.0,
+                "rendement_moyen_brut_pct": 0.0063,
+                "rendement_moyen_net_pct": -0.1937
+              },
+              {
+                "activite_pct": 2.0,
+                "bougies": 1815,
+                "accuracy": 0.492,
+                "seuil_confiance": 1.0,
+                "rendement_moyen_brut_pct": -0.0129,
+                "rendement_moyen_net_pct": -0.2129
+              },
+              {
+                "activite_pct": 1.0,
+                "bougies": 907,
+                "accuracy": 0.5237,
+                "seuil_confiance": 1.0,
+                "rendement_moyen_brut_pct": 0.0051,
+                "rendement_moyen_net_pct": -0.1949
+              }
+            ]
+          },
+          "regression_logistique": {
+            "secondes": 1.5,
+            "par_confiance": [
+              {
+                "activite_pct": 100.0,
+                "bougies": 90765,
+                "accuracy": 0.5251,
+                "seuil_confiance": 0.5,
+                "rendement_moyen_brut_pct": -0.0004,
+                "rendement_moyen_net_pct": -0.2004
+              },
+              {
+                "activite_pct": 50.0,
+                "bougies": 45382,
+                "accuracy": 0.5431,
+                "seuil_confiance": 0.5234,
+                "rendement_moyen_brut_pct": 0.0017,
+                "rendement_moyen_net_pct": -0.1983
+              },
+              {
+                "activite_pct": 20.0,
+                "bougies": 18153,
+                "accuracy": 0.5588,
+                "seuil_confiance": 0.5428,
+                "rendement_moyen_brut_pct": 0.0038,
+                "rendement_moyen_net_pct": -0.1962
+              },
+              {
+                "activite_pct": 10.0,
+                "bougies": 9076,
+                "accuracy": 0.5692,
+                "seuil_confiance": 0.5532,
+                "rendement_moyen_brut_pct": 0.0075,
+                "rendement_moyen_net_pct": -0.1925
+              },
+              {
+                "activite_pct": 5.0,
+                "bougies": 4538,
+                "accuracy": 0.5681,
+                "seuil_confiance": 0.5612,
+                "rendement_moyen_brut_pct": 0.0034,
+                "rendement_moyen_net_pct": -0.1966
+              },
+              {
+                "activite_pct": 2.0,
+                "bougies": 1815,
+                "accuracy": 0.5587,
+                "seuil_confiance": 0.5698,
+                "rendement_moyen_brut_pct": 0.0,
+                "rendement_moyen_net_pct": -0.2
+              },
+              {
+                "activite_pct": 1.0,
+                "bougies": 907,
+                "accuracy": 0.5546,
+                "seuil_confiance": 0.5751,
+                "rendement_moyen_brut_pct": 0.0181,
+                "rendement_moyen_net_pct": -0.1819
+              }
+            ]
+          },
+          "gradient_boosting": {
+            "secondes": 2.9,
+            "par_confiance": [
+              {
+                "activite_pct": 100.0,
+                "bougies": 90765,
+                "accuracy": 0.5243,
+                "seuil_confiance": 0.5,
+                "rendement_moyen_brut_pct": 0.0016,
+                "rendement_moyen_net_pct": -0.1984
+              },
+              {
+                "activite_pct": 50.0,
+                "bougies": 45382,
+                "accuracy": 0.5422,
+                "seuil_confiance": 0.5234,
+                "rendement_moyen_brut_pct": 0.0024,
+                "rendement_moyen_net_pct": -0.1976
+              },
+              {
+                "activite_pct": 20.0,
+                "bougies": 18153,
+                "accuracy": 0.5585,
+                "seuil_confiance": 0.5449,
+                "rendement_moyen_brut_pct": 0.0082,
+                "rendement_moyen_net_pct": -0.1918
+              },
+              {
+                "activite_pct": 10.0,
+                "bougies": 9076,
+                "accuracy": 0.5588,
+                "seuil_confiance": 0.5579,
+                "rendement_moyen_brut_pct": 0.0074,
+                "rendement_moyen_net_pct": -0.1926
+              },
+              {
+                "activite_pct": 5.0,
+                "bougies": 4538,
+                "accuracy": 0.5699,
+                "seuil_confiance": 0.5685,
+                "rendement_moyen_brut_pct": 0.0091,
+                "rendement_moyen_net_pct": -0.1909
+              },
+              {
+                "activite_pct": 2.0,
+                "bougies": 1815,
+                "accuracy": 0.5669,
+                "seuil_confiance": 0.5798,
+                "rendement_moyen_brut_pct": 0.0097,
+                "rendement_moyen_net_pct": -0.1903
+              },
+              {
+                "activite_pct": 1.0,
+                "bougies": 907,
+                "accuracy": 0.5656,
+                "seuil_confiance": 0.5876,
+                "rendement_moyen_brut_pct": 0.0024,
+                "rendement_moyen_net_pct": -0.1976
+              }
+            ],
+            "par_pas_de_temps": {
+              "15m": {
+                "bougies": 69067,
+                "accuracy": 0.5238
+              },
+              "1h": {
+                "bougies": 17353,
+                "accuracy": 0.5252
+              },
+              "4h": {
+                "bougies": 4345,
+                "accuracy": 0.5275
+              }
             }
-          ]
-        },
-        "regression_logistique": {
-          "secondes": 1.5,
-          "par_confiance": [
-            {
-              "activite_pct": 100.0,
-              "bougies": 90765,
-              "accuracy": 0.5251,
-              "seuil_confiance": 0.5,
-              "rendement_moyen_brut_pct": -0.0004,
-              "rendement_moyen_net_pct": -0.2004
-            },
-            {
-              "activite_pct": 50.0,
-              "bougies": 45382,
-              "accuracy": 0.5431,
-              "seuil_confiance": 0.5234,
-              "rendement_moyen_brut_pct": 0.0017,
-              "rendement_moyen_net_pct": -0.1983
-            },
-            {
-              "activite_pct": 20.0,
-              "bougies": 18153,
-              "accuracy": 0.5588,
-              "seuil_confiance": 0.5428,
-              "rendement_moyen_brut_pct": 0.0038,
-              "rendement_moyen_net_pct": -0.1962
-            },
-            {
-              "activite_pct": 10.0,
-              "bougies": 9076,
-              "accuracy": 0.5692,
-              "seuil_confiance": 0.5532,
-              "rendement_moyen_brut_pct": 0.0075,
-              "rendement_moyen_net_pct": -0.1925
-            },
-            {
-              "activite_pct": 5.0,
-              "bougies": 4538,
-              "accuracy": 0.5681,
-              "seuil_confiance": 0.5612,
-              "rendement_moyen_brut_pct": 0.0034,
-              "rendement_moyen_net_pct": -0.1966
-            },
-            {
-              "activite_pct": 2.0,
-              "bougies": 1815,
-              "accuracy": 0.5587,
-              "seuil_confiance": 0.5698,
-              "rendement_moyen_brut_pct": 0.0,
-              "rendement_moyen_net_pct": -0.2
-            },
-            {
-              "activite_pct": 1.0,
-              "bougies": 907,
-              "accuracy": 0.5546,
-              "seuil_confiance": 0.5751,
-              "rendement_moyen_brut_pct": 0.0181,
-              "rendement_moyen_net_pct": -0.1819
-            }
-          ]
-        },
-        "gradient_boosting": {
-          "secondes": 2.9,
-          "par_confiance": [
-            {
-              "activite_pct": 100.0,
-              "bougies": 90765,
-              "accuracy": 0.5243,
-              "seuil_confiance": 0.5,
-              "rendement_moyen_brut_pct": 0.0016,
-              "rendement_moyen_net_pct": -0.1984
-            },
-            {
-              "activite_pct": 50.0,
-              "bougies": 45382,
-              "accuracy": 0.5422,
-              "seuil_confiance": 0.5234,
-              "rendement_moyen_brut_pct": 0.0024,
-              "rendement_moyen_net_pct": -0.1976
-            },
-            {
-              "activite_pct": 20.0,
-              "bougies": 18153,
-              "accuracy": 0.5585,
-              "seuil_confiance": 0.5449,
-              "rendement_moyen_brut_pct": 0.0082,
-              "rendement_moyen_net_pct": -0.1918
-            },
-            {
-              "activite_pct": 10.0,
-              "bougies": 9076,
-              "accuracy": 0.5588,
-              "seuil_confiance": 0.5579,
-              "rendement_moyen_brut_pct": 0.0074,
-              "rendement_moyen_net_pct": -0.1926
-            },
-            {
-              "activite_pct": 5.0,
-              "bougies": 4538,
-              "accuracy": 0.5699,
-              "seuil_confiance": 0.5685,
-              "rendement_moyen_brut_pct": 0.0091,
-              "rendement_moyen_net_pct": -0.1909
-            },
-            {
-              "activite_pct": 2.0,
-              "bougies": 1815,
-              "accuracy": 0.5669,
-              "seuil_confiance": 0.5798,
-              "rendement_moyen_brut_pct": 0.0097,
-              "rendement_moyen_net_pct": -0.1903
-            },
-            {
-              "activite_pct": 1.0,
-              "bougies": 907,
-              "accuracy": 0.5656,
-              "seuil_confiance": 0.5876,
-              "rendement_moyen_brut_pct": 0.0024,
-              "rendement_moyen_net_pct": -0.1976
-            }
-          ],
-          "par_pas_de_temps": {
-            "15m": {
-              "bougies": 69067,
-              "accuracy": 0.5238
-            },
-            "1h": {
-              "bougies": 17353,
-              "accuracy": 0.5252
-            },
-            "4h": {
-              "bougies": 4345,
-              "accuracy": 0.5275
-            }
+          },
+          "foret_aleatoire": {
+            "secondes": 30.2,
+            "par_confiance": [
+              {
+                "activite_pct": 100.0,
+                "bougies": 90765,
+                "accuracy": 0.524,
+                "seuil_confiance": 0.5,
+                "rendement_moyen_brut_pct": 0.0012,
+                "rendement_moyen_net_pct": -0.1988
+              },
+              {
+                "activite_pct": 50.0,
+                "bougies": 45382,
+                "accuracy": 0.5358,
+                "seuil_confiance": 0.5276,
+                "rendement_moyen_brut_pct": 0.0018,
+                "rendement_moyen_net_pct": -0.1982
+              },
+              {
+                "activite_pct": 20.0,
+                "bougies": 18153,
+                "accuracy": 0.5556,
+                "seuil_confiance": 0.5538,
+                "rendement_moyen_brut_pct": 0.0068,
+                "rendement_moyen_net_pct": -0.1932
+              },
+              {
+                "activite_pct": 10.0,
+                "bougies": 9076,
+                "accuracy": 0.5563,
+                "seuil_confiance": 0.57,
+                "rendement_moyen_brut_pct": 0.0081,
+                "rendement_moyen_net_pct": -0.1919
+              },
+              {
+                "activite_pct": 5.0,
+                "bougies": 4538,
+                "accuracy": 0.5615,
+                "seuil_confiance": 0.5838,
+                "rendement_moyen_brut_pct": 0.0087,
+                "rendement_moyen_net_pct": -0.1913
+              },
+              {
+                "activite_pct": 2.0,
+                "bougies": 1815,
+                "accuracy": 0.5752,
+                "seuil_confiance": 0.6001,
+                "rendement_moyen_brut_pct": 0.016,
+                "rendement_moyen_net_pct": -0.184
+              },
+              {
+                "activite_pct": 1.0,
+                "bougies": 907,
+                "accuracy": 0.5689,
+                "seuil_confiance": 0.6111,
+                "rendement_moyen_brut_pct": 0.0093,
+                "rendement_moyen_net_pct": -0.1907
+              }
+            ]
           }
-        },
-        "foret_aleatoire": {
-          "secondes": 30.5,
-          "par_confiance": [
-            {
-              "activite_pct": 100.0,
-              "bougies": 90765,
-              "accuracy": 0.524,
-              "seuil_confiance": 0.5,
-              "rendement_moyen_brut_pct": 0.0012,
-              "rendement_moyen_net_pct": -0.1988
-            },
-            {
-              "activite_pct": 50.0,
-              "bougies": 45382,
-              "accuracy": 0.5358,
-              "seuil_confiance": 0.5276,
-              "rendement_moyen_brut_pct": 0.0018,
-              "rendement_moyen_net_pct": -0.1982
-            },
-            {
-              "activite_pct": 20.0,
-              "bougies": 18153,
-              "accuracy": 0.5556,
-              "seuil_confiance": 0.5538,
-              "rendement_moyen_brut_pct": 0.0068,
-              "rendement_moyen_net_pct": -0.1932
-            },
-            {
-              "activite_pct": 10.0,
-              "bougies": 9076,
-              "accuracy": 0.5563,
-              "seuil_confiance": 0.57,
-              "rendement_moyen_brut_pct": 0.0081,
-              "rendement_moyen_net_pct": -0.1919
-            },
-            {
-              "activite_pct": 5.0,
-              "bougies": 4538,
-              "accuracy": 0.5615,
-              "seuil_confiance": 0.5838,
-              "rendement_moyen_brut_pct": 0.0087,
-              "rendement_moyen_net_pct": -0.1913
-            },
-            {
-              "activite_pct": 2.0,
-              "bougies": 1815,
-              "accuracy": 0.5752,
-              "seuil_confiance": 0.6001,
-              "rendement_moyen_brut_pct": 0.016,
-              "rendement_moyen_net_pct": -0.184
-            },
-            {
-              "activite_pct": 1.0,
-              "bougies": 907,
-              "accuracy": 0.5689,
-              "seuil_confiance": 0.6111,
-              "rendement_moyen_brut_pct": 0.0093,
-              "rendement_moyen_net_pct": -0.1907
+        }
+      }
+    },
+    "avec_contexte": {
+      "day_trading": {
+        "lignes": 453821,
+        "variables": 35,
+        "part_hausse_test": 0.4998,
+        "reference_toujours_meme_sens": 0.5002,
+        "modeles": {
+          "reference_majoritaire": {
+            "secondes": 1.3,
+            "par_confiance": [
+              {
+                "activite_pct": 100.0,
+                "bougies": 90765,
+                "accuracy": 0.4998,
+                "seuil_confiance": 1.0,
+                "rendement_moyen_brut_pct": 0.0031,
+                "rendement_moyen_net_pct": -0.1969
+              },
+              {
+                "activite_pct": 50.0,
+                "bougies": 45382,
+                "accuracy": 0.4979,
+                "seuil_confiance": 1.0,
+                "rendement_moyen_brut_pct": -0.0035,
+                "rendement_moyen_net_pct": -0.2035
+              },
+              {
+                "activite_pct": 20.0,
+                "bougies": 18153,
+                "accuracy": 0.5051,
+                "seuil_confiance": 1.0,
+                "rendement_moyen_brut_pct": 0.0052,
+                "rendement_moyen_net_pct": -0.1948
+              },
+              {
+                "activite_pct": 10.0,
+                "bougies": 9076,
+                "accuracy": 0.5065,
+                "seuil_confiance": 1.0,
+                "rendement_moyen_brut_pct": 0.0095,
+                "rendement_moyen_net_pct": -0.1905
+              },
+              {
+                "activite_pct": 5.0,
+                "bougies": 4538,
+                "accuracy": 0.5015,
+                "seuil_confiance": 1.0,
+                "rendement_moyen_brut_pct": 0.0063,
+                "rendement_moyen_net_pct": -0.1937
+              },
+              {
+                "activite_pct": 2.0,
+                "bougies": 1815,
+                "accuracy": 0.492,
+                "seuil_confiance": 1.0,
+                "rendement_moyen_brut_pct": -0.0129,
+                "rendement_moyen_net_pct": -0.2129
+              },
+              {
+                "activite_pct": 1.0,
+                "bougies": 907,
+                "accuracy": 0.5237,
+                "seuil_confiance": 1.0,
+                "rendement_moyen_brut_pct": 0.0051,
+                "rendement_moyen_net_pct": -0.1949
+              }
+            ]
+          },
+          "regression_logistique": {
+            "secondes": 1.8,
+            "par_confiance": [
+              {
+                "activite_pct": 100.0,
+                "bougies": 90765,
+                "accuracy": 0.5256,
+                "seuil_confiance": 0.5,
+                "rendement_moyen_brut_pct": 0.0001,
+                "rendement_moyen_net_pct": -0.1999
+              },
+              {
+                "activite_pct": 50.0,
+                "bougies": 45382,
+                "accuracy": 0.5428,
+                "seuil_confiance": 0.5235,
+                "rendement_moyen_brut_pct": 0.0021,
+                "rendement_moyen_net_pct": -0.1979
+              },
+              {
+                "activite_pct": 20.0,
+                "bougies": 18153,
+                "accuracy": 0.5619,
+                "seuil_confiance": 0.5433,
+                "rendement_moyen_brut_pct": 0.0049,
+                "rendement_moyen_net_pct": -0.1951
+              },
+              {
+                "activite_pct": 10.0,
+                "bougies": 9076,
+                "accuracy": 0.5688,
+                "seuil_confiance": 0.5537,
+                "rendement_moyen_brut_pct": 0.0062,
+                "rendement_moyen_net_pct": -0.1938
+              },
+              {
+                "activite_pct": 5.0,
+                "bougies": 4538,
+                "accuracy": 0.5784,
+                "seuil_confiance": 0.5618,
+                "rendement_moyen_brut_pct": 0.0087,
+                "rendement_moyen_net_pct": -0.1913
+              },
+              {
+                "activite_pct": 2.0,
+                "bougies": 1815,
+                "accuracy": 0.5647,
+                "seuil_confiance": 0.5705,
+                "rendement_moyen_brut_pct": -0.0058,
+                "rendement_moyen_net_pct": -0.2058
+              },
+              {
+                "activite_pct": 1.0,
+                "bougies": 907,
+                "accuracy": 0.5623,
+                "seuil_confiance": 0.5758,
+                "rendement_moyen_brut_pct": 0.0234,
+                "rendement_moyen_net_pct": -0.1766
+              }
+            ]
+          },
+          "gradient_boosting": {
+            "secondes": 4.0,
+            "par_confiance": [
+              {
+                "activite_pct": 100.0,
+                "bougies": 90765,
+                "accuracy": 0.5236,
+                "seuil_confiance": 0.5,
+                "rendement_moyen_brut_pct": 0.0015,
+                "rendement_moyen_net_pct": -0.1985
+              },
+              {
+                "activite_pct": 50.0,
+                "bougies": 45382,
+                "accuracy": 0.5399,
+                "seuil_confiance": 0.5252,
+                "rendement_moyen_brut_pct": 0.0035,
+                "rendement_moyen_net_pct": -0.1965
+              },
+              {
+                "activite_pct": 20.0,
+                "bougies": 18153,
+                "accuracy": 0.5524,
+                "seuil_confiance": 0.5481,
+                "rendement_moyen_brut_pct": 0.0074,
+                "rendement_moyen_net_pct": -0.1926
+              },
+              {
+                "activite_pct": 10.0,
+                "bougies": 9076,
+                "accuracy": 0.5632,
+                "seuil_confiance": 0.562,
+                "rendement_moyen_brut_pct": 0.0156,
+                "rendement_moyen_net_pct": -0.1844
+              },
+              {
+                "activite_pct": 5.0,
+                "bougies": 4538,
+                "accuracy": 0.5734,
+                "seuil_confiance": 0.5741,
+                "rendement_moyen_brut_pct": 0.0204,
+                "rendement_moyen_net_pct": -0.1796
+              },
+              {
+                "activite_pct": 2.0,
+                "bougies": 1815,
+                "accuracy": 0.5658,
+                "seuil_confiance": 0.5887,
+                "rendement_moyen_brut_pct": 0.0271,
+                "rendement_moyen_net_pct": -0.1729
+              },
+              {
+                "activite_pct": 1.0,
+                "bougies": 907,
+                "accuracy": 0.5502,
+                "seuil_confiance": 0.5993,
+                "rendement_moyen_brut_pct": 0.0314,
+                "rendement_moyen_net_pct": -0.1686
+              }
+            ],
+            "par_pas_de_temps": {
+              "15m": {
+                "bougies": 69067,
+                "accuracy": 0.5218
+              },
+              "1h": {
+                "bougies": 17353,
+                "accuracy": 0.5283
+              },
+              "4h": {
+                "bougies": 4345,
+                "accuracy": 0.5339
+              }
             }
-          ]
+          },
+          "foret_aleatoire": {
+            "secondes": 29.7,
+            "par_confiance": [
+              {
+                "activite_pct": 100.0,
+                "bougies": 90765,
+                "accuracy": 0.5225,
+                "seuil_confiance": 0.5,
+                "rendement_moyen_brut_pct": 0.0012,
+                "rendement_moyen_net_pct": -0.1988
+              },
+              {
+                "activite_pct": 50.0,
+                "bougies": 45382,
+                "accuracy": 0.5372,
+                "seuil_confiance": 0.527,
+                "rendement_moyen_brut_pct": 0.0029,
+                "rendement_moyen_net_pct": -0.1971
+              },
+              {
+                "activite_pct": 20.0,
+                "bougies": 18153,
+                "accuracy": 0.5524,
+                "seuil_confiance": 0.5525,
+                "rendement_moyen_brut_pct": 0.0061,
+                "rendement_moyen_net_pct": -0.1939
+              },
+              {
+                "activite_pct": 10.0,
+                "bougies": 9076,
+                "accuracy": 0.5639,
+                "seuil_confiance": 0.568,
+                "rendement_moyen_brut_pct": 0.0096,
+                "rendement_moyen_net_pct": -0.1904
+              },
+              {
+                "activite_pct": 5.0,
+                "bougies": 4538,
+                "accuracy": 0.5791,
+                "seuil_confiance": 0.5814,
+                "rendement_moyen_brut_pct": 0.018,
+                "rendement_moyen_net_pct": -0.182
+              },
+              {
+                "activite_pct": 2.0,
+                "bougies": 1815,
+                "accuracy": 0.5813,
+                "seuil_confiance": 0.5968,
+                "rendement_moyen_brut_pct": 0.0171,
+                "rendement_moyen_net_pct": -0.1829
+              },
+              {
+                "activite_pct": 1.0,
+                "bougies": 907,
+                "accuracy": 0.5799,
+                "seuil_confiance": 0.6076,
+                "rendement_moyen_brut_pct": 0.0114,
+                "rendement_moyen_net_pct": -0.1886
+              }
+            ]
+          }
         }
       }
     }
