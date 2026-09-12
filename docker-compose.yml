@@ -59,7 +59,62 @@ services:
       retries: 12
       start_period: 20s
 
+  # ---------------------------------------------------------------------------
+  #  Interfaces web d'exploration
+  #
+  #  Elles ne servent QU'A REGARDER les donnees : aucun script du projet n'en
+  #  depend, le pipeline fonctionne sans elles. Elles sont pratiques pour une
+  #  demonstration ou une capture d'ecran.
+  #
+  #  Les deux n'ecoutent que sur la machine locale, avec les identifiants de
+  #  developpement. Sur un vrai serveur, il faudrait une authentification.
+  # ---------------------------------------------------------------------------
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: crypto_pgadmin
+    restart: unless-stopped
+    environment:
+      # Identifiant de connexion, jamais utilise pour envoyer un courriel.
+      # Le domaine doit exister (pgAdmin refuse .local, .test et compagnie).
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@cryptobot.fr}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-cryptobot}
+      # Mode bureau : ni ecran de connexion, ni mot de passe maitre. On arrive
+      # directement sur la base, ce qui evite deux clics avant chaque capture.
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+      # Serveur deja enregistre : voir docker/pgadmin/servers.json
+      - ./docker/pgadmin/servers.json:/pgadmin4/servers.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  mongo-express:
+    image: mongo-express:1.0.2
+    container_name: crypto_mongo_express
+    restart: unless-stopped
+    environment:
+      # `mongo` est le nom du service : les conteneurs se parlent par ce nom,
+      # pas par localhost, qui designerait le conteneur lui-meme.
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_USER:-cryptobot}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_PASSWORD:-cryptobot}
+      ME_CONFIG_MONGODB_ENABLE_ADMIN: "true"
+      # Pas de seconde authentification par-dessus : interface locale seulement.
+      ME_CONFIG_BASICAUTH: "false"
+    ports:
+      - "${MONGO_EXPRESS_PORT:-8081}:8081"
+    depends_on:
+      mongo:
+        condition: service_healthy
+
 volumes:
   # Volumes nommes : les donnees survivent a un `docker compose down`.
   postgres_data:
   mongo_data:
+  # Preferences de pgAdmin (serveurs enregistres, mise en page).
+  pgadmin_data:

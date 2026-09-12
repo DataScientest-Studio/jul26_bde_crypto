@@ -1,0 +1,15 @@
+{
+  "_comment": "Connexion chargee automatiquement au premier demarrage de pgAdmin : le serveur est deja enregistre, il n'y a rien a saisir a l'ouverture (mot de passe cryptobot a la premiere connexion).",
+  "Servers": {
+    "1": {
+      "Name": "CryptoBot - TimescaleDB",
+      "Group": "CryptoBot",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "cryptobot",
+      "Username": "cryptobot",
+      "SSLMode": "prefer",
+      "Comment": "Couche exploitable : candles_scalping / candles_day_trading / candles_swing et les vues par profil"
+    }
+  }
+}

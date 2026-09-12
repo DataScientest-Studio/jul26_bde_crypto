@@ -39,9 +39,28 @@ python -m scripts.check_db             # état des deux bases
 Les scripts de `sql/` et `mongo/` sont joués automatiquement à la création
 des conteneurs. Pour les rejouer après modification : `docker compose down -v`.
 
+### Regarder les données dans le navigateur
+
+`docker compose up -d` démarre aussi deux interfaces web, pratiques pour
+explorer les bases ou faire une capture d'écran :
+
+| Interface | Adresse | Contenu |
+|---|---|---|
+| pgAdmin | <http://localhost:5050> | TimescaleDB : `candles_*`, les vues par profil, les tables de référence |
+| mongo-express | <http://localhost:8081> | MongoDB : `raw_klines`, `exchange_info`, la couche brute |
+
+Le serveur PostgreSQL est déjà enregistré dans pgAdmin
+(`docker/pgadmin/servers.json`) : il suffit de le déplier et de saisir le mot
+de passe `cryptobot` à la première connexion.
+
+Ces deux interfaces ne servent **qu'à regarder** : aucun script du projet n'en
+dépend. Elles n'écoutent que sur la machine locale et utilisent les
+identifiants de développement ; sur un vrai serveur, il faudrait les protéger.
+
 | Fichier | Rôle |
 |---|---|
-| `docker-compose.yml` | Les deux bases, avec healthchecks et volumes nommés |
+| `docker-compose.yml` | Les deux bases, avec healthchecks et volumes nommés, plus les deux interfaces web |
+| `docker/pgadmin/servers.json` | Connexion PostgreSQL pré-enregistrée dans pgAdmin |
 | `sql/01_schema.sql` | Tables, contraintes, hypertables TimescaleDB, index |
 | `sql/02_seed.sql` | Profils, pas de temps, règle de propriété |
 | `sql/03_views.sql` | `v_scalping`, `v_day_trading`, `v_swing`, `v_coverage` |
