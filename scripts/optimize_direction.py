@@ -22,6 +22,7 @@ reellement, donc c'est ce qu'il faut optimiser.
 Usage :
     python -m scripts.optimize_direction
     python -m scripts.optimize_direction --profil day_trading
+    python -m scripts.optimize_direction --activite 0.02 --plafond 0   # 2 %, toutes les lignes
 """
 from __future__ import annotations
 
@@ -53,8 +54,14 @@ log = logging.getLogger("optimisation")
 RESULTATS = config.DOCS / "optimisation_direction.json"
 
 # FIGE AVANT L'EXPERIENCE : ne pas toucher apres avoir vu les resultats.
+# Modifiable en ligne de commande, mais toujours AVANT de lancer.
 ACTIVITE = 0.05
 PLAFOND = 150_000  # lignes les plus recentes, pour tenir le temps de calcul
+
+# Niveaux mesures en validation, a titre de comparaison. Seul ACTIVITE sert
+# a choisir les reglages ; les autres permettent de verifier, SANS toucher
+# au test, si un niveau plus selectif tient ses promesses.
+NIVEAUX_VALIDATION = (0.10, 0.05, 0.02, 0.01)
 
 GRILLES = {
     "foret_aleatoire": (
@@ -80,18 +87,20 @@ GRILLES = {
 }
 
 
-def score_selectif(estimateur, X, y) -> float:
-    """Accuracy sur les ACTIVITE % de bougies les plus sures.
+def scoreur(activite: float):
+    """Fabrique un score "accuracy sur les `activite` % les plus sures".
 
     Signature (estimateur, X, y) : c'est ce qu'attend GridSearchCV pour un
     score personnalise. La confiance d'une prediction binaire est la distance
     a 0,5 - une probabilite de 0,52 comme de 0,48 veut dire "je ne sais pas".
     """
-    probabilites = estimateur.predict_proba(X)[:, 1]
-    prediction = (probabilites >= 0.5).astype(int)
-    confiance = np.abs(probabilites - 0.5)
-    garde = np.argsort(-confiance)[:max(int(len(probabilites) * ACTIVITE), 1)]
-    return float((prediction[garde] == np.asarray(y)[garde]).mean())
+    def score(estimateur, X, y) -> float:
+        probabilites = estimateur.predict_proba(X)[:, 1]
+        prediction = (probabilites >= 0.5).astype(int)
+        confiance = np.abs(probabilites - 0.5)
+        garde = np.argsort(-confiance)[:max(int(len(probabilites) * activite), 1)]
+        return float((prediction[garde] == np.asarray(y)[garde]).mean())
+    return score
 
 
 def mesure_finale(pipeline, X_test, y_test, rendements) -> dict:
@@ -116,15 +125,25 @@ def mesure_finale(pipeline, X_test, y_test, rendements) -> dict:
 
 
 def main():
+    global ACTIVITE
     parser = argparse.ArgumentParser(description="Optimisation sur le sens de la bougie")
     parser.add_argument("--profil", default="day_trading")
+    parser.add_argument("--activite", type=float, default=ACTIVITE,
+                        help="Part des bougies ou le modele se prononce (0.02 = 2 %%)")
+    parser.add_argument("--plafond", type=int, default=PLAFOND,
+                        help="Lignes les plus recentes a garder (0 = toutes)")
     args = parser.parse_args()
+
+    ACTIVITE = args.activite
+    cle_score = f"selectif_{ACTIVITE * 100:g}pct"
+    scores = {f"selectif_{n * 100:g}pct": scoreur(n)
+              for n in sorted(set(NIVEAUX_VALIDATION) | {ACTIVITE}, reverse=True)}
 
     # Le contexte multi-echelles est retenu : il apportait +1 point dans le
     # regime selectif. Decision prise avant cette experience.
     jeu = preparer(args.profil, contexte=True)
-    if len(jeu) > PLAFOND:
-        jeu = jeu.tail(PLAFOND).reset_index(drop=True)
+    if args.plafond and len(jeu) > args.plafond:
+        jeu = jeu.tail(args.plafond).reset_index(drop=True)
 
     hors_variables = {"rendement_suivant", "label"}
     colonnes = [c for c in colonnes_explicatives(jeu) if c not in hors_variables]
@@ -144,7 +163,7 @@ def main():
     # immediate. Jamais l'inverse.
     decoupage = TimeSeriesSplit(n_splits=3)
 
-    resultats = {"activite": ACTIVITE, "lignes": len(X), "variables": len(colonnes),
+    resultats = {"activite": ACTIVITE, "plafond": args.plafond, "lignes": len(X), "variables": len(colonnes),
                  "contexte_multi_echelles": True, "modeles": {}}
     meilleur = None
 
@@ -155,8 +174,10 @@ def main():
             ("modele", modele),
         ])
         recherche = GridSearchCV(
-            pipeline, grille, scoring=score_selectif, cv=decoupage,
-            n_jobs=1, refit=True, verbose=0,
+            # Plusieurs scores calcules, mais les reglages sont choisis
+            # UNIQUEMENT sur celui du niveau fige (refit=cle_score).
+            pipeline, grille, scoring=scores, cv=decoupage,
+            n_jobs=1, refit=cle_score, verbose=0,
         )
         t0 = time.time()
         recherche.fit(X_train, y_train)
@@ -166,11 +187,18 @@ def main():
                  nom, recherche.best_score_, len(recherche.cv_results_["params"]), secondes)
         for parametre, valeur in recherche.best_params_.items():
             log.info("      %-32s %s", parametre.replace("modele__", ""), valeur)
+        par_niveau = {
+            nom_score: round(float(recherche.cv_results_[f"mean_test_{nom_score}"][recherche.best_index_]), 4)
+            for nom_score in scores
+        }
+        log.info("      validation par niveau : %s",
+                 " | ".join(f"{k.replace('selectif_', '')} {v:.4f}" for k, v in par_niveau.items()))
 
         resultats["modeles"][nom] = {
             "score_validation": round(float(recherche.best_score_), 4),
             "parametres": {k.replace("modele__", ""): v
                            for k, v in recherche.best_params_.items()},
+            "validation_par_niveau": par_niveau,
             "combinaisons": len(recherche.cv_results_["params"]),
             "secondes": secondes,
         }
@@ -194,7 +222,14 @@ def main():
     log.info("   objectif 0,60       %s",
              "ATTEINT" if final["accuracy_selective"] >= 0.60 else "NON ATTEINT")
 
-    RESULTATS.write_text(json.dumps(resultats, indent=2), encoding="utf-8")
+    # Fusion par niveau : le run a 2 % n'efface pas celui a 5 %.
+    tous = {}
+    if RESULTATS.exists():
+        tous = json.loads(RESULTATS.read_text(encoding="utf-8"))
+        if "activite" in tous:  # ancien format, a plat : c'etait le run a 5 %
+            tous = {"selectif_5pct_plafond_150000": tous}
+    tous[f"{cle_score}_plafond_{args.plafond or 'aucun'}"] = resultats
+    RESULTATS.write_text(json.dumps(tous, indent=2), encoding="utf-8")
     log.info("Resultats ecrits : %s", RESULTATS)
 
 

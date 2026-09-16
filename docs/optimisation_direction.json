@@ -1,48 +1,117 @@
 {
-  "activite": 0.05,
-  "lignes": 150000,
-  "variables": 35,
-  "contexte_multi_echelles": true,
-  "modeles": {
-    "foret_aleatoire": {
+  "selectif_5pct_plafond_150000": {
+    "activite": 0.05,
+    "lignes": 150000,
+    "variables": 35,
+    "contexte_multi_echelles": true,
+    "modeles": {
+      "foret_aleatoire": {
+        "score_validation": 0.5709,
+        "parametres": {
+          "max_features": 0.5,
+          "min_samples_leaf": 20,
+          "n_estimators": 400
+        },
+        "combinaisons": 12,
+        "secondes": 758.5
+      },
+      "gradient_boosting": {
+        "score_validation": 0.5622,
+        "parametres": {
+          "learning_rate": 0.05,
+          "max_iter": 200,
+          "max_leaf_nodes": 63
+        },
+        "combinaisons": 12,
+        "secondes": 28.4
+      },
+      "regression_logistique": {
+        "score_validation": 0.5667,
+        "parametres": {
+          "C": 0.1
+        },
+        "combinaisons": 3,
+        "secondes": 3.5
+      }
+    },
+    "retenu": {
+      "modele": "foret_aleatoire",
       "score_validation": 0.5709,
-      "parametres": {
-        "max_features": 0.5,
-        "min_samples_leaf": 20,
-        "n_estimators": 400
-      },
-      "combinaisons": 12,
-      "secondes": 758.5
-    },
-    "gradient_boosting": {
-      "score_validation": 0.5622,
-      "parametres": {
-        "learning_rate": 0.05,
-        "max_iter": 200,
-        "max_leaf_nodes": 63
-      },
-      "combinaisons": 12,
-      "secondes": 28.4
-    },
-    "regression_logistique": {
-      "score_validation": 0.5667,
-      "parametres": {
-        "C": 0.1
-      },
-      "combinaisons": 3,
-      "secondes": 3.5
+      "test": {
+        "bougies": 1500,
+        "accuracy_selective": 0.5693,
+        "accuracy_globale": 0.5204,
+        "seuil_confiance": 0.6079,
+        "rendement_moyen_brut_pct": -0.0095,
+        "rendement_moyen_net_pct": -0.2095
+      }
     }
   },
-  "retenu": {
-    "modele": "foret_aleatoire",
-    "score_validation": 0.5709,
-    "test": {
-      "bougies": 1500,
-      "accuracy_selective": 0.5693,
-      "accuracy_globale": 0.5204,
-      "seuil_confiance": 0.6079,
-      "rendement_moyen_brut_pct": -0.0095,
-      "rendement_moyen_net_pct": -0.2095
+  "selectif_2pct_plafond_aucun": {
+    "activite": 0.02,
+    "plafond": 0,
+    "lignes": 453821,
+    "variables": 35,
+    "contexte_multi_echelles": true,
+    "modeles": {
+      "foret_aleatoire": {
+        "score_validation": 0.5697,
+        "parametres": {
+          "max_features": "sqrt",
+          "min_samples_leaf": 100,
+          "n_estimators": 400
+        },
+        "validation_par_niveau": {
+          "selectif_10pct": 0.5548,
+          "selectif_5pct": 0.5605,
+          "selectif_2pct": 0.5697,
+          "selectif_1pct": 0.5741
+        },
+        "combinaisons": 12,
+        "secondes": 3555.5
+      },
+      "gradient_boosting": {
+        "score_validation": 0.5601,
+        "parametres": {
+          "learning_rate": 0.05,
+          "max_iter": 200,
+          "max_leaf_nodes": 63
+        },
+        "validation_par_niveau": {
+          "selectif_10pct": 0.5466,
+          "selectif_5pct": 0.5481,
+          "selectif_2pct": 0.5601,
+          "selectif_1pct": 0.573
+        },
+        "combinaisons": 12,
+        "secondes": 105.8
+      },
+      "regression_logistique": {
+        "score_validation": 0.5491,
+        "parametres": {
+          "C": 0.1
+        },
+        "validation_par_niveau": {
+          "selectif_10pct": 0.5484,
+          "selectif_5pct": 0.5527,
+          "selectif_2pct": 0.5491,
+          "selectif_1pct": 0.5458
+        },
+        "combinaisons": 3,
+        "secondes": 13.7
+      }
+    },
+    "retenu": {
+      "modele": "foret_aleatoire",
+      "score_validation": 0.5697,
+      "test": {
+        "bougies": 1815,
+        "accuracy_selective": 0.578,
+        "accuracy_globale": 0.5237,
+        "seuil_confiance": 0.5852,
+        "rendement_moyen_brut_pct": 0.0122,
+        "rendement_moyen_net_pct": -0.1878
+      }
     }
   }
 }
