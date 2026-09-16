@@ -1,0 +1,86 @@
+{
+  "source": "https://data.binance.vision/data/futures/um/daily/bookDepth",
+  "debut": "2024-08-29",
+  "fin": "2026-08-29",
+  "paires": {
+    "BNBUSDT": {
+      "jours_absents": [],
+      "15m": {
+        "bougies": 70170,
+        "photos_moyennes_par_bougie": 29.3
+      },
+      "1h": {
+        "bougies": 17544,
+        "photos_moyennes_par_bougie": 117.1
+      },
+      "4h": {
+        "bougies": 4386,
+        "photos_moyennes_par_bougie": 468.3
+      }
+    },
+    "BTCUSDT": {
+      "jours_absents": [],
+      "15m": {
+        "bougies": 70170,
+        "photos_moyennes_par_bougie": 29.3
+      },
+      "1h": {
+        "bougies": 17544,
+        "photos_moyennes_par_bougie": 117.1
+      },
+      "4h": {
+        "bougies": 4386,
+        "photos_moyennes_par_bougie": 468.3
+      }
+    },
+    "ETHUSDT": {
+      "jours_absents": [],
+      "15m": {
+        "bougies": 70170,
+        "photos_moyennes_par_bougie": 29.3
+      },
+      "1h": {
+        "bougies": 17544,
+        "photos_moyennes_par_bougie": 117.1
+      },
+      "4h": {
+        "bougies": 4386,
+        "photos_moyennes_par_bougie": 468.3
+      }
+    },
+    "SOLUSDT": {
+      "jours_absents": [
+        "2026-01-14"
+      ],
+      "15m": {
+        "bougies": 70074,
+        "photos_moyennes_par_bougie": 29.3
+      },
+      "1h": {
+        "bougies": 17520,
+        "photos_moyennes_par_bougie": 117.1
+      },
+      "4h": {
+        "bougies": 4380,
+        "photos_moyennes_par_bougie": 468.3
+      }
+    },
+    "XRPUSDT": {
+      "jours_absents": [
+        "2026-01-14"
+      ],
+      "15m": {
+        "bougies": 70074,
+        "photos_moyennes_par_bougie": 29.3
+      },
+      "1h": {
+        "bougies": 17520,
+        "photos_moyennes_par_bougie": 117.1
+      },
+      "4h": {
+        "bougies": 4380,
+        "photos_moyennes_par_bougie": 468.3
+      }
+    }
+  }
+}

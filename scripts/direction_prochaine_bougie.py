@@ -73,6 +73,27 @@ ACTIVITES = (1.00, 0.50, 0.20, 0.10, 0.05, 0.02, 0.01)
 # bougies plus tot.
 RETARDS = (1, 2, 3)
 
+# Resumes du carnet d'ordres par bougie, produits par scripts/collect_order_book.py.
+CARNET = config.DATA_PROCESSED / "order_book"
+
+
+def charger_carnet() -> pd.DataFrame:
+    """Variables du carnet d'ordres, prefixees `carnet_`.
+
+    La colonne `photos` (nombre de photos dans la bougie) sert au controle
+    de couverture, pas au modele : elle est ecartee.
+    """
+    fichiers = sorted(CARNET.glob("*.parquet"))
+    if not fichiers:
+        raise FileNotFoundError(
+            f"Aucun resume de carnet dans {CARNET}. "
+            "Lancer d'abord : python -m scripts.collect_order_book"
+        )
+    carnet = pd.concat([pd.read_parquet(f) for f in fichiers], ignore_index=True)
+    cle = ["symbol", "interval", "open_time"]
+    variables = [c for c in carnet.columns if c not in cle + ["photos"]]
+    return carnet[cle + variables].rename(columns={c: f"carnet_{c}" for c in variables})
+
 
 def ajouter_retards(variables: pd.DataFrame, retards: tuple[int, ...] = RETARDS) -> pd.DataFrame:
     """Donne au modele la TRAJECTOIRE des indicateurs, pas seulement leur etat.
@@ -125,7 +146,8 @@ def etiqueter_direction(brut: pd.DataFrame) -> pd.DataFrame:
     return pd.concat(morceaux, ignore_index=True)
 
 
-def preparer(profil: str, contexte: bool = False, retards: bool = False) -> pd.DataFrame:
+def preparer(profil: str, contexte: bool = False, retards: bool = False,
+             carnet: bool = False) -> pd.DataFrame:
     """Variables explicatives + sens de la prochaine bougie."""
     brut = pd.read_parquet(EXTRACT / f"{profil}.parquet")
     cible = etiqueter_direction(brut)
@@ -142,6 +164,15 @@ def preparer(profil: str, contexte: bool = False, retards: bool = False) -> pd.D
         variables = ajouter_contexte_lent(variables)
 
     cle = ["symbol", "interval", "open_time"]
+    if carnet:
+        # Jointure a GAUCHE : une bougie sans carnet (jour absent des
+        # archives) reste dans le jeu, avec des valeurs manquantes que
+        # l'imputation du pipeline remplacera par la mediane.
+        resumes = charger_carnet()
+        variables["open_time"] = pd.to_datetime(variables["open_time"], utc=True)
+        variables = variables.merge(resumes, on=cle, how="left")
+        couverture = variables["carnet_desequilibre_1_moy"].notna().mean()
+        log.info("Carnet d'ordres : %.2f %% des bougies couvertes", couverture * 100)
     jeu = variables.merge(cible, on=cle, how="inner")
     jeu = jeu.dropna(subset=["rendement_suivant"])
     # Une bougie qui cloture exactement au meme prix n'a pas de sens a predire.
@@ -194,8 +225,8 @@ def par_confiance(probabilites: np.ndarray, y_vrai: np.ndarray,
 
 
 def evaluer(profil: str, contexte: bool = False, retards: bool = False,
-            part_test: float = 0.2) -> dict:
-    jeu = preparer(profil, contexte, retards)
+            carnet: bool = False, part_test: float = 0.2) -> dict:
+    jeu = preparer(profil, contexte, retards, carnet)
     hors_variables = {"rendement_suivant", "label"}
     colonnes = [c for c in colonnes_explicatives(jeu) if c not in hors_variables]
 
@@ -261,6 +292,8 @@ def evaluer(profil: str, contexte: bool = False, retards: bool = False,
 def main():
     parser = argparse.ArgumentParser(description="Prediction du sens de la prochaine bougie")
     parser.add_argument("--profils", nargs="+", default=["day_trading"])
+    parser.add_argument("--carnet", action="store_true",
+                        help="Ajouter les variables du carnet d'ordres")
     parser.add_argument("--retards", action="store_true",
                         help="Ajouter les valeurs des 3 bougies precedentes")
     parser.add_argument("--contexte", action="store_true",
@@ -281,12 +314,15 @@ def main():
     variante = "avec_contexte" if args.contexte else "sans_contexte"
     if args.retards:
         variante += "_et_retards"
+    if args.carnet:
+        variante += "_et_carnet"
     profils = resultats["variantes"].setdefault(variante, {})
 
     for profil in args.profils:
-        log.info("=== %s (contexte : %s, retards : %s) ===", profil,
-                 "oui" if args.contexte else "non", "oui" if args.retards else "non")
-        profils[profil] = evaluer(profil, args.contexte, args.retards)
+        log.info("=== %s (contexte : %s, retards : %s, carnet : %s) ===", profil,
+                 "oui" if args.contexte else "non", "oui" if args.retards else "non",
+                 "oui" if args.carnet else "non")
+        profils[profil] = evaluer(profil, args.contexte, args.retards, args.carnet)
 
     RESULTATS.write_text(json.dumps(resultats, indent=2), encoding="utf-8")
     log.info("Resultats ecrits : %s", RESULTATS)
