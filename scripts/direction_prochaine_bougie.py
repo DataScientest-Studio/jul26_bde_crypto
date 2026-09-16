@@ -148,8 +148,14 @@ def etiqueter_direction(brut: pd.DataFrame) -> pd.DataFrame:
 
 def preparer(profil: str, contexte: bool = False, retards: bool = False,
              carnet: bool = False) -> pd.DataFrame:
-    """Variables explicatives + sens de la prochaine bougie."""
+    """Variables explicatives + sens de la prochaine bougie, depuis l'extrait fige."""
     brut = pd.read_parquet(EXTRACT / f"{profil}.parquet")
+    return preparer_depuis(brut, contexte, retards, carnet)
+
+
+def preparer_depuis(brut: pd.DataFrame, contexte: bool = False, retards: bool = False,
+                    carnet: bool = False) -> pd.DataFrame:
+    """Meme preparation, sur n'importe quel jeu de bougies (ex. bougies recentes)."""
     cible = etiqueter_direction(brut)
     variables = construire_groupes(brut, FAMILLES)
     if retards:

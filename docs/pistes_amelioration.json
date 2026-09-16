@@ -1,0 +1,216 @@
+{
+  "regle_de_decision": "piste retenue si gain d'accuracy selective a 2 % ET a 5 % en validation",
+  "phase_a_validation": {
+    "reference": {
+      "10%": {
+        "accuracy": 0.5556,
+        "bougies": 7261,
+        "ic95": [
+          0.5441,
+          0.567
+        ]
+      },
+      "5%": {
+        "accuracy": 0.5559,
+        "bougies": 3630,
+        "ic95": [
+          0.5397,
+          0.572
+        ]
+      },
+      "2%": {
+        "accuracy": 0.5668,
+        "bougies": 1452,
+        "ic95": [
+          0.5412,
+          0.5921
+        ]
+      },
+      "1%": {
+        "accuracy": 0.5317,
+        "bougies": 726,
+        "ic95": [
+          0.4953,
+          0.5677
+        ]
+      }
+    },
+    "calibration": {
+      "10%": {
+        "accuracy": 0.5656,
+        "bougies": 7261,
+        "ic95": [
+          0.5542,
+          0.577
+        ]
+      },
+      "5%": {
+        "accuracy": 0.5733,
+        "bougies": 3630,
+        "ic95": [
+          0.5571,
+          0.5893
+        ]
+      },
+      "2%": {
+        "accuracy": 0.5813,
+        "bougies": 1452,
+        "ic95": [
+          0.5557,
+          0.6064
+        ]
+      },
+      "1%": {
+        "accuracy": 0.5909,
+        "bougies": 726,
+        "ic95": [
+          0.5548,
+          0.6261
+        ]
+      }
+    },
+    "calendrier": {
+      "10%": {
+        "accuracy": 0.5666,
+        "bougies": 7261,
+        "ic95": [
+          0.5552,
+          0.5779
+        ]
+      },
+      "5%": {
+        "accuracy": 0.5678,
+        "bougies": 3630,
+        "ic95": [
+          0.5516,
+          0.5838
+        ]
+      },
+      "2%": {
+        "accuracy": 0.5537,
+        "bougies": 1452,
+        "ic95": [
+          0.528,
+          0.5791
+        ]
+      },
+      "1%": {
+        "accuracy": 0.5289,
+        "bougies": 726,
+        "ic95": [
+          0.4926,
+          0.565
+        ]
+      }
+    },
+    "btc": {
+      "10%": {
+        "accuracy": 0.5569,
+        "bougies": 7261,
+        "ic95": [
+          0.5455,
+          0.5683
+        ]
+      },
+      "5%": {
+        "accuracy": 0.5664,
+        "bougies": 3630,
+        "ic95": [
+          0.5502,
+          0.5824
+        ]
+      },
+      "2%": {
+        "accuracy": 0.564,
+        "bougies": 1452,
+        "ic95": [
+          0.5384,
+          0.5894
+        ]
+      },
+      "1%": {
+        "accuracy": 0.5523,
+        "bougies": 726,
+        "ic95": [
+          0.516,
+          0.5881
+        ]
+      }
+    }
+  },
+  "pistes_retenues": [
+    "calibration"
+  ],
+  "phase_b_bougies_recentes": {
+    "bougies_recentes": 14831,
+    "jours": 23.7,
+    "configurations": {
+      "reference": {
+        "variables": 35,
+        "calibration": false,
+        "accuracy_globale": 0.5242,
+        "styles": {
+          "agressif": {
+            "seuil_probabilite": 0.5607,
+            "ordres": 1281,
+            "part_des_bougies_pct": 8.637,
+            "ordres_par_jour": 53.98,
+            "accuracy": 0.5691,
+            "ic95": [
+              0.5418,
+              0.596
+            ],
+            "rendement_moyen_brut_pct": 0.0181,
+            "rendement_moyen_net_pct": -0.1819
+          },
+          "conservateur": {
+            "seuil_probabilite": 0.5843,
+            "ordres": 249,
+            "part_des_bougies_pct": 1.679,
+            "ordres_par_jour": 10.49,
+            "accuracy": 0.6064,
+            "ic95": [
+              0.5446,
+              0.665
+            ],
+            "rendement_moyen_brut_pct": 0.0495,
+            "rendement_moyen_net_pct": -0.1505
+          }
+        }
+      },
+      "avec_pistes_retenues": {
+        "variables": 35,
+        "calibration": true,
+        "accuracy_globale": 0.5288,
+        "styles": {
+          "agressif": {
+            "seuil_probabilite": 0.5604,
+            "ordres": 1268,
+            "part_des_bougies_pct": 8.55,
+            "ordres_par_jour": 53.44,
+            "accuracy": 0.5733,
+            "ic95": [
+              0.5459,
+              0.6003
+            ],
+            "rendement_moyen_brut_pct": 0.0103,
+            "rendement_moyen_net_pct": -0.1897
+          },
+          "conservateur": {
+            "seuil_probabilite": 0.5901,
+            "ordres": 305,
+            "part_des_bougies_pct": 2.057,
+            "ordres_par_jour": 12.85,
+            "accuracy": 0.5836,
+            "ic95": [
+              0.5276,
+              0.6376
+            ],
+            "rendement_moyen_brut_pct": -0.0085,
+            "rendement_moyen_net_pct": -0.2085
+          }
+        }
+      }
+    }
+  }
+}
