@@ -69,6 +69,42 @@ FRAIS_ALLER_RETOUR = 0.002
 # 5 % = il ne garde que les 5 % de bougies ou il est le plus sur.
 ACTIVITES = (1.00, 0.50, 0.20, 0.10, 0.05, 0.02, 0.01)
 
+# Retards ajoutes par l'option --retards : valeurs des indicateurs 1, 2 et 3
+# bougies plus tot.
+RETARDS = (1, 2, 3)
+
+
+def ajouter_retards(variables: pd.DataFrame, retards: tuple[int, ...] = RETARDS) -> pd.DataFrame:
+    """Donne au modele la TRAJECTOIRE des indicateurs, pas seulement leur etat.
+
+    Sans retards, le modele sait que le RSI vaut 38. Avec, il sait aussi
+    qu'il valait 30, puis 34 : le RSI remonte. Deux informations :
+
+      - `<variable>_t-k` : la valeur k bougies plus tot ;
+      - `<variable>_var3` : la variation sur 3 bougies. Elle se deduit des
+        retards, mais un arbre de decision la reconstruit mal (il coupe une
+        variable a la fois) : on la lui donne toute faite.
+
+    Le decalage se fait paire par paire et pas de temps par pas de temps,
+    sinon la premiere bougie du BTC recevrait la derniere de l'ETH.
+    shift(k) avec k > 0 ne regarde que le passe : aucune fuite.
+    """
+    cle = ["symbol", "interval", "open_time"]
+    colonnes = [c for c in variables.columns if c not in cle]
+    variables = variables.sort_values(cle).reset_index(drop=True)
+    groupes = variables.groupby(["symbol", "interval"], sort=False)[colonnes]
+
+    ajouts = {}
+    for k in retards:
+        decale = groupes.shift(k)
+        for c in colonnes:
+            ajouts[f"{c}_t-{k}"] = decale[c]
+    decale_3 = groupes.shift(3)
+    for c in colonnes:
+        ajouts[f"{c}_var3"] = variables[c] - decale_3[c]
+
+    return pd.concat([variables, pd.DataFrame(ajouts)], axis=1)
+
 
 def etiqueter_direction(brut: pd.DataFrame) -> pd.DataFrame:
     """Etiquette chaque bougie par le sens de la SUIVANTE.
@@ -89,11 +125,16 @@ def etiqueter_direction(brut: pd.DataFrame) -> pd.DataFrame:
     return pd.concat(morceaux, ignore_index=True)
 
 
-def preparer(profil: str, contexte: bool = False) -> pd.DataFrame:
+def preparer(profil: str, contexte: bool = False, retards: bool = False) -> pd.DataFrame:
     """Variables explicatives + sens de la prochaine bougie."""
     brut = pd.read_parquet(EXTRACT / f"{profil}.parquet")
     cible = etiqueter_direction(brut)
     variables = construire_groupes(brut, FAMILLES)
+    if retards:
+        # AVANT le contexte : on ne retarde que les variables du pas de temps
+        # lui-meme. Le contexte lent bouge peu d'une bougie a l'autre, ses
+        # retards seraient presque des copies.
+        variables = ajouter_retards(variables)
     if contexte:
         # Chaque bougie recoit l'etat des pas de temps plus lents. Le
         # rattachement se fait sur leur CLOTURE, sinon c'est une fuite :
@@ -152,8 +193,9 @@ def par_confiance(probabilites: np.ndarray, y_vrai: np.ndarray,
     return lignes
 
 
-def evaluer(profil: str, contexte: bool = False, part_test: float = 0.2) -> dict:
-    jeu = preparer(profil, contexte)
+def evaluer(profil: str, contexte: bool = False, retards: bool = False,
+            part_test: float = 0.2) -> dict:
+    jeu = preparer(profil, contexte, retards)
     hors_variables = {"rendement_suivant", "label"}
     colonnes = [c for c in colonnes_explicatives(jeu) if c not in hors_variables]
 
@@ -219,6 +261,8 @@ def evaluer(profil: str, contexte: bool = False, part_test: float = 0.2) -> dict
 def main():
     parser = argparse.ArgumentParser(description="Prediction du sens de la prochaine bougie")
     parser.add_argument("--profils", nargs="+", default=["day_trading"])
+    parser.add_argument("--retards", action="store_true",
+                        help="Ajouter les valeurs des 3 bougies precedentes")
     parser.add_argument("--contexte", action="store_true",
                         help="Ajouter l'etat des pas de temps plus lents")
     args = parser.parse_args()
@@ -235,11 +279,14 @@ def main():
         resultats.pop("contexte_multi_echelles", None)
 
     variante = "avec_contexte" if args.contexte else "sans_contexte"
+    if args.retards:
+        variante += "_et_retards"
     profils = resultats["variantes"].setdefault(variante, {})
 
     for profil in args.profils:
-        log.info("=== %s (contexte : %s) ===", profil, "oui" if args.contexte else "non")
-        profils[profil] = evaluer(profil, args.contexte)
+        log.info("=== %s (contexte : %s, retards : %s) ===", profil,
+                 "oui" if args.contexte else "non", "oui" if args.retards else "non")
+        profils[profil] = evaluer(profil, args.contexte, args.retards)
 
     RESULTATS.write_text(json.dumps(resultats, indent=2), encoding="utf-8")
     log.info("Resultats ecrits : %s", RESULTATS)
