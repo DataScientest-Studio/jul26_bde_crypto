@@ -1,0 +1,48 @@
+{
+  "activite": 0.05,
+  "lignes": 150000,
+  "variables": 35,
+  "contexte_multi_echelles": true,
+  "modeles": {
+    "foret_aleatoire": {
+      "score_validation": 0.5709,
+      "parametres": {
+        "max_features": 0.5,
+        "min_samples_leaf": 20,
+        "n_estimators": 400
+      },
+      "combinaisons": 12,
+      "secondes": 758.5
+    },
+    "gradient_boosting": {
+      "score_validation": 0.5622,
+      "parametres": {
+        "learning_rate": 0.05,
+        "max_iter": 200,
+        "max_leaf_nodes": 63
+      },
+      "combinaisons": 12,
+      "secondes": 28.4
+    },
+    "regression_logistique": {
+      "score_validation": 0.5667,
+      "parametres": {
+        "C": 0.1
+      },
+      "combinaisons": 3,
+      "secondes": 3.5
+    }
+  },
+  "retenu": {
+    "modele": "foret_aleatoire",
+    "score_validation": 0.5709,
+    "test": {
+      "bougies": 1500,
+      "accuracy_selective": 0.5693,
+      "accuracy_globale": 0.5204,
+      "seuil_confiance": 0.6079,
+      "rendement_moyen_brut_pct": -0.0095,
+      "rendement_moyen_net_pct": -0.2095
+    }
+  }
+}
