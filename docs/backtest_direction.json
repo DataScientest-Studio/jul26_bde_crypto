@@ -1,0 +1,269 @@
+{
+  "capital_initial": 10000.0,
+  "fraction_par_ordre": 0.05,
+  "hypotheses": "entree et sortie aux prix de cloture, sans glissement de prix",
+  "historique": {
+    "jours": 145.5,
+    "acheter_et_conserver_pct": 17.3,
+    "styles": {
+      "agressif": {
+        "seuil_probabilite": 0.5532,
+        "modes": {
+          "acheteur_seul": {
+            "exposition_maximale_pct": 30.000000000000004,
+            "frais": {
+              "standard_0.10%": {
+                "ordres": 302,
+                "capital_final": 9906.84,
+                "performance_pct": -0.93,
+                "perte_max_pct": -1.21,
+                "ordres_gagnants_pct": 39.07,
+                "gain_moyen_net_par_ordre_pct": -0.0618,
+                "frais_payes_eur_approx": 302.0
+              },
+              "bnb_0.075%": {
+                "ordres": 302,
+                "capital_final": 9981.96,
+                "performance_pct": -0.18,
+                "perte_max_pct": -1.13,
+                "ordres_gagnants_pct": 46.36,
+                "gain_moyen_net_par_ordre_pct": -0.0118,
+                "frais_payes_eur_approx": 226.0
+              },
+              "sans_frais": {
+                "ordres": 302,
+                "capital_final": 10210.85,
+                "performance_pct": 2.11,
+                "perte_max_pct": -0.88,
+                "ordres_gagnants_pct": 61.59,
+                "gain_moyen_net_par_ordre_pct": 0.1384,
+                "frais_payes_eur_approx": 0.0
+              }
+            }
+          },
+          "acheteur_vendeur": {
+            "exposition_maximale_pct": 75.0,
+            "frais": {
+              "standard_0.10%": {
+                "ordres": 12812,
+                "capital_final": 2731.46,
+                "performance_pct": -72.69,
+                "perte_max_pct": -72.69,
+                "ordres_gagnants_pct": 18.51,
+                "gain_moyen_net_par_ordre_pct": -0.2025,
+                "frais_payes_eur_approx": 12812.0
+              },
+              "bnb_0.075%": {
+                "ordres": 12812,
+                "capital_final": 3761.72,
+                "performance_pct": -62.38,
+                "perte_max_pct": -62.47,
+                "ordres_gagnants_pct": 24.78,
+                "gain_moyen_net_par_ordre_pct": -0.1526,
+                "frais_payes_eur_approx": 9609.0
+              },
+              "sans_frais": {
+                "ordres": 12812,
+                "capital_final": 9829.87,
+                "performance_pct": -1.7,
+                "perte_max_pct": -5.94,
+                "ordres_gagnants_pct": 55.07,
+                "gain_moyen_net_par_ordre_pct": -0.0026,
+                "frais_payes_eur_approx": 0.0
+              }
+            }
+          }
+        }
+      },
+      "conservateur": {
+        "seuil_probabilite": 0.5766,
+        "modes": {
+          "acheteur_seul": {
+            "exposition_maximale_pct": 15.000000000000002,
+            "frais": {
+              "standard_0.10%": {
+                "ordres": 23,
+                "capital_final": 10019.59,
+                "performance_pct": 0.2,
+                "perte_max_pct": -0.09,
+                "ordres_gagnants_pct": 52.17,
+                "gain_moyen_net_par_ordre_pct": 0.1704,
+                "frais_payes_eur_approx": 23.0
+              },
+              "bnb_0.075%": {
+                "ordres": 23,
+                "capital_final": 10025.37,
+                "performance_pct": 0.25,
+                "perte_max_pct": -0.08,
+                "ordres_gagnants_pct": 52.17,
+                "gain_moyen_net_par_ordre_pct": 0.2205,
+                "frais_payes_eur_approx": 17.0
+              },
+              "sans_frais": {
+                "ordres": 23,
+                "capital_final": 10042.74,
+                "performance_pct": 0.43,
+                "perte_max_pct": -0.06,
+                "ordres_gagnants_pct": 69.57,
+                "gain_moyen_net_par_ordre_pct": 0.371,
+                "frais_payes_eur_approx": 0.0
+              }
+            }
+          },
+          "acheteur_vendeur": {
+            "exposition_maximale_pct": 50.0,
+            "frais": {
+              "standard_0.10%": {
+                "ordres": 3355,
+                "capital_final": 7096.43,
+                "performance_pct": -29.04,
+                "perte_max_pct": -29.45,
+                "ordres_gagnants_pct": 20.86,
+                "gain_moyen_net_par_ordre_pct": -0.2044,
+                "frais_payes_eur_approx": 3355.0
+              },
+              "bnb_0.075%": {
+                "ordres": 3355,
+                "capital_final": 7716.78,
+                "performance_pct": -22.83,
+                "perte_max_pct": -23.38,
+                "ordres_gagnants_pct": 26.94,
+                "gain_moyen_net_par_ordre_pct": -0.1544,
+                "frais_payes_eur_approx": 2516.0
+              },
+              "sans_frais": {
+                "ordres": 3355,
+                "capital_final": 9923.7,
+                "performance_pct": -0.76,
+                "perte_max_pct": -2.42,
+                "ordres_gagnants_pct": 55.98,
+                "gain_moyen_net_par_ordre_pct": -0.0045,
+                "frais_payes_eur_approx": 0.0
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "recente": {
+    "jours": 23.7,
+    "acheter_et_conserver_pct": -2.22,
+    "styles": {
+      "agressif": {
+        "seuil_probabilite": 0.5604,
+        "modes": {
+          "acheteur_seul": {
+            "exposition_maximale_pct": 0.0,
+            "frais": {
+              "standard_0.10%": {
+                "ordres": 0,
+                "capital_final": 10000.0,
+                "performance_pct": 0.0
+              },
+              "bnb_0.075%": {
+                "ordres": 0,
+                "capital_final": 10000.0,
+                "performance_pct": 0.0
+              },
+              "sans_frais": {
+                "ordres": 0,
+                "capital_final": 10000.0,
+                "performance_pct": 0.0
+              }
+            }
+          },
+          "acheteur_vendeur": {
+            "exposition_maximale_pct": 45.0,
+            "frais": {
+              "standard_0.10%": {
+                "ordres": 1268,
+                "capital_final": 8866.73,
+                "performance_pct": -11.33,
+                "perte_max_pct": -11.69,
+                "ordres_gagnants_pct": 22.08,
+                "gain_moyen_net_par_ordre_pct": -0.1897,
+                "frais_payes_eur_approx": 1268.0
+              },
+              "bnb_0.075%": {
+                "ordres": 1268,
+                "capital_final": 9152.11,
+                "performance_pct": -8.48,
+                "perte_max_pct": -8.98,
+                "ordres_gagnants_pct": 27.84,
+                "gain_moyen_net_par_ordre_pct": -0.1397,
+                "frais_payes_eur_approx": 951.0
+              },
+              "sans_frais": {
+                "ordres": 1268,
+                "capital_final": 10064.97,
+                "performance_pct": 0.65,
+                "perte_max_pct": -1.18,
+                "ordres_gagnants_pct": 57.33,
+                "gain_moyen_net_par_ordre_pct": 0.0103,
+                "frais_payes_eur_approx": 0.0
+              }
+            }
+          }
+        }
+      },
+      "conservateur": {
+        "seuil_probabilite": 0.5901,
+        "modes": {
+          "acheteur_seul": {
+            "exposition_maximale_pct": 0.0,
+            "frais": {
+              "standard_0.10%": {
+                "ordres": 0,
+                "capital_final": 10000.0,
+                "performance_pct": 0.0
+              },
+              "bnb_0.075%": {
+                "ordres": 0,
+                "capital_final": 10000.0,
+                "performance_pct": 0.0
+              },
+              "sans_frais": {
+                "ordres": 0,
+                "capital_final": 10000.0,
+                "performance_pct": 0.0
+              }
+            }
+          },
+          "acheteur_vendeur": {
+            "exposition_maximale_pct": 30.000000000000004,
+            "frais": {
+              "standard_0.10%": {
+                "ordres": 305,
+                "capital_final": 9687.16,
+                "performance_pct": -3.13,
+                "perte_max_pct": -3.23,
+                "ordres_gagnants_pct": 24.59,
+                "gain_moyen_net_par_ordre_pct": -0.2084,
+                "frais_payes_eur_approx": 305.0
+              },
+              "bnb_0.075%": {
+                "ordres": 305,
+                "capital_final": 9761.25,
+                "performance_pct": -2.39,
+                "perte_max_pct": -2.51,
+                "ordres_gagnants_pct": 29.18,
+                "gain_moyen_net_par_ordre_pct": -0.1584,
+                "frais_payes_eur_approx": 229.0
+              },
+              "sans_frais": {
+                "ordres": 305,
+                "capital_final": 9987.01,
+                "performance_pct": -0.13,
+                "perte_max_pct": -0.51,
+                "ordres_gagnants_pct": 58.36,
+                "gain_moyen_net_par_ordre_pct": -0.0085,
+                "frais_payes_eur_approx": 0.0
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
