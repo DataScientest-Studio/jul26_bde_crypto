@@ -1,0 +1,386 @@
+{
+  "test historique (90 765 bougies)": {
+    "oracle": [
+      {
+        "tranche de mouvement": "1/10",
+        "bougies": 9077,
+        "mouvement moyen (%)": 0.012,
+        "bonnes reponses": 0.4984,
+        "marge d'erreur": "0.488-0.509",
+        "gain brut (%)": -0.0001,
+        "gain net (%)": -0.2001
+      },
+      {
+        "tranche de mouvement": "2/10",
+        "bougies": 9076,
+        "mouvement moyen (%)": 0.034,
+        "bonnes reponses": 0.5217,
+        "marge d'erreur": "0.511-0.532",
+        "gain brut (%)": 0.0015,
+        "gain net (%)": -0.1985
+      },
+      {
+        "tranche de mouvement": "3/10",
+        "bougies": 9077,
+        "mouvement moyen (%)": 0.057,
+        "bonnes reponses": 0.5258,
+        "marge d'erreur": "0.516-0.536",
+        "gain brut (%)": 0.003,
+        "gain net (%)": -0.197
+      },
+      {
+        "tranche de mouvement": "4/10",
+        "bougies": 9076,
+        "mouvement moyen (%)": 0.082,
+        "bonnes reponses": 0.535,
+        "marge d'erreur": "0.525-0.545",
+        "gain brut (%)": 0.0056,
+        "gain net (%)": -0.1944
+      },
+      {
+        "tranche de mouvement": "5/10",
+        "bougies": 9077,
+        "mouvement moyen (%)": 0.111,
+        "bonnes reponses": 0.5457,
+        "marge d'erreur": "0.535-0.556",
+        "gain brut (%)": 0.01,
+        "gain net (%)": -0.19
+      },
+      {
+        "tranche de mouvement": "6/10",
+        "bougies": 9076,
+        "mouvement moyen (%)": 0.146,
+        "bonnes reponses": 0.5407,
+        "marge d'erreur": "0.530-0.551",
+        "gain brut (%)": 0.0119,
+        "gain net (%)": -0.1881
+      },
+      {
+        "tranche de mouvement": "7/10",
+        "bougies": 9076,
+        "mouvement moyen (%)": 0.193,
+        "bonnes reponses": 0.5413,
+        "marge d'erreur": "0.531-0.552",
+        "gain brut (%)": 0.0161,
+        "gain net (%)": -0.1839
+      },
+      {
+        "tranche de mouvement": "8/10",
+        "bougies": 9077,
+        "mouvement moyen (%)": 0.261,
+        "bonnes reponses": 0.5307,
+        "marge d'erreur": "0.520-0.541",
+        "gain brut (%)": 0.0159,
+        "gain net (%)": -0.1841
+      },
+      {
+        "tranche de mouvement": "9/10",
+        "bougies": 9076,
+        "mouvement moyen (%)": 0.387,
+        "bonnes reponses": 0.5108,
+        "marge d'erreur": "0.501-0.521",
+        "gain brut (%)": 0.0075,
+        "gain net (%)": -0.1925
+      },
+      {
+        "tranche de mouvement": "10/10",
+        "bougies": 9077,
+        "mouvement moyen (%)": 0.941,
+        "bonnes reponses": 0.4803,
+        "marge d'erreur": "0.470-0.491",
+        "gain brut (%)": -0.0704,
+        "gain net (%)": -0.2704
+      }
+    ],
+    "atr": [
+      {
+        "tranche d'ATR": "1/10",
+        "bougies": 9077,
+        "mouvement moyen (%)": 0.074,
+        "bonnes reponses": 0.5289,
+        "marge d'erreur": "0.519-0.539",
+        "gain brut (%)": 0.0029,
+        "gain net (%)": -0.1971
+      },
+      {
+        "tranche d'ATR": "2/10",
+        "bougies": 9076,
+        "mouvement moyen (%)": 0.106,
+        "bonnes reponses": 0.5142,
+        "marge d'erreur": "0.504-0.524",
+        "gain brut (%)": -0.0009,
+        "gain net (%)": -0.2009
+      },
+      {
+        "tranche d'ATR": "3/10",
+        "bougies": 9077,
+        "mouvement moyen (%)": 0.125,
+        "bonnes reponses": 0.5285,
+        "marge d'erreur": "0.518-0.539",
+        "gain brut (%)": 0.0034,
+        "gain net (%)": -0.1966
+      },
+      {
+        "tranche d'ATR": "4/10",
+        "bougies": 9076,
+        "mouvement moyen (%)": 0.142,
+        "bonnes reponses": 0.5284,
+        "marge d'erreur": "0.518-0.539",
+        "gain brut (%)": 0.0008,
+        "gain net (%)": -0.1992
+      },
+      {
+        "tranche d'ATR": "5/10",
+        "bougies": 9077,
+        "mouvement moyen (%)": 0.161,
+        "bonnes reponses": 0.5233,
+        "marge d'erreur": "0.513-0.534",
+        "gain brut (%)": -0.0008,
+        "gain net (%)": -0.2008
+      },
+      {
+        "tranche d'ATR": "6/10",
+        "bougies": 9076,
+        "mouvement moyen (%)": 0.184,
+        "bonnes reponses": 0.5181,
+        "marge d'erreur": "0.508-0.528",
+        "gain brut (%)": -0.0036,
+        "gain net (%)": -0.2036
+      },
+      {
+        "tranche d'ATR": "7/10",
+        "bougies": 9076,
+        "mouvement moyen (%)": 0.214,
+        "bonnes reponses": 0.525,
+        "marge d'erreur": "0.515-0.535",
+        "gain brut (%)": 0.0028,
+        "gain net (%)": -0.1972
+      },
+      {
+        "tranche d'ATR": "8/10",
+        "bougies": 9077,
+        "mouvement moyen (%)": 0.263,
+        "bonnes reponses": 0.521,
+        "marge d'erreur": "0.511-0.531",
+        "gain brut (%)": -0.0012,
+        "gain net (%)": -0.2012
+      },
+      {
+        "tranche d'ATR": "9/10",
+        "bougies": 9076,
+        "mouvement moyen (%)": 0.341,
+        "bonnes reponses": 0.5178,
+        "marge d'erreur": "0.508-0.528",
+        "gain brut (%)": -0.0033,
+        "gain net (%)": -0.2033
+      },
+      {
+        "tranche d'ATR": "10/10",
+        "bougies": 9077,
+        "mouvement moyen (%)": 0.612,
+        "bonnes reponses": 0.5252,
+        "marge d'erreur": "0.515-0.535",
+        "gain brut (%)": 0.0008,
+        "gain net (%)": -0.1992
+      }
+    ],
+    "agitees_et_sur": {
+      "ordres": 733,
+      "bonnes_reponses": 0.543,
+      "gain_brut_pct": -0.0506,
+      "gain_net_pct": -0.2506
+    }
+  },
+  "bougies jamais vues (14 831)": {
+    "oracle": [
+      {
+        "tranche de mouvement": "1/10",
+        "bougies": 1484,
+        "mouvement moyen (%)": 0.014,
+        "bonnes reponses": 0.5155,
+        "marge d'erreur": "0.490-0.541",
+        "gain brut (%)": 0.0003,
+        "gain net (%)": -0.1997
+      },
+      {
+        "tranche de mouvement": "2/10",
+        "bougies": 1483,
+        "mouvement moyen (%)": 0.037,
+        "bonnes reponses": 0.5145,
+        "marge d'erreur": "0.489-0.540",
+        "gain brut (%)": 0.0011,
+        "gain net (%)": -0.1989
+      },
+      {
+        "tranche de mouvement": "3/10",
+        "bougies": 1483,
+        "mouvement moyen (%)": 0.062,
+        "bonnes reponses": 0.5448,
+        "marge d'erreur": "0.519-0.570",
+        "gain brut (%)": 0.0056,
+        "gain net (%)": -0.1944
+      },
+      {
+        "tranche de mouvement": "4/10",
+        "bougies": 1483,
+        "mouvement moyen (%)": 0.089,
+        "bonnes reponses": 0.5293,
+        "marge d'erreur": "0.504-0.555",
+        "gain brut (%)": 0.0056,
+        "gain net (%)": -0.1944
+      },
+      {
+        "tranche de mouvement": "5/10",
+        "bougies": 1483,
+        "mouvement moyen (%)": 0.123,
+        "bonnes reponses": 0.5489,
+        "marge d'erreur": "0.523-0.574",
+        "gain brut (%)": 0.0118,
+        "gain net (%)": -0.1882
+      },
+      {
+        "tranche de mouvement": "6/10",
+        "bougies": 1483,
+        "mouvement moyen (%)": 0.164,
+        "bonnes reponses": 0.5705,
+        "marge d'erreur": "0.545-0.595",
+        "gain brut (%)": 0.0233,
+        "gain net (%)": -0.1767
+      },
+      {
+        "tranche de mouvement": "7/10",
+        "bougies": 1483,
+        "mouvement moyen (%)": 0.22,
+        "bonnes reponses": 0.5455,
+        "marge d'erreur": "0.520-0.571",
+        "gain brut (%)": 0.0197,
+        "gain net (%)": -0.1803
+      },
+      {
+        "tranche de mouvement": "8/10",
+        "bougies": 1483,
+        "mouvement moyen (%)": 0.297,
+        "bonnes reponses": 0.5185,
+        "marge d'erreur": "0.493-0.544",
+        "gain brut (%)": 0.0114,
+        "gain net (%)": -0.1886
+      },
+      {
+        "tranche de mouvement": "9/10",
+        "bougies": 1483,
+        "mouvement moyen (%)": 0.428,
+        "bonnes reponses": 0.5287,
+        "marge d'erreur": "0.503-0.554",
+        "gain brut (%)": 0.0237,
+        "gain net (%)": -0.1763
+      },
+      {
+        "tranche de mouvement": "10/10",
+        "bougies": 1483,
+        "mouvement moyen (%)": 0.977,
+        "bonnes reponses": 0.472,
+        "marge d'erreur": "0.447-0.497",
+        "gain brut (%)": -0.0993,
+        "gain net (%)": -0.2993
+      }
+    ],
+    "atr": [
+      {
+        "tranche d'ATR": "1/10",
+        "bougies": 1484,
+        "mouvement moyen (%)": 0.075,
+        "bonnes reponses": 0.5296,
+        "marge d'erreur": "0.504-0.555",
+        "gain brut (%)": -0.0005,
+        "gain net (%)": -0.2005
+      },
+      {
+        "tranche d'ATR": "2/10",
+        "bougies": 1483,
+        "mouvement moyen (%)": 0.125,
+        "bonnes reponses": 0.5078,
+        "marge d'erreur": "0.482-0.533",
+        "gain brut (%)": -0.0037,
+        "gain net (%)": -0.2037
+      },
+      {
+        "tranche d'ATR": "3/10",
+        "bougies": 1483,
+        "mouvement moyen (%)": 0.137,
+        "bonnes reponses": 0.5327,
+        "marge d'erreur": "0.507-0.558",
+        "gain brut (%)": 0.0032,
+        "gain net (%)": -0.1968
+      },
+      {
+        "tranche d'ATR": "4/10",
+        "bougies": 1483,
+        "mouvement moyen (%)": 0.162,
+        "bonnes reponses": 0.5226,
+        "marge d'erreur": "0.497-0.548",
+        "gain brut (%)": 0.0032,
+        "gain net (%)": -0.1968
+      },
+      {
+        "tranche d'ATR": "5/10",
+        "bougies": 1483,
+        "mouvement moyen (%)": 0.182,
+        "bonnes reponses": 0.5421,
+        "marge d'erreur": "0.517-0.567",
+        "gain brut (%)": 0.004,
+        "gain net (%)": -0.196
+      },
+      {
+        "tranche d'ATR": "6/10",
+        "bougies": 1483,
+        "mouvement moyen (%)": 0.218,
+        "bonnes reponses": 0.5482,
+        "marge d'erreur": "0.523-0.573",
+        "gain brut (%)": 0.0077,
+        "gain net (%)": -0.1923
+      },
+      {
+        "tranche d'ATR": "7/10",
+        "bougies": 1483,
+        "mouvement moyen (%)": 0.243,
+        "bonnes reponses": 0.5226,
+        "marge d'erreur": "0.497-0.548",
+        "gain brut (%)": -0.012,
+        "gain net (%)": -0.212
+      },
+      {
+        "tranche d'ATR": "8/10",
+        "bougies": 1483,
+        "mouvement moyen (%)": 0.302,
+        "bonnes reponses": 0.5199,
+        "marge d'erreur": "0.494-0.545",
+        "gain brut (%)": 0.0062,
+        "gain net (%)": -0.1938
+      },
+      {
+        "tranche d'ATR": "9/10",
+        "bougies": 1483,
+        "mouvement moyen (%)": 0.378,
+        "bonnes reponses": 0.5374,
+        "marge d'erreur": "0.512-0.563",
+        "gain brut (%)": 0.0057,
+        "gain net (%)": -0.1943
+      },
+      {
+        "tranche d'ATR": "10/10",
+        "bougies": 1483,
+        "mouvement moyen (%)": 0.591,
+        "bonnes reponses": 0.5253,
+        "marge d'erreur": "0.500-0.551",
+        "gain brut (%)": -0.0108,
+        "gain net (%)": -0.2108
+      }
+    ],
+    "agitees_et_sur": {
+      "ordres": 67,
+      "bonnes_reponses": 0.6418,
+      "gain_brut_pct": 0.0344,
+      "gain_net_pct": -0.1656
+    }
+  }
+}
