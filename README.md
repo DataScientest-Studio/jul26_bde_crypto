@@ -123,6 +123,41 @@ mlflow ui --backend-store-uri sqlite:///mlflow.db
 python -m nbconvert --to notebook --execute --inplace notebooks/etape3_modelisation.ipynb
 ```
 
+## Suite : nouvelle cible et modèle final (17 septembre)
+
+Après la présentation de l'étape 3, la cible est devenue **le sens de la
+prochaine bougie**, sur le profil day trading, avec un bouton
+conservateur / agressif pour le produit final.
+
+**Livrables** : section 11 du notebook, `models/direction_day_trading.joblib`,
+expérience MLflow `cryptobot_direction`.
+
+| Style | Le bot agit si la probabilité dépasse | Ordres/jour | Bonnes réponses | Backtest |
+|---|---|---|---|---|
+| Agressif | 0,5604 | 53 | 0,573 | −11,3 % |
+| Conservateur | 0,5901 | 13 | 0,584 | −3,1 % |
+
+Mesures faites sur 14 831 bougies **postérieures à l'extrait figé**, jamais vues
+par le modèle (24 août → 16 septembre).
+
+**Résultat** : le modèle garde un avantage réel mais faible (environ 57 %), et il
+n'est pas rentable. Sur une bougie de 15 minutes, le prix bouge en moyenne de
+0,227 % contre 0,2 % de frais par aller-retour : même un modèle parfait ne
+gagnerait que 0,027 % par ordre.
+
+```bash
+python -m scripts.direction_prochaine_bougie --contexte   # cible, sélectivité
+python -m scripts.optimize_direction --activite 0.02 --plafond 0
+python -m scripts.profils_de_risque          # seuils du bouton
+python -m scripts.pistes_amelioration        # calibration, calendrier, BTC
+python -m scripts.collect_order_book         # carnet d'ordres (futures)
+python -m scripts.horizon_long               # horizons 4 h et 1 jour
+python -m scripts.nouvelles_bougies          # bougies jamais vues
+python -m scripts.backtest_direction         # backtest en euros
+python -m scripts.train_direction_final      # modèle final, MLflow, .joblib
+python scripts/make_notebook.py              # régénérer le notebook
+```
+
 ## Profils de trading
 
 Un bot ne regarde pas le marché à la même échelle selon la stratégie visée.
