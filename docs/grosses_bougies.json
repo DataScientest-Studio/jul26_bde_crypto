@@ -1,0 +1,113 @@
+{
+  "seuils_grosses_bougies": {
+    "15m": 0.00534,
+    "1h": 0.01073,
+    "4h": 0.02192
+  },
+  "variables_de_forme": [
+    "forme_corps",
+    "forme_corps_sur_amplitude",
+    "forme_meche_haute",
+    "forme_meche_basse",
+    "forme_amplitude",
+    "forme_corps_t-1",
+    "forme_amplitude_t-1",
+    "forme_corps_sur_amplitude_t-1",
+    "forme_corps_t-2",
+    "forme_amplitude_t-2",
+    "forme_corps_sur_amplitude_t-2",
+    "forme_englobante",
+    "forme_vertes_sur_3",
+    "forme_amplitude_relative"
+  ],
+  "test_historique": {
+    "bougies": 90765,
+    "classes": {
+      "grosse baisse": {
+        "taux_de_base": 0.0215,
+        "annonces": 7162,
+        "precision": 0.0813,
+        "ic95": [
+          0.0752,
+          0.0878
+        ],
+        "rappel": 0.2988,
+        "part_de_grosses_bougies": 0.1666
+      },
+      "rien de notable": {
+        "taux_de_base": 0.9545,
+        "annonces": 77503,
+        "precision": 0.9767,
+        "ic95": [
+          0.9757,
+          0.9778
+        ],
+        "rappel": 0.8738,
+        "part_de_grosses_bougies": 0.0233
+      },
+      "grosse hausse": {
+        "taux_de_base": 0.0241,
+        "annonces": 6100,
+        "precision": 0.1041,
+        "ic95": [
+          0.0967,
+          0.112
+        ],
+        "rappel": 0.2908,
+        "part_de_grosses_bougies": 0.1862
+      }
+    },
+    "si_on_trade_les_annonces": {
+      "ordres": 13262,
+      "bon_sens": 0.4746,
+      "mouvement_moyen_pct": 0.4343,
+      "gain_brut_pct": 0.0016,
+      "gain_net_pct": -0.1984
+    }
+  },
+  "bougies_jamais_vues": {
+    "bougies": 14831,
+    "classes": {
+      "grosse baisse": {
+        "taux_de_base": 0.0284,
+        "annonces": 1699,
+        "precision": 0.0812,
+        "ic95": [
+          0.0692,
+          0.0952
+        ],
+        "rappel": 0.3278,
+        "part_de_grosses_bougies": 0.1519
+      },
+      "rien de notable": {
+        "taux_de_base": 0.9436,
+        "annonces": 11790,
+        "precision": 0.972,
+        "ic95": [
+          0.9689,
+          0.9748
+        ],
+        "rappel": 0.8189,
+        "part_de_grosses_bougies": 0.028
+      },
+      "grosse hausse": {
+        "taux_de_base": 0.028,
+        "annonces": 1342,
+        "precision": 0.1051,
+        "ic95": [
+          0.0898,
+          0.1226
+        ],
+        "rappel": 0.3389,
+        "part_de_grosses_bougies": 0.1855
+      }
+    },
+    "si_on_trade_les_annonces": {
+      "ordres": 3041,
+      "bon_sens": 0.4765,
+      "mouvement_moyen_pct": 0.4187,
+      "gain_brut_pct": -0.0029,
+      "gain_net_pct": -0.2029
+    }
+  }
+}
