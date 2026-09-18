@@ -244,13 +244,6 @@
     </section>
 
     <section class="carte">
-      <h2>Ordre projeté</h2>
-      <div class="lignes" id="ordre-lignes">
-        <p class="vide">En attente des données…</p>
-      </div>
-    </section>
-
-    <section class="carte">
       <h2>Position ouverte</h2>
       <div id="positions-ouvertes"><p class="vide">Aucune position ouverte.</p></div>
     </section>
@@ -259,6 +252,13 @@
       <h2>Trades terminés</h2>
       <div class="etiquettes" id="bilan"></div>
       <div class="histo" id="historique"></div>
+    </section>
+
+    <section class="carte">
+      <h2>Ordre projeté</h2>
+      <div class="lignes" id="ordre-lignes">
+        <p class="vide">En attente des données…</p>
+      </div>
     </section>
 
     <section class="carte">
@@ -415,6 +415,43 @@ function remplirOrdre(ordre, decision) {
   }).join("");
 }
 
+function marqueursDesTrades(carnet, serie) {
+  const marques = [];
+  const debut = serie.length ? enSecondesLocales(serie[0].open_time) : 0;
+
+  const ouverture = (sens, quand) => ({
+    time: quand,
+    position: sens === 1 ? "belowBar" : "aboveBar",
+    color: sens === 1 ? COULEURS.hausse : COULEURS.baisse,
+    shape: sens === 1 ? "arrowUp" : "arrowDown",
+    text: sens === 1 ? "achat" : "vente",
+  });
+
+  carnet.historique.forEach((trade) => {
+    const entree = enSecondesLocales(trade.ouverte_sur_la_bougie);
+    if (entree < debut) return;                       // hors de la fenetre affichee
+    marques.push(ouverture(trade.sens, entree));
+    if (trade.fermee_a) {
+      const gagnant = (trade.rendement_net_pct ?? 0) >= 0;
+      marques.push({
+        time: enSecondesLocales(trade.fermee_a),
+        position: trade.sens === 1 ? "aboveBar" : "belowBar",
+        color: gagnant ? COULEURS.hausse : COULEURS.baisse,
+        shape: "circle",
+        text: `${trade.statut} ${pourcent(trade.rendement_net_pct ?? 0, true)}`,
+      });
+    }
+  });
+
+  carnet.ouvertes.forEach((position) => {
+    const entree = enSecondesLocales(position.ouverte_sur_la_bougie);
+    if (entree >= debut) marques.push(ouverture(position.sens, entree));
+  });
+
+  // La bibliotheque exige des marqueurs tries dans le temps.
+  return marques.sort((a, b) => a.time - b.time);
+}
+
 function remplirCarnet(carnet) {
   const ouvertes = carnet.ouvertes;
   $("positions-ouvertes").innerHTML = ouvertes.length ? ouvertes.map((p) => {
@@ -508,15 +545,11 @@ async function charger() {
     // Sans cela, la bibliotheque garde un espacement fixe et laisse la moitie
     // gauche vide quand la fenetre est large.
     chart.timeScale().fitContent();
-    marqueurs.setMarkers(serie.filter((b) => b.decision !== "attendre").map((b) => ({
-      time: enSecondesLocales(b.open_time),
-      position: b.decision === "acheter" ? "belowBar" : "aboveBar",
-      color: b.decision === "acheter" ? COULEURS.hausse : COULEURS.baisse,
-      shape: b.decision === "acheter" ? "arrowUp" : "arrowDown",
-      text: b.decision === "acheter" ? "A" : "V",
-    })));
+    // Les marqueurs racontent les TRADES, pas les avis du modele : une fleche
+    // a l'ouverture, un point a la fermeture avec le resultat. C'est ce qui
+    // permet de juger le bot d'un coup d'oeil.
+    marqueurs.setMarkers(marqueursDesTrades(carnet, serie));
 
-    remplirCarnet(carnet);
     derniereBougie = graphique.bougie_en_cours
       ? { ...graphique.bougie_en_cours, en_cours: true }
       : serie[serie.length - 1];
@@ -531,6 +564,7 @@ async function charger() {
       : ordre.ordre);
     remplirOrdre(ordre.ordre, ordre.decision);
     placerJauge(ordre.decision);
+    remplirCarnet(carnet);
 
     const decision = ordre.decision.decision;
     // Le prix affiche est celui qui bouge : la bougie en cours si elle existe.

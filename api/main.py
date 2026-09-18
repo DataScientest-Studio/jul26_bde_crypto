@@ -332,7 +332,10 @@ def interface() -> HTMLResponse:
     lancer en plus. Elle n'est pas protegee par la cle d'API - c'est la page
     qui demande la cle a l'utilisateur si l'API en exige une.
     """
-    return HTMLResponse((Path(__file__).parent / "interface.html").read_text(encoding="utf-8"))
+    # no-store : sans cela, le navigateur garde l'ancienne page et l'utilisateur
+    # ne voit pas les modifications apres un simple rafraichissement.
+    return HTMLResponse((Path(__file__).parent / "interface.html").read_text(encoding="utf-8"),
+                        headers={"Cache-Control": "no-store"})
 
 
 @app.get("/derive", response_model=Derive, tags=["surveillance"],

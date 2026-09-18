@@ -153,7 +153,7 @@ def etat(symbole: str, interval: str, style: str, prix_actuel: float) -> dict:
         fermees = pd.read_sql(
             """
             SELECT sens, bougie_signal, fermee_a, prix_entree, prix_sortie, statut,
-                   rendement_brut_pct, rendement_net_pct
+                   take_profit, stop_loss, rendement_brut_pct, rendement_net_pct
             FROM positions_virtuelles
             WHERE symbol = %s AND interval = %s AND style = %s AND statut <> 'ouverte'
             ORDER BY fermee_a DESC LIMIT 50
@@ -188,6 +188,7 @@ def etat(symbole: str, interval: str, style: str, prix_actuel: float) -> dict:
         "fermee_a": f["fermee_a"].isoformat() if pd.notna(f["fermee_a"]) else None,
         "prix_entree": float(f["prix_entree"]),
         "prix_sortie": float(f["prix_sortie"]) if pd.notna(f["prix_sortie"]) else None,
+        "take_profit": float(f["take_profit"]), "stop_loss": float(f["stop_loss"]),
         "statut": f["statut"],
         "rendement_net_pct": float(f["rendement_net_pct"]) if pd.notna(f["rendement_net_pct"]) else None,
     } for _, f in fermees.iterrows()]
