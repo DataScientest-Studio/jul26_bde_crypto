@@ -276,7 +276,7 @@ const COULEURS = { hausse: "#17b26a", baisse: "#f04438", neutre: "#64748b",
 
 let etatChoix = { interval: "1h", style: "conservateur" };
 let minuterie = null;
-let chart, serieBougies, marqueurs, lignesPrix = [];
+let chart, serieBougies, marqueurs, zones, lignesPrix = [];
 
 function creerGraphique() {
   chart = LightweightCharts.createChart($("graphique"), {
@@ -295,6 +295,8 @@ function creerGraphique() {
     wickUpColor: COULEURS.hausse, wickDownColor: COULEURS.baisse,
   });
   marqueurs = LightweightCharts.createSeriesMarkers(serieBougies, []);
+  zones = new ZonesDeTrade();
+  serieBougies.attachPrimitive(zones);
 
   // La légende suit la croix de visée : c'est ce qu'attend un lecteur habitué
   // aux plateformes de trading.
@@ -413,6 +415,103 @@ function remplirOrdre(ordre, decision) {
         <span class="part chiffre">${part.toFixed(1)} %</span>
       </div></div>`;
   }).join("");
+}
+
+// Rectangles de gain et de risque, comme l'outil "position" de TradingView :
+// une zone verte entre l'entree et le take profit, une rouge entre l'entree et
+// le stop loss, etendues de l'ouverture a la fermeture du trade.
+//
+// lightweight-charts n'offre pas de rectangle : on passe par une "primitive",
+// le point d'extension prevu pour dessiner soi-meme sur le graphique.
+class ZonesDeTrade {
+  constructor() { this.trades = []; }
+
+  attached(parametres) {
+    this.chart = parametres.chart;
+    this.serie = parametres.series;
+    this.redessiner = parametres.requestUpdate;
+  }
+  detached() { this.chart = this.serie = this.redessiner = null; }
+
+  majTrades(trades) {
+    this.trades = trades;
+    if (this.redessiner) this.redessiner();
+  }
+
+  updateAllViews() {}
+  paneViews() { return [this]; }
+  zOrder() { return "bottom"; }          // sous les bougies, jamais devant
+  renderer() { return { draw: (cible) => this.dessiner(cible) }; }
+
+  dessiner(cible) {
+    if (!this.chart || !this.trades.length) return;
+    const echelle = this.chart.timeScale();
+
+    cible.useMediaCoordinateSpace(({ context: ctx }) => {
+      for (const trade of this.trades) {
+        const xDebut = echelle.timeToCoordinate(trade.debut);
+        const xFin = echelle.timeToCoordinate(trade.fin);
+        const yEntree = this.serie.priceToCoordinate(trade.entree);
+        const yGain = this.serie.priceToCoordinate(trade.take_profit);
+        const yRisque = this.serie.priceToCoordinate(trade.stop_loss);
+        if ([xDebut, xFin, yEntree, yGain, yRisque].some((v) => v === null)) continue;
+
+        const largeur = Math.max(xFin - xDebut, 2);
+        const zone = (y, couleur, bordure) => {
+          ctx.fillStyle = couleur;
+          ctx.fillRect(xDebut, Math.min(yEntree, y), largeur, Math.abs(yEntree - y));
+          ctx.strokeStyle = bordure;
+          ctx.lineWidth = 1;
+          ctx.strokeRect(xDebut, Math.min(yEntree, y), largeur, Math.abs(yEntree - y));
+        };
+        zone(yGain, "rgba(23, 178, 106, .13)", "rgba(23, 178, 106, .45)");
+        zone(yRisque, "rgba(240, 68, 56, .13)", "rgba(240, 68, 56, .45)");
+
+        ctx.strokeStyle = "rgba(232, 237, 245, .65)";
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
+        ctx.moveTo(xDebut, yEntree);
+        ctx.lineTo(xDebut + largeur, yEntree);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    });
+  }
+}
+
+function zonesDesTrades(carnet, serie) {
+  if (!serie.length) return [];
+  const temps = serie.map((b) => enSecondesLocales(b.open_time));
+  const debutVue = temps[0], finVue = temps[temps.length - 1];
+
+  // La conversion temps -> pixel ne fonctionne que sur des dates de BOUGIES.
+  // Une fermeture a 08:59:59 ne correspond a aucune bougie : on la ramene sur
+  // la bougie qui la contient, sinon le rectangle n'est pas dessine du tout.
+  const alignerSurBougie = (instant) => {
+    if (instant <= debutVue) return debutVue;
+    if (instant >= finVue) return finVue;
+    let bas = 0, haut = temps.length - 1;
+    while (bas < haut) {
+      const milieu = Math.ceil((bas + haut) / 2);
+      if (temps[milieu] <= instant) bas = milieu; else haut = milieu - 1;
+    }
+    return temps[bas];
+  };
+
+  const zones = carnet.historique
+    .filter((t) => t.fermee_a && enSecondesLocales(t.fermee_a) >= debutVue)
+    .map((t) => ({
+      debut: alignerSurBougie(enSecondesLocales(t.ouverte_sur_la_bougie)),
+      fin: alignerSurBougie(enSecondesLocales(t.fermee_a)),
+      entree: t.prix_entree, take_profit: t.take_profit, stop_loss: t.stop_loss,
+    }));
+
+  // Une position encore ouverte s'etend jusqu'a la derniere bougie affichee.
+  carnet.ouvertes.forEach((p) => zones.push({
+    debut: alignerSurBougie(enSecondesLocales(p.ouverte_sur_la_bougie)),
+    fin: finVue, entree: p.prix_entree, take_profit: p.take_profit, stop_loss: p.stop_loss,
+  }));
+  return zones;
 }
 
 function marqueursDesTrades(carnet, serie) {
@@ -549,6 +648,7 @@ async function charger() {
     // a l'ouverture, un point a la fermeture avec le resultat. C'est ce qui
     // permet de juger le bot d'un coup d'oeil.
     marqueurs.setMarkers(marqueursDesTrades(carnet, serie));
+    zones.majTrades(zonesDesTrades(carnet, serie));
 
     derniereBougie = graphique.bougie_en_cours
       ? { ...graphique.bougie_en_cours, en_cours: true }
