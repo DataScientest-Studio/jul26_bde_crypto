@@ -188,6 +188,16 @@
     </div>
   </div>
 
+  <label class="champ" for="fenetre">Bougies
+    <select id="fenetre">
+      <option value="80">80</option>
+      <option value="150" selected>150</option>
+      <option value="300">300</option>
+    </select>
+  </label>
+
+  <label class="champ" for="trades"><input type="checkbox" id="trades" checked> Trades</label>
+
   <label class="champ" for="source">Données
     <select id="source">
       <option value="binance">Binance en direct</option>
@@ -464,10 +474,10 @@ class ZonesDeTrade {
           ctx.lineWidth = 1;
           ctx.strokeRect(xDebut, Math.min(yEntree, y), largeur, Math.abs(yEntree - y));
         };
-        zone(yGain, "rgba(23, 178, 106, .13)", "rgba(23, 178, 106, .45)");
-        zone(yRisque, "rgba(240, 68, 56, .13)", "rgba(240, 68, 56, .45)");
+        zone(yGain, "rgba(23, 178, 106, .20)", "rgba(23, 178, 106, .70)");
+        zone(yRisque, "rgba(240, 68, 56, .20)", "rgba(240, 68, 56, .70)");
 
-        ctx.strokeStyle = "rgba(232, 237, 245, .65)";
+        ctx.strokeStyle = "rgba(232, 237, 245, .85)";
         ctx.setLineDash([3, 3]);
         ctx.beginPath();
         ctx.moveTo(xDebut, yEntree);
@@ -623,7 +633,7 @@ async function charger() {
 
   try {
     const [graphique, ordre, carnet] = await Promise.all([
-      appeler(`/graphique/${paire}`, { ...commun, limite: "200" }),
+      appeler(`/graphique/${paire}`, { ...commun, limite: $("fenetre").value }),
       appeler(`/ordre/${paire}`, commun),
       appeler(`/positions/${paire}`, commun, "POST"),
     ]);
@@ -647,8 +657,11 @@ async function charger() {
     // Les marqueurs racontent les TRADES, pas les avis du modele : une fleche
     // a l'ouverture, un point a la fermeture avec le resultat. C'est ce qui
     // permet de juger le bot d'un coup d'oeil.
-    marqueurs.setMarkers(marqueursDesTrades(carnet, serie));
-    zones.majTrades(zonesDesTrades(carnet, serie));
+    // Case "Trades" decochee : on ne garde que les bougies, pour lire le prix
+    // sans rien par-dessus.
+    const montrerTrades = $("trades").checked;
+    marqueurs.setMarkers(montrerTrades ? marqueursDesTrades(carnet, serie) : []);
+    zones.majTrades(montrerTrades ? zonesDesTrades(carnet, serie) : []);
 
     derniereBougie = graphique.bougie_en_cours
       ? { ...graphique.bougie_en_cours, en_cours: true }
@@ -737,7 +750,8 @@ function programmer() {
 creerGraphique();
 brancherSegments("intervalles", "interval");
 brancherSegments("styles", "style");
-["paire", "source"].forEach((id) => $(id).addEventListener("change", charger));
+["paire", "source", "fenetre"].forEach((id) => $(id).addEventListener("change", charger));
+$("trades").addEventListener("change", charger);
 charger();
 programmer();
 // Le compte a rebours descend chaque minute, sans rappeler l'API.

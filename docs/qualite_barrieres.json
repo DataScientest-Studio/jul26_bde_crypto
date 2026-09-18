@@ -1,0 +1,1364 @@
+{
+  "barrieres_actuelles": {
+    "largeur_sigma": 3.0,
+    "horizon": 12
+  },
+  "style": "conservateur",
+  "frais_aller_retour": 0.002,
+  "par_jeu_de_donnees": {
+    "BTCUSDT|15m": {
+      "trades_analyses": 42,
+      "mae_sigma": {
+        "mediane": 2.84,
+        "moyenne": 3.92,
+        "q90": 10.14
+      },
+      "mfe_sigma": {
+        "mediane": 2.08,
+        "moyenne": 3.34,
+        "q90": 6.81
+      },
+      "ratio_avantage": 0.851,
+      "mfe_moyenne_des_perdants_sigma": 1.04,
+      "mae_moyenne_des_gagnants_sigma": 2.15,
+      "configuration_actuelle": {
+        "take_profit_sigma": 3.0,
+        "stop_loss_sigma": 3.0,
+        "trades": 42,
+        "gagnants_pct": 40.5,
+        "gain_moyen_net_pct": -0.1827,
+        "issues": {
+          "take profit": 16,
+          "stop loss": 16,
+          "echeance": 10
+        }
+      },
+      "configurations": [
+        {
+          "take_profit_sigma": 1.0,
+          "stop_loss_sigma": 1.0,
+          "trades": 42,
+          "gagnants_pct": 4.8,
+          "gain_moyen_net_pct": -0.1817,
+          "issues": {
+            "take profit": 22,
+            "stop loss": 19,
+            "echeance": 1
+          }
+        },
+        {
+          "take_profit_sigma": 2.0,
+          "stop_loss_sigma": 2.0,
+          "trades": 42,
+          "gagnants_pct": 45.2,
+          "gain_moyen_net_pct": -0.1756,
+          "issues": {
+            "take profit": 19,
+            "stop loss": 19,
+            "echeance": 4
+          }
+        },
+        {
+          "take_profit_sigma": 3.0,
+          "stop_loss_sigma": 3.0,
+          "trades": 42,
+          "gagnants_pct": 40.5,
+          "gain_moyen_net_pct": -0.1827,
+          "issues": {
+            "take profit": 16,
+            "stop loss": 16,
+            "echeance": 10
+          }
+        },
+        {
+          "take_profit_sigma": 4.0,
+          "stop_loss_sigma": 4.0,
+          "trades": 42,
+          "gagnants_pct": 35.7,
+          "gain_moyen_net_pct": -0.2033,
+          "issues": {
+            "take profit": 12,
+            "stop loss": 13,
+            "echeance": 17
+          }
+        },
+        {
+          "take_profit_sigma": 3.0,
+          "stop_loss_sigma": 1.5,
+          "trades": 42,
+          "gagnants_pct": 26.2,
+          "gain_moyen_net_pct": -0.2189,
+          "issues": {
+            "take profit": 11,
+            "stop loss": 28,
+            "echeance": 3
+          }
+        },
+        {
+          "take_profit_sigma": 4.0,
+          "stop_loss_sigma": 2.0,
+          "trades": 42,
+          "gagnants_pct": 33.3,
+          "gain_moyen_net_pct": -0.178,
+          "issues": {
+            "take profit": 11,
+            "stop loss": 23,
+            "echeance": 8
+          }
+        },
+        {
+          "take_profit_sigma": 6.0,
+          "stop_loss_sigma": 3.0,
+          "trades": 42,
+          "gagnants_pct": 28.6,
+          "gain_moyen_net_pct": -0.216,
+          "issues": {
+            "take profit": 6,
+            "stop loss": 18,
+            "echeance": 18
+          }
+        },
+        {
+          "take_profit_sigma": 1.5,
+          "stop_loss_sigma": 3.0,
+          "trades": 42,
+          "gagnants_pct": 35.7,
+          "gain_moyen_net_pct": -0.165,
+          "issues": {
+            "take profit": 27,
+            "stop loss": 12,
+            "echeance": 3
+          }
+        },
+        {
+          "take_profit_sigma": 2.0,
+          "stop_loss_sigma": 4.0,
+          "trades": 42,
+          "gagnants_pct": 47.6,
+          "gain_moyen_net_pct": -0.2153,
+          "issues": {
+            "take profit": 22,
+            "stop loss": 13,
+            "echeance": 7
+          }
+        }
+      ]
+    },
+    "BTCUSDT|1h": {
+      "trades_analyses": 17,
+      "mae_sigma": {
+        "mediane": 1.36,
+        "moyenne": 4.55,
+        "q90": 10.59
+      },
+      "mfe_sigma": {
+        "mediane": 2.49,
+        "moyenne": 4.04,
+        "q90": 9.32
+      },
+      "ratio_avantage": 0.889,
+      "mfe_moyenne_des_perdants_sigma": 1.02,
+      "mae_moyenne_des_gagnants_sigma": 1.75,
+      "configuration_actuelle": {
+        "take_profit_sigma": 3.0,
+        "stop_loss_sigma": 3.0,
+        "trades": 17,
+        "gagnants_pct": 35.3,
+        "gain_moyen_net_pct": -0.2869,
+        "issues": {
+          "take profit": 4,
+          "stop loss": 8,
+          "echeance": 5
+        }
+      },
+      "configurations": [
+        {
+          "take_profit_sigma": 1.0,
+          "stop_loss_sigma": 1.0,
+          "trades": 17,
+          "gagnants_pct": 35.3,
+          "gain_moyen_net_pct": -0.2778,
+          "issues": {
+            "take profit": 7,
+            "stop loss": 10,
+            "echeance": 0
+          }
+        },
+        {
+          "take_profit_sigma": 2.0,
+          "stop_loss_sigma": 2.0,
+          "trades": 17,
+          "gagnants_pct": 41.2,
+          "gain_moyen_net_pct": -0.163,
+          "issues": {
+            "take profit": 7,
+            "stop loss": 8,
+            "echeance": 2
+          }
+        },
+        {
+          "take_profit_sigma": 3.0,
+          "stop_loss_sigma": 3.0,
+          "trades": 17,
+          "gagnants_pct": 35.3,
+          "gain_moyen_net_pct": -0.2869,
+          "issues": {
+            "take profit": 4,
+            "stop loss": 8,
+            "echeance": 5
+          }
+        },
+        {
+          "take_profit_sigma": 4.0,
+          "stop_loss_sigma": 4.0,
+          "trades": 17,
+          "gagnants_pct": 52.9,
+          "gain_moyen_net_pct": 0.109,
+          "issues": {
+            "take profit": 7,
+            "stop loss": 4,
+            "echeance": 6
+          }
+        },
+        {
+          "take_profit_sigma": 3.0,
+          "stop_loss_sigma": 1.5,
+          "trades": 17,
+          "gagnants_pct": 35.3,
+          "gain_moyen_net_pct": -0.0761,
+          "issues": {
+            "take profit": 4,
+            "stop loss": 8,
+            "echeance": 5
+          }
+        },
+        {
+          "take_profit_sigma": 4.0,
+          "stop_loss_sigma": 2.0,
+          "trades": 17,
+          "gagnants_pct": 35.3,
+          "gain_moyen_net_pct": -0.0702,
+          "issues": {
+            "take profit": 4,
+            "stop loss": 8,
+            "echeance": 5
+          }
+        },
+        {
+          "take_profit_sigma": 6.0,
+          "stop_loss_sigma": 3.0,
+          "trades": 17,
+          "gagnants_pct": 35.3,
+          "gain_moyen_net_pct": -0.1632,
+          "issues": {
+            "take profit": 3,
+            "stop loss": 8,
+            "echeance": 6
+          }
+        },
+        {
+          "take_profit_sigma": 1.5,
+          "stop_loss_sigma": 3.0,
+          "trades": 17,
+          "gagnants_pct": 41.2,
+          "gain_moyen_net_pct": -0.2831,
+          "issues": {
+            "take profit": 8,
+            "stop loss": 7,
+            "echeance": 2
+          }
+        },
+        {
+          "take_profit_sigma": 2.0,
+          "stop_loss_sigma": 4.0,
+          "trades": 17,
+          "gagnants_pct": 64.7,
+          "gain_moyen_net_pct": -0.0169,
+          "issues": {
+            "take profit": 11,
+            "stop loss": 4,
+            "echeance": 2
+          }
+        }
+      ]
+    },
+    "BTCUSDT|4h": {
+      "trades_analyses": 31,
+      "mae_sigma": {
+        "mediane": 2.05,
+        "moyenne": 4.02,
+        "q90": 9.26
+      },
+      "mfe_sigma": {
+        "mediane": 2.99,
+        "moyenne": 3.17,
+        "q90": 6.88
+      },
+      "ratio_avantage": 0.788,
+      "mfe_moyenne_des_perdants_sigma": 1.4,
+      "mae_moyenne_des_gagnants_sigma": 1.18,
+      "configuration_actuelle": {
+        "take_profit_sigma": 3.0,
+        "stop_loss_sigma": 3.0,
+        "trades": 31,
+        "gagnants_pct": 54.8,
+        "gain_moyen_net_pct": -0.0398,
+        "issues": {
+          "take profit": 14,
+          "stop loss": 12,
+          "echeance": 5
+        }
+      },
+      "configurations": [
+        {
+          "take_profit_sigma": 1.0,
+          "stop_loss_sigma": 1.0,
+          "trades": 31,
+          "gagnants_pct": 38.7,
+          "gain_moyen_net_pct": -0.3687,
+          "issues": {
+            "take profit": 12,
+            "stop loss": 19,
+            "echeance": 0
+          }
+        },
+        {
+          "take_profit_sigma": 2.0,
+          "stop_loss_sigma": 2.0,
+          "trades": 31,
+          "gagnants_pct": 54.8,
+          "gain_moyen_net_pct": -0.0416,
+          "issues": {
+            "take profit": 16,
+            "stop loss": 14,
+            "echeance": 1
+          }
+        },
+        {
+          "take_profit_sigma": 3.0,
+          "stop_loss_sigma": 3.0,
+          "trades": 31,
+          "gagnants_pct": 54.8,
+          "gain_moyen_net_pct": -0.0398,
+          "issues": {
+            "take profit": 14,
+            "stop loss": 12,
+            "echeance": 5
+          }
+        },
+        {
+          "take_profit_sigma": 4.0,
+          "stop_loss_sigma": 4.0,
+          "trades": 31,
+          "gagnants_pct": 61.3,
+          "gain_moyen_net_pct": -0.2203,
+          "issues": {
+            "take profit": 8,
+            "stop loss": 10,
+            "echeance": 13
+          }
+        },
+        {
+          "take_profit_sigma": 3.0,
+          "stop_loss_sigma": 1.5,
+          "trades": 31,
+          "gagnants_pct": 35.5,
+          "gain_moyen_net_pct": -0.2359,
+          "issues": {
+            "take profit": 10,
+            "stop loss": 20,
+            "echeance": 1
+          }
+        },
+        {
+          "take_profit_sigma": 4.0,
+          "stop_loss_sigma": 2.0,
+          "trades": 31,
+          "gagnants_pct": 48.4,
+          "gain_moyen_net_pct": -0.056,
+          "issues": {
+            "take profit": 7,
+            "stop loss": 16,
+            "echeance": 8
+          }
+        },
+        {
+          "take_profit_sigma": 6.0,
+          "stop_loss_sigma": 3.0,
+          "trades": 31,
+          "gagnants_pct": 54.8,
+          "gain_moyen_net_pct": -0.1734,
+          "issues": {
+            "take profit": 4,
+            "stop loss": 12,
+            "echeance": 15
+          }
+        },
+        {
+          "take_profit_sigma": 1.5,
+          "stop_loss_sigma": 3.0,
+          "trades": 31,
+          "gagnants_pct": 64.5,
+          "gain_moyen_net_pct": -0.208,
+          "issues": {
+            "take profit": 19,
+            "stop loss": 9,
+            "echeance": 3
+          }
+        },
+        {
+          "take_profit_sigma": 2.0,
+          "stop_loss_sigma": 4.0,
+          "trades": 31,
+          "gagnants_pct": 67.7,
+          "gain_moyen_net_pct": -0.1161,
+          "issues": {
+            "take profit": 18,
+            "stop loss": 8,
+            "echeance": 5
+          }
+        }
+      ]
+    },
+    "ETHUSDT|15m": {
+      "trades_analyses": 34,
+      "mae_sigma": {
+        "mediane": 2.18,
+        "moyenne": 3.54,
+        "q90": 8.42
+      },
+      "mfe_sigma": {
+        "mediane": 2.84,
+        "moyenne": 3.27,
+        "q90": 5.55
+      },
+      "ratio_avantage": 0.923,
+      "mfe_moyenne_des_perdants_sigma": 0.86,
+      "mae_moyenne_des_gagnants_sigma": 1.36,
+      "configuration_actuelle": {
+        "take_profit_sigma": 3.0,
+        "stop_loss_sigma": 3.0,
+        "trades": 34,
+        "gagnants_pct": 47.1,
+        "gain_moyen_net_pct": -0.205,
+        "issues": {
+          "take profit": 14,
+          "stop loss": 14,
+          "echeance": 6
+        }
+      },
+      "configurations": [
+        {
+          "take_profit_sigma": 1.0,
+          "stop_loss_sigma": 1.0,
+          "trades": 34,
+          "gagnants_pct": 14.7,
+          "gain_moyen_net_pct": -0.2484,
+          "issues": {
+            "take profit": 15,
+            "stop loss": 19,
+            "echeance": 0
+          }
+        },
+        {
+          "take_profit_sigma": 2.0,
+          "stop_loss_sigma": 2.0,
+          "trades": 34,
+          "gagnants_pct": 41.2,
+          "gain_moyen_net_pct": -0.2262,
+          "issues": {
+            "take profit": 17,
+            "stop loss": 16,
+            "echeance": 1
+          }
+        },
+        {
+          "take_profit_sigma": 3.0,
+          "stop_loss_sigma": 3.0,
+          "trades": 34,
+          "gagnants_pct": 47.1,
+          "gain_moyen_net_pct": -0.205,
+          "issues": {
+            "take profit": 14,
+            "stop loss": 14,
+            "echeance": 6
+          }
+        },
+        {
+          "take_profit_sigma": 4.0,
+          "stop_loss_sigma": 4.0,
+          "trades": 34,
+          "gagnants_pct": 50.0,
+          "gain_moyen_net_pct": -0.125,
+          "issues": {
+            "take profit": 12,
+            "stop loss": 10,
+            "echeance": 12
+          }
+        },
+        {
+          "take_profit_sigma": 3.0,
+          "stop_loss_sigma": 1.5,
+          "trades": 34,
+          "gagnants_pct": 32.4,
+          "gain_moyen_net_pct": -0.2129,
+          "issues": {
+            "take profit": 11,
+            "stop loss": 21,
+            "echeance": 2
+          }
+        },
+        {
+          "take_profit_sigma": 4.0,
+          "stop_loss_sigma": 2.0,
+          "trades": 34,
+          "gagnants_pct": 41.2,
+          "gain_moyen_net_pct": -0.1413,
+          "issues": {
+            "take profit": 10,
+            "stop loss": 17,
+            "echeance": 7
+          }
+        },
+        {
+          "take_profit_sigma": 6.0,
+          "stop_loss_sigma": 3.0,
+          "trades": 34,
+          "gagnants_pct": 44.1,
+          "gain_moyen_net_pct": -0.1924,
+          "issues": {
+            "take profit": 3,
+            "stop loss": 14,
+            "echeance": 17
+          }
+        },
+        {
+          "take_profit_sigma": 1.5,
+          "stop_loss_sigma": 3.0,
+          "trades": 34,
+          "gagnants_pct": 44.1,
+          "gain_moyen_net_pct": -0.294,
+          "issues": {
+            "take profit": 19,
+            "stop loss": 13,
+            "echeance": 2
+          }
+        },
+        {
+          "take_profit_sigma": 2.0,
+          "stop_loss_sigma": 4.0,
+          "trades": 34,
+          "gagnants_pct": 50.0,
+          "gain_moyen_net_pct": -0.2353,
+          "issues": {
+            "take profit": 20,
+            "stop loss": 10,
+            "echeance": 4
+          }
+        }
+      ]
+    },
+    "ETHUSDT|1h": {
+      "trades_analyses": 17,
+      "mae_sigma": {
+        "mediane": 1.48,
+        "moyenne": 3.95,
+        "q90": 10.05
+      },
+      "mfe_sigma": {
+        "mediane": 2.14,
+        "moyenne": 3.02,
+        "q90": 6.07
+      },
+      "ratio_avantage": 0.766,
+      "mfe_moyenne_des_perdants_sigma": 0.85,
+      "mae_moyenne_des_gagnants_sigma": 1.38,
+      "configuration_actuelle": {
+        "take_profit_sigma": 3.0,
+        "stop_loss_sigma": 3.0,
+        "trades": 17,
+        "gagnants_pct": 58.8,
+        "gain_moyen_net_pct": 0.0761,
+        "issues": {
+          "take profit": 7,
+          "stop loss": 7,
+          "echeance": 3
+        }
+      },
+      "configurations": [
+        {
+          "take_profit_sigma": 1.0,
+          "stop_loss_sigma": 1.0,
+          "trades": 17,
+          "gagnants_pct": 41.2,
+          "gain_moyen_net_pct": -0.2252,
+          "issues": {
+            "take profit": 8,
+            "stop loss": 9,
+            "echeance": 0
+          }
+        },
+        {
+          "take_profit_sigma": 2.0,
+          "stop_loss_sigma": 2.0,
+          "trades": 17,
+          "gagnants_pct": 52.9,
+          "gain_moyen_net_pct": -0.0531,
+          "issues": {
+            "take profit": 7,
+            "stop loss": 8,
+            "echeance": 2
+          }
+        },
+        {
+          "take_profit_sigma": 3.0,
+          "stop_loss_sigma": 3.0,
+          "trades": 17,
+          "gagnants_pct": 58.8,
+          "gain_moyen_net_pct": 0.0761,
+          "issues": {
+            "take profit": 7,
+            "stop loss": 7,
+            "echeance": 3
+          }
+        },
+        {
+          "take_profit_sigma": 4.0,
+          "stop_loss_sigma": 4.0,
+          "trades": 17,
+          "gagnants_pct": 58.8,
+          "gain_moyen_net_pct": 0.1195,
+          "issues": {
+            "take profit": 6,
+            "stop loss": 7,
+            "echeance": 4
+          }
+        },
+        {
+          "take_profit_sigma": 3.0,
+          "stop_loss_sigma": 1.5,
+          "trades": 17,
+          "gagnants_pct": 52.9,
+          "gain_moyen_net_pct": 0.2179,
+          "issues": {
+            "take profit": 6,
+            "stop loss": 8,
+            "echeance": 3
+          }
+        },
+        {
+          "take_profit_sigma": 4.0,
+          "stop_loss_sigma": 2.0,
+          "trades": 17,
+          "gagnants_pct": 52.9,
+          "gain_moyen_net_pct": 0.3087,
+          "issues": {
+            "take profit": 5,
+            "stop loss": 8,
+            "echeance": 4
+          }
+        },
+        {
+          "take_profit_sigma": 6.0,
+          "stop_loss_sigma": 3.0,
+          "trades": 17,
+          "gagnants_pct": 58.8,
+          "gain_moyen_net_pct": 0.3726,
+          "issues": {
+            "take profit": 2,
+            "stop loss": 7,
+            "echeance": 8
+          }
+        },
+        {
+          "take_profit_sigma": 1.5,
+          "stop_loss_sigma": 3.0,
+          "trades": 17,
+          "gagnants_pct": 64.7,
+          "gain_moyen_net_pct": -0.2074,
+          "issues": {
+            "take profit": 9,
+            "stop loss": 6,
+            "echeance": 2
+          }
+        },
+        {
+          "take_profit_sigma": 2.0,
+          "stop_loss_sigma": 4.0,
+          "trades": 17,
+          "gagnants_pct": 58.8,
+          "gain_moyen_net_pct": -0.286,
+          "issues": {
+            "take profit": 8,
+            "stop loss": 7,
+            "echeance": 2
+          }
+        }
+      ]
+    },
+    "ETHUSDT|4h": {
+      "trades_analyses": 19,
+      "mae_sigma": {
+        "mediane": 2.16,
+        "moyenne": 3.41,
+        "q90": 9.35
+      },
+      "mfe_sigma": {
+        "mediane": 2.42,
+        "moyenne": 3.38,
+        "q90": 6.53
+      },
+      "ratio_avantage": 0.993,
+      "mfe_moyenne_des_perdants_sigma": 0.89,
+      "mae_moyenne_des_gagnants_sigma": 1.41,
+      "configuration_actuelle": {
+        "take_profit_sigma": 3.0,
+        "stop_loss_sigma": 3.0,
+        "trades": 19,
+        "gagnants_pct": 63.2,
+        "gain_moyen_net_pct": 0.4266,
+        "issues": {
+          "take profit": 7,
+          "stop loss": 5,
+          "echeance": 7
+        }
+      },
+      "configurations": [
+        {
+          "take_profit_sigma": 1.0,
+          "stop_loss_sigma": 1.0,
+          "trades": 19,
+          "gagnants_pct": 31.6,
+          "gain_moyen_net_pct": -0.7367,
+          "issues": {
+            "take profit": 6,
+            "stop loss": 13,
+            "echeance": 0
+          }
+        },
+        {
+          "take_profit_sigma": 2.0,
+          "stop_loss_sigma": 2.0,
+          "trades": 19,
+          "gagnants_pct": 57.9,
+          "gain_moyen_net_pct": -0.4738,
+          "issues": {
+            "take profit": 9,
+            "stop loss": 8,
+            "echeance": 2
+          }
+        },
+        {
+          "take_profit_sigma": 3.0,
+          "stop_loss_sigma": 3.0,
+          "trades": 19,
+          "gagnants_pct": 63.2,
+          "gain_moyen_net_pct": 0.4266,
+          "issues": {
+            "take profit": 7,
+            "stop loss": 5,
+            "echeance": 7
+          }
+        },
+        {
+          "take_profit_sigma": 4.0,
+          "stop_loss_sigma": 4.0,
+          "trades": 19,
+          "gagnants_pct": 63.2,
+          "gain_moyen_net_pct": 0.4741,
+          "issues": {
+            "take profit": 7,
+            "stop loss": 5,
+            "echeance": 7
+          }
+        },
+        {
+          "take_profit_sigma": 3.0,
+          "stop_loss_sigma": 1.5,
+          "trades": 19,
+          "gagnants_pct": 31.6,
+          "gain_moyen_net_pct": -0.7213,
+          "issues": {
+            "take profit": 3,
+            "stop loss": 13,
+            "echeance": 3
+          }
+        },
+        {
+          "take_profit_sigma": 4.0,
+          "stop_loss_sigma": 2.0,
+          "trades": 19,
+          "gagnants_pct": 42.1,
+          "gain_moyen_net_pct": -0.4374,
+          "issues": {
+            "take profit": 5,
+            "stop loss": 10,
+            "echeance": 4
+          }
+        },
+        {
+          "take_profit_sigma": 6.0,
+          "stop_loss_sigma": 3.0,
+          "trades": 19,
+          "gagnants_pct": 63.2,
+          "gain_moyen_net_pct": 1.4903,
+          "issues": {
+            "take profit": 5,
+            "stop loss": 5,
+            "echeance": 9
+          }
+        },
+        {
+          "take_profit_sigma": 1.5,
+          "stop_loss_sigma": 3.0,
+          "trades": 19,
+          "gagnants_pct": 78.9,
+          "gain_moyen_net_pct": 0.2284,
+          "issues": {
+            "take profit": 15,
+            "stop loss": 4,
+            "echeance": 0
+          }
+        },
+        {
+          "take_profit_sigma": 2.0,
+          "stop_loss_sigma": 4.0,
+          "trades": 19,
+          "gagnants_pct": 78.9,
+          "gain_moyen_net_pct": 0.2295,
+          "issues": {
+            "take profit": 13,
+            "stop loss": 4,
+            "echeance": 2
+          }
+        }
+      ]
+    },
+    "SOLUSDT|15m": {
+      "trades_analyses": 12,
+      "mae_sigma": {
+        "mediane": 1.75,
+        "moyenne": 2.69,
+        "q90": 6.65
+      },
+      "mfe_sigma": {
+        "mediane": 3.46,
+        "moyenne": 3.51,
+        "q90": 6.57
+      },
+      "ratio_avantage": 1.307,
+      "mfe_moyenne_des_perdants_sigma": 0.93,
+      "mae_moyenne_des_gagnants_sigma": 1.72,
+      "configuration_actuelle": {
+        "take_profit_sigma": 3.0,
+        "stop_loss_sigma": 3.0,
+        "trades": 12,
+        "gagnants_pct": 66.7,
+        "gain_moyen_net_pct": 0.1077,
+        "issues": {
+          "take profit": 7,
+          "stop loss": 3,
+          "echeance": 2
+        }
+      },
+      "configurations": [
+        {
+          "take_profit_sigma": 1.0,
+          "stop_loss_sigma": 1.0,
+          "trades": 12,
+          "gagnants_pct": 41.7,
+          "gain_moyen_net_pct": -0.1173,
+          "issues": {
+            "take profit": 7,
+            "stop loss": 5,
+            "echeance": 0
+          }
+        },
+        {
+          "take_profit_sigma": 2.0,
+          "stop_loss_sigma": 2.0,
+          "trades": 12,
+          "gagnants_pct": 58.3,
+          "gain_moyen_net_pct": 0.0524,
+          "issues": {
+            "take profit": 8,
+            "stop loss": 3,
+            "echeance": 1
+          }
+        },
+        {
+          "take_profit_sigma": 3.0,
+          "stop_loss_sigma": 3.0,
+          "trades": 12,
+          "gagnants_pct": 66.7,
+          "gain_moyen_net_pct": 0.1077,
+          "issues": {
+            "take profit": 7,
+            "stop loss": 3,
+            "echeance": 2
+          }
+        },
+        {
+          "take_profit_sigma": 4.0,
+          "stop_loss_sigma": 4.0,
+          "trades": 12,
+          "gagnants_pct": 58.3,
+          "gain_moyen_net_pct": 0.1074,
+          "issues": {
+            "take profit": 4,
+            "stop loss": 2,
+            "echeance": 6
+          }
+        },
+        {
+          "take_profit_sigma": 3.0,
+          "stop_loss_sigma": 1.5,
+          "trades": 12,
+          "gagnants_pct": 50.0,
+          "gain_moyen_net_pct": -0.0027,
+          "issues": {
+            "take profit": 5,
+            "stop loss": 5,
+            "echeance": 2
+          }
+        },
+        {
+          "take_profit_sigma": 4.0,
+          "stop_loss_sigma": 2.0,
+          "trades": 12,
+          "gagnants_pct": 58.3,
+          "gain_moyen_net_pct": 0.164,
+          "issues": {
+            "take profit": 4,
+            "stop loss": 4,
+            "echeance": 4
+          }
+        },
+        {
+          "take_profit_sigma": 6.0,
+          "stop_loss_sigma": 3.0,
+          "trades": 12,
+          "gagnants_pct": 50.0,
+          "gain_moyen_net_pct": 0.022,
+          "issues": {
+            "take profit": 2,
+            "stop loss": 3,
+            "echeance": 7
+          }
+        },
+        {
+          "take_profit_sigma": 1.5,
+          "stop_loss_sigma": 3.0,
+          "trades": 12,
+          "gagnants_pct": 66.7,
+          "gain_moyen_net_pct": -0.0658,
+          "issues": {
+            "take profit": 9,
+            "stop loss": 3,
+            "echeance": 0
+          }
+        },
+        {
+          "take_profit_sigma": 2.0,
+          "stop_loss_sigma": 4.0,
+          "trades": 12,
+          "gagnants_pct": 58.3,
+          "gain_moyen_net_pct": -0.0189,
+          "issues": {
+            "take profit": 8,
+            "stop loss": 2,
+            "echeance": 2
+          }
+        }
+      ]
+    },
+    "SOLUSDT|1h": {
+      "trades_analyses": 28,
+      "mae_sigma": {
+        "mediane": 3.16,
+        "moyenne": 3.2,
+        "q90": 5.61
+      },
+      "mfe_sigma": {
+        "mediane": 2.55,
+        "moyenne": 3.0,
+        "q90": 5.53
+      },
+      "ratio_avantage": 0.935,
+      "mfe_moyenne_des_perdants_sigma": 1.26,
+      "mae_moyenne_des_gagnants_sigma": 2.56,
+      "configuration_actuelle": {
+        "take_profit_sigma": 3.0,
+        "stop_loss_sigma": 3.0,
+        "trades": 28,
+        "gagnants_pct": 39.3,
+        "gain_moyen_net_pct": -0.3489,
+        "issues": {
+          "take profit": 7,
+          "stop loss": 14,
+          "echeance": 7
+        }
+      },
+      "configurations": [
+        {
+          "take_profit_sigma": 1.0,
+          "stop_loss_sigma": 1.0,
+          "trades": 28,
+          "gagnants_pct": 50.0,
+          "gain_moyen_net_pct": -0.1651,
+          "issues": {
+            "take profit": 14,
+            "stop loss": 14,
+            "echeance": 0
+          }
+        },
+        {
+          "take_profit_sigma": 2.0,
+          "stop_loss_sigma": 2.0,
+          "trades": 28,
+          "gagnants_pct": 42.9,
+          "gain_moyen_net_pct": -0.173,
+          "issues": {
+            "take profit": 12,
+            "stop loss": 14,
+            "echeance": 2
+          }
+        },
+        {
+          "take_profit_sigma": 3.0,
+          "stop_loss_sigma": 3.0,
+          "trades": 28,
+          "gagnants_pct": 39.3,
+          "gain_moyen_net_pct": -0.3489,
+          "issues": {
+            "take profit": 7,
+            "stop loss": 14,
+            "echeance": 7
+          }
+        },
+        {
+          "take_profit_sigma": 4.0,
+          "stop_loss_sigma": 4.0,
+          "trades": 28,
+          "gagnants_pct": 35.7,
+          "gain_moyen_net_pct": -0.7586,
+          "issues": {
+            "take profit": 4,
+            "stop loss": 9,
+            "echeance": 15
+          }
+        },
+        {
+          "take_profit_sigma": 3.0,
+          "stop_loss_sigma": 1.5,
+          "trades": 28,
+          "gagnants_pct": 28.6,
+          "gain_moyen_net_pct": -0.1527,
+          "issues": {
+            "take profit": 4,
+            "stop loss": 18,
+            "echeance": 6
+          }
+        },
+        {
+          "take_profit_sigma": 4.0,
+          "stop_loss_sigma": 2.0,
+          "trades": 28,
+          "gagnants_pct": 28.6,
+          "gain_moyen_net_pct": -0.5046,
+          "issues": {
+            "take profit": 2,
+            "stop loss": 17,
+            "echeance": 9
+          }
+        },
+        {
+          "take_profit_sigma": 6.0,
+          "stop_loss_sigma": 3.0,
+          "trades": 28,
+          "gagnants_pct": 32.1,
+          "gain_moyen_net_pct": -0.7607,
+          "issues": {
+            "take profit": 1,
+            "stop loss": 15,
+            "echeance": 12
+          }
+        },
+        {
+          "take_profit_sigma": 1.5,
+          "stop_loss_sigma": 3.0,
+          "trades": 28,
+          "gagnants_pct": 57.1,
+          "gain_moyen_net_pct": -0.2603,
+          "issues": {
+            "take profit": 16,
+            "stop loss": 10,
+            "echeance": 2
+          }
+        },
+        {
+          "take_profit_sigma": 2.0,
+          "stop_loss_sigma": 4.0,
+          "trades": 28,
+          "gagnants_pct": 53.6,
+          "gain_moyen_net_pct": -0.2848,
+          "issues": {
+            "take profit": 15,
+            "stop loss": 7,
+            "echeance": 6
+          }
+        }
+      ]
+    },
+    "SOLUSDT|4h": {
+      "trades_analyses": 32,
+      "mae_sigma": {
+        "mediane": 2.64,
+        "moyenne": 3.64,
+        "q90": 8.33
+      },
+      "mfe_sigma": {
+        "mediane": 2.34,
+        "moyenne": 3.36,
+        "q90": 6.65
+      },
+      "ratio_avantage": 0.923,
+      "mfe_moyenne_des_perdants_sigma": 1.36,
+      "mae_moyenne_des_gagnants_sigma": 1.75,
+      "configuration_actuelle": {
+        "take_profit_sigma": 3.0,
+        "stop_loss_sigma": 3.0,
+        "trades": 32,
+        "gagnants_pct": 50.0,
+        "gain_moyen_net_pct": -0.4299,
+        "issues": {
+          "take profit": 12,
+          "stop loss": 14,
+          "echeance": 6
+        }
+      },
+      "configurations": [
+        {
+          "take_profit_sigma": 1.0,
+          "stop_loss_sigma": 1.0,
+          "trades": 32,
+          "gagnants_pct": 56.2,
+          "gain_moyen_net_pct": -0.0974,
+          "issues": {
+            "take profit": 18,
+            "stop loss": 14,
+            "echeance": 0
+          }
+        },
+        {
+          "take_profit_sigma": 2.0,
+          "stop_loss_sigma": 2.0,
+          "trades": 32,
+          "gagnants_pct": 43.8,
+          "gain_moyen_net_pct": -0.5937,
+          "issues": {
+            "take profit": 14,
+            "stop loss": 17,
+            "echeance": 1
+          }
+        },
+        {
+          "take_profit_sigma": 3.0,
+          "stop_loss_sigma": 3.0,
+          "trades": 32,
+          "gagnants_pct": 50.0,
+          "gain_moyen_net_pct": -0.4299,
+          "issues": {
+            "take profit": 12,
+            "stop loss": 14,
+            "echeance": 6
+          }
+        },
+        {
+          "take_profit_sigma": 4.0,
+          "stop_loss_sigma": 4.0,
+          "trades": 32,
+          "gagnants_pct": 53.1,
+          "gain_moyen_net_pct": -0.1989,
+          "issues": {
+            "take profit": 10,
+            "stop loss": 11,
+            "echeance": 11
+          }
+        },
+        {
+          "take_profit_sigma": 3.0,
+          "stop_loss_sigma": 1.5,
+          "trades": 32,
+          "gagnants_pct": 34.4,
+          "gain_moyen_net_pct": -0.2629,
+          "issues": {
+            "take profit": 11,
+            "stop loss": 21,
+            "echeance": 0
+          }
+        },
+        {
+          "take_profit_sigma": 4.0,
+          "stop_loss_sigma": 2.0,
+          "trades": 32,
+          "gagnants_pct": 34.4,
+          "gain_moyen_net_pct": -0.4746,
+          "issues": {
+            "take profit": 8,
+            "stop loss": 19,
+            "echeance": 5
+          }
+        },
+        {
+          "take_profit_sigma": 6.0,
+          "stop_loss_sigma": 3.0,
+          "trades": 32,
+          "gagnants_pct": 43.8,
+          "gain_moyen_net_pct": -0.0856,
+          "issues": {
+            "take profit": 5,
+            "stop loss": 15,
+            "echeance": 12
+          }
+        },
+        {
+          "take_profit_sigma": 1.5,
+          "stop_loss_sigma": 3.0,
+          "trades": 32,
+          "gagnants_pct": 68.8,
+          "gain_moyen_net_pct": -0.0216,
+          "issues": {
+            "take profit": 21,
+            "stop loss": 9,
+            "echeance": 2
+          }
+        },
+        {
+          "take_profit_sigma": 2.0,
+          "stop_loss_sigma": 4.0,
+          "trades": 32,
+          "gagnants_pct": 59.4,
+          "gain_moyen_net_pct": -0.5505,
+          "issues": {
+            "take profit": 16,
+            "stop loss": 10,
+            "echeance": 6
+          }
+        }
+      ]
+    }
+  },
+  "comparaison": [
+    {
+      "take_profit_sigma": 1.0,
+      "stop_loss_sigma": 1.0,
+      "gagnants_pct": 34.9,
+      "gain_moyen_net_pct": -0.2687,
+      "issues": {
+        "take profit": 109,
+        "stop loss": 122,
+        "echeance": 1
+      }
+    },
+    {
+      "take_profit_sigma": 2.0,
+      "stop_loss_sigma": 2.0,
+      "gagnants_pct": 48.7,
+      "gain_moyen_net_pct": -0.2053,
+      "issues": {
+        "take profit": 109,
+        "stop loss": 107,
+        "echeance": 16
+      }
+    },
+    {
+      "take_profit_sigma": 3.0,
+      "stop_loss_sigma": 3.0,
+      "gagnants_pct": 50.6,
+      "gain_moyen_net_pct": -0.0981,
+      "issues": {
+        "take profit": 88,
+        "stop loss": 93,
+        "echeance": 51
+      }
+    },
+    {
+      "take_profit_sigma": 4.0,
+      "stop_loss_sigma": 4.0,
+      "gagnants_pct": 52.1,
+      "gain_moyen_net_pct": -0.0773,
+      "issues": {
+        "take profit": 70,
+        "stop loss": 71,
+        "echeance": 91
+      }
+    },
+    {
+      "take_profit_sigma": 3.0,
+      "stop_loss_sigma": 1.5,
+      "gagnants_pct": 36.3,
+      "gain_moyen_net_pct": -0.1851,
+      "issues": {
+        "take profit": 65,
+        "stop loss": 142,
+        "echeance": 25
+      }
+    },
+    {
+      "take_profit_sigma": 4.0,
+      "stop_loss_sigma": 2.0,
+      "gagnants_pct": 41.6,
+      "gain_moyen_net_pct": -0.1544,
+      "issues": {
+        "take profit": 56,
+        "stop loss": 122,
+        "echeance": 54
+      }
+    },
+    {
+      "take_profit_sigma": 6.0,
+      "stop_loss_sigma": 3.0,
+      "gagnants_pct": 45.6,
+      "gain_moyen_net_pct": 0.0326,
+      "issues": {
+        "take profit": 31,
+        "stop loss": 97,
+        "echeance": 104
+      }
+    },
+    {
+      "take_profit_sigma": 1.5,
+      "stop_loss_sigma": 3.0,
+      "gagnants_pct": 58.0,
+      "gain_moyen_net_pct": -0.1419,
+      "issues": {
+        "take profit": 143,
+        "stop loss": 73,
+        "echeance": 16
+      }
+    },
+    {
+      "take_profit_sigma": 2.0,
+      "stop_loss_sigma": 4.0,
+      "gagnants_pct": 59.9,
+      "gain_moyen_net_pct": -0.166,
+      "issues": {
+        "take profit": 131,
+        "stop loss": 65,
+        "echeance": 36
+      }
+    }
+  ],
+  "meilleure_mesuree": {
+    "take_profit_sigma": 6.0,
+    "stop_loss_sigma": 3.0,
+    "gagnants_pct": 45.6,
+    "gain_moyen_net_pct": 0.0326,
+    "issues": {
+      "take profit": 31,
+      "stop loss": 97,
+      "echeance": 104
+    }
+  }
+}
