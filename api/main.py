@@ -31,6 +31,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+import pandas as pd
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
@@ -190,11 +191,19 @@ def graphique(symbole: str, interval: str = Query("15m"), limite: int = Query(12
     # avant la premiere que l'on affiche.
     profondeur = limite + modele.BOUGIES_MINIMUM * 2
     try:
-        bougies_recentes = (donnees.bougies_binance(symbole, profondeur) if source == "binance"
-                            else donnees.dernieres_bougies(symbole, par_intervalle=profondeur))
+        toutes = (donnees.bougies_binance(symbole, profondeur, inclure_en_cours=True)
+                  if source == "binance"
+                  else donnees.dernieres_bougies(symbole, par_intervalle=profondeur))
     except Exception as exc:
         origine = "Binance" if source == "binance" else "base"
         raise HTTPException(status_code=503, detail=f"{origine} indisponible ({type(exc).__name__})")
+
+    # La bougie en cours est mise de cote : le modele ne predit QUE sur des
+    # bougies cloturees, mais l'interface l'affiche pour suivre le prix vivant.
+    maintenant = pd.Timestamp.now(tz="UTC")
+    en_cours = toutes[(toutes["symbol"] == symbole) & (toutes["interval"] == interval)
+                      & (toutes["close_time"] > maintenant)]
+    bougies_recentes = toutes[toutes["close_time"] <= maintenant]
 
     try:
         serie = modele.predire_serie(bougies_recentes, symbole, interval, style, limite)
@@ -203,9 +212,23 @@ def graphique(symbole: str, interval: str = Query("15m"), limite: int = Query(12
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc))
 
+    derniere = en_cours.sort_values("open_time").tail(1)
+    bougie_en_cours = None
+    if not derniere.empty:
+        ligne = derniere.iloc[0]
+        bougie_en_cours = {
+            "open_time": ligne["open_time"].isoformat(),
+            "close_time": ligne["close_time"].isoformat(),
+            "open": float(ligne["open"]), "high": float(ligne["high"]),
+            "low": float(ligne["low"]), "close": float(ligne["close"]),
+        }
+
     return {"symbole": symbole, "interval": interval, "style": style, "source": source,
             "seuils": modele.charger()["styles"][style],
-            "bougies": len(serie), "donnees": serie}
+            "bougies": len(serie), "donnees": serie,
+            # Affichee, jamais utilisee pour predire.
+            "bougie_en_cours": bougie_en_cours,
+            "maintenant": maintenant.isoformat()}
 
 
 @app.get("/ordre/{symbole}", tags=["interface"], dependencies=[Depends(verifier_cle)])

@@ -190,6 +190,7 @@
       <div class="bloc"><span class="l">Décision</span><span class="v" id="decision">—</span></div>
       <div class="bloc"><span class="l">Probabilité de hausse</span><span class="v chiffre" id="proba">—</span></div>
       <div class="bloc"><span class="l">Volatilité récente</span><span class="v chiffre" id="volatilite">—</span></div>
+      <div class="bloc"><span class="l">Prochaine clôture</span><span class="v chiffre" id="cloture">—</span></div>
     </div>
 
     <div class="zone-graphique">
@@ -272,16 +273,40 @@ function creerGraphique() {
 }
 
 let derniereBougie = null;
+let finBougieEnCours = null;
+
+function decalageTexte() {
+  const heures = -new Date().getTimezoneOffset() / 60;
+  return "UTC" + (heures >= 0 ? "+" : "") + heures;
+}
 
 function afficherLegende(bougie) {
   if (!bougie) { $("legende").innerHTML = ""; return; }
   const monte = bougie.close >= bougie.open;
   const ligne = (nom, valeur) =>
     `<div class="ligne"><span>${nom}</span><b class="chiffre">${formater(valeur)}</b></div>`;
+  const marque = bougie.en_cours ? " · en cours" : "";
   $("legende").innerHTML =
-    `<div class="ligne"><span><b>${$("paire").value}</b> · ${etatChoix.interval}</span>
+    `<div class="ligne"><span><b>${$("paire").value}</b> · ${etatChoix.interval}${marque}</span>
        <b class="chiffre ${monte ? "hausse" : "baisse"}">${formater(bougie.close)}</b></div>`
-    + ligne("ouverture", bougie.open) + ligne("plus haut", bougie.high) + ligne("plus bas", bougie.low);
+    + ligne("ouverture", bougie.open) + ligne("plus haut", bougie.high) + ligne("plus bas", bougie.low)
+    + `<div class="ligne"><span>heures locales</span><span>${decalageTexte()}</span></div>`;
+}
+
+// La bibliotheque affiche les horodatages en UTC. On les decale donc de
+// l'ecart du navigateur pour que l'axe parle en HEURE LOCALE : sans cela, une
+// bougie 4h de 08:00 UTC s'affiche "08:00" alors qu'il est 16:00 chez le
+// lecteur, qui croit voir des donnees vieilles de huit heures.
+function enSecondesLocales(texteIso) {
+  const date = new Date(texteIso);
+  return Math.floor(date.getTime() / 1000) - date.getTimezoneOffset() * 60;
+}
+
+function heureLocale(texteIso, avecDate = true) {
+  const options = avecDate
+    ? { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }
+    : { hour: "2-digit", minute: "2-digit" };
+  return new Date(texteIso).toLocaleString("fr-FR", options);
 }
 
 function formater(valeur) {
@@ -324,7 +349,7 @@ function remplirOrdre(ordre, decision) {
 
   $("ordre-lignes").innerHTML =
     ligne("Sens", sens)
-    + ligne("Entrée", formater(ordre.entree))
+    + ligne("Entrée <span class=\"c\">(dernière clôture)</span>", formater(ordre.entree))
     + ligne("Take profit", formater(ordre.take_profit) + `<br><span class="c">${pourcent(achat ? ordre.distance_pct : -ordre.distance_pct, true)}</span>`, "hausse")
     + ligne("Stop loss", formater(ordre.stop_loss) + `<br><span class="c">${pourcent(achat ? -ordre.distance_pct : ordre.distance_pct, true)}</span>`, "baisse")
     + `<div class="ligne souligne"><span class="c">Gain net si take profit</span>
@@ -391,25 +416,37 @@ async function charger() {
     ]);
 
     const serie = graphique.donnees;
-    serieBougies.setData(serie.map((b) => ({
-      time: Math.floor(new Date(b.open_time).getTime() / 1000),
+    const points = serie.map((b) => ({
+      time: enSecondesLocales(b.open_time),
       open: b.open, high: b.high, low: b.low, close: b.close,
-    })));
+    }));
+    // La bougie en cours est ajoutee a la fin : elle bouge en direct, mais le
+    // modele ne se prononce jamais dessus.
+    if (graphique.bougie_en_cours) {
+      const c = graphique.bougie_en_cours;
+      points.push({ time: enSecondesLocales(c.open_time),
+                    open: c.open, high: c.high, low: c.low, close: c.close });
+    }
+    serieBougies.setData(points);
     marqueurs.setMarkers(serie.filter((b) => b.decision !== "attendre").map((b) => ({
-      time: Math.floor(new Date(b.open_time).getTime() / 1000),
+      time: enSecondesLocales(b.open_time),
       position: b.decision === "acheter" ? "belowBar" : "aboveBar",
       color: b.decision === "acheter" ? COULEURS.hausse : COULEURS.baisse,
       shape: b.decision === "acheter" ? "arrowUp" : "arrowDown",
       text: b.decision === "acheter" ? "A" : "V",
     })));
 
-    derniereBougie = serie[serie.length - 1];
+    derniereBougie = graphique.bougie_en_cours
+      ? { ...graphique.bougie_en_cours, en_cours: true }
+      : serie[serie.length - 1];
+    const derniereClose = serie[serie.length - 1];
     afficherLegende(derniereBougie);
     poserNiveaux(ordre.ordre);
     remplirOrdre(ordre.ordre, ordre.decision);
     placerJauge(ordre.decision);
 
     const decision = ordre.decision.decision;
+    // Le prix affiche est celui qui bouge : la bougie en cours si elle existe.
     $("prix").textContent = formater(derniereBougie.close);
     $("decision").textContent = decision;
     $("decision").className = "v " + (decision === "acheter" ? "hausse"
@@ -431,14 +468,32 @@ async function charger() {
 
     $("pastille").className = "pastille vivant";
     const source = graphique.source === "binance" ? "Binance en direct" : "base du projet";
-    $("etat").textContent = `${serie.length} bougies · ${source} · `
-      + new Date(derniereBougie.open_time).toLocaleString("fr-FR")
-      + ` · actualisé ${new Date().toLocaleTimeString("fr-FR")}`;
+    const duree = { "15m": 15, "1h": 60, "4h": 240 }[etatChoix.interval];
+    const finDerniere = new Date(new Date(derniereClose.open_time).getTime() + duree * 60000);
+    finBougieEnCours = graphique.bougie_en_cours
+      ? new Date(graphique.bougie_en_cours.close_time) : null;
+    majCompteARebours();
+
+    $("etat").textContent = `${serie.length} bougies · ${source} · dernière close `
+      + `${heureLocale(derniereBougie.open_time, false)}–${heureLocale(finDerniere.toISOString(), false)}`
+      + ` · actualisé ${new Date().toLocaleTimeString("fr-FR")} (heures locales)`;
   } catch (erreur) {
     $("pastille").className = "pastille mort";
     $("etat").textContent = "Erreur : " + erreur.message;
     $("etat").classList.add("erreur");
   }
+}
+
+function majCompteARebours() {
+  if (!finBougieEnCours) { $("cloture").textContent = "—"; return; }
+  const reste = finBougieEnCours - new Date();
+  if (reste <= 0) { $("cloture").textContent = "imminente"; return; }
+  const minutes = Math.floor(reste / 60000);
+  const texte = minutes >= 60
+    ? `${Math.floor(minutes / 60)} h ${String(minutes % 60).padStart(2, "0")}`
+    : `${minutes} min`;
+  // Le modele ne se prononcera qu'a la cloture de la bougie en cours.
+  $("cloture").textContent = `${heureLocale(finBougieEnCours.toISOString(), false)} · dans ${texte}`;
 }
 
 function brancherSegments(id, cle) {
@@ -464,6 +519,8 @@ brancherSegments("styles", "style");
 ["paire", "source"].forEach((id) => $(id).addEventListener("change", charger));
 charger();
 programmer();
+// Le compte a rebours descend chaque minute, sans rappeler l'API.
+setInterval(majCompteARebours, 30000);
 </script>
 
 </body>

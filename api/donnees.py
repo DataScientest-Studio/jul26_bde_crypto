@@ -41,15 +41,18 @@ def dernieres_bougies(symbole: str, profil: str = "day_trading",
     return df.sort_values(["interval", "open_time"]).reset_index(drop=True)
 
 
-def bougies_binance(symbole: str, par_intervalle: int = 300) -> pd.DataFrame:
+def bougies_binance(symbole: str, par_intervalle: int = 300,
+                    inclure_en_cours: bool = False) -> pd.DataFrame:
     """Les dernieres bougies lues DIRECTEMENT chez Binance.
 
     La base n'est alimentee que lorsqu'on lance la collecte : elle a donc
     toujours du retard. Pour une interface qui doit montrer le marche tel
     qu'il est maintenant, on interroge Binance a la volee.
 
-    La bougie EN COURS est ecartee : sa "cloture" n'est qu'un prix
+    La bougie EN COURS est ecartee par defaut : sa "cloture" n'est qu'un prix
     intermediaire, et le modele n'a jamais appris sur des bougies inachevees.
+    `inclure_en_cours` la garde quand meme, pour l'AFFICHER - jamais pour
+    predire dessus. Elle se reconnait a sa date de fermeture dans le futur.
     """
     from src.binance_rest import BinanceClient
     from src.preprocessing import normalize_klines
@@ -60,7 +63,7 @@ def bougies_binance(symbole: str, par_intervalle: int = 300) -> pd.DataFrame:
     for interval in ("15m", "1h", "4h"):
         brut = client.klines(symbole, interval, limit=min(par_intervalle, 1000))
         df = normalize_klines(brut, symbole, interval)
-        morceaux.append(df[df["close_time"] < maintenant])
+        morceaux.append(df if inclure_en_cours else df[df["close_time"] < maintenant])
     return pd.concat(morceaux, ignore_index=True)[COLONNES]
 
 

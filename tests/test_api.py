@@ -84,7 +84,7 @@ def client(monkeypatch):
     monkeypatch.setattr(donnees, "paires_disponibles", lambda: ["BTCUSDT", "ETHUSDT"])
     monkeypatch.setattr(donnees, "journaliser_prediction", lambda prediction: None)
     monkeypatch.setattr(donnees, "bougies_binance",
-                        lambda symbole, par_intervalle=300: bougies_factices())
+                        lambda symbole, par_intervalle=300, inclure_en_cours=False: bougies_factices())
 
     # Le modele factice accepte n'importe quelles colonnes : on prend celles
     # que la chaine de calcul produit reellement, pour verifier au passage
@@ -463,3 +463,27 @@ def test_fichier_statique_refuse_de_sortir_du_dossier(client):
     """Sans ce controle, un nom comme ../../.env sortirait du dossier statique."""
     assert client.get("/static/lightweight-charts.js").status_code == 200
     assert client.get("/static/..%2F..%2FREADME.md").status_code == 404
+
+
+def test_graphique_separe_la_bougie_en_cours(client, monkeypatch):
+    """La bougie en cours est affichable mais jamais predite.
+
+    Sa cloture n'existe pas encore : la faire passer dans le modele
+    reviendrait a lui donner un prix intermediaire pour un prix de cloture.
+    """
+    bougies = bougies_factices()
+    maintenant = pd.Timestamp.now(tz="UTC")
+    # On fabrique une bougie 1h encore ouverte.
+    en_cours = bougies[bougies["interval"] == "1h"].tail(1).copy()
+    en_cours["open_time"] = maintenant.floor("h")
+    en_cours["close_time"] = maintenant.floor("h") + pd.Timedelta("1h")
+    monkeypatch.setattr(donnees, "bougies_binance",
+                        lambda symbole, par_intervalle=300, inclure_en_cours=False:
+                        pd.concat([bougies, en_cours], ignore_index=True))
+
+    corps = client.get("/graphique/BTCUSDT?interval=1h&limite=30").json()
+    assert corps["bougie_en_cours"] is not None
+    assert pd.Timestamp(corps["bougie_en_cours"]["close_time"]) > maintenant
+    # Aucune decision ne porte sur elle : elle n'est pas dans la serie predite.
+    horodatages = {b["open_time"] for b in corps["donnees"]}
+    assert corps["bougie_en_cours"]["open_time"] not in horodatages
