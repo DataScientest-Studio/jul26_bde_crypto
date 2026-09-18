@@ -9,6 +9,8 @@
     POST /prediction        acheter / vendre / attendre, selon le style
     GET  /derive            les donnees recentes (fenetre en jours) ressemblent-elles
                             a celles de l'entrainement ?
+    GET  /ordre/{paire}     l'ordre projete : take profit, stop loss, et ce que
+                            le modele a barrieres prevoit qu'il devienne
 
 SECURITE
     Si la variable d'environnement CRYPTOBOT_API_KEY est definie, toutes les
@@ -34,7 +36,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
 from api import derive as module_derive
-from api import donnees, modele
+from api import donnees, modele, ordre as module_ordre
 from api.schemas import DemandeDePrediction, Derive, Prediction, Sante
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -204,6 +206,53 @@ def graphique(symbole: str, interval: str = Query("15m"), limite: int = Query(12
     return {"symbole": symbole, "interval": interval, "style": style, "source": source,
             "seuils": modele.charger()["styles"][style],
             "bougies": len(serie), "donnees": serie}
+
+
+@app.get("/ordre/{symbole}", tags=["interface"], dependencies=[Depends(verifier_cle)])
+def ordre(symbole: str, interval: str = Query("1h"), style: str = Query("conservateur"),
+          source: str = Query("binance", pattern="^(binance|base)$")) -> dict:
+    """L'ordre projete a cet instant : niveaux, echeance et pronostic.
+
+    Deux modeles repondent ici. Celui de l'etape 4 decide s'il faut agir ; celui
+    de l'etape 3, entraine sur les trois barrieres, dit si le take profit ou le
+    stop loss serait touche en premier.
+    """
+    symbole = symbole.upper()
+    profondeur = modele.BOUGIES_MINIMUM * 2
+    try:
+        bougies_recentes = (donnees.bougies_binance(symbole, profondeur) if source == "binance"
+                            else donnees.dernieres_bougies(symbole, par_intervalle=profondeur))
+    except Exception as exc:
+        origine = "Binance" if source == "binance" else "base"
+        raise HTTPException(status_code=503, detail=f"{origine} indisponible ({type(exc).__name__})")
+
+    try:
+        decision = modele.predire(bougies_recentes, symbole, interval, style)
+        projection = module_ordre.projeter(bougies_recentes, symbole, interval, decision["sens"])
+    except (modele.ModeleIndisponible, module_ordre.ModeleBarrieresIndisponible) as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+
+    return {"decision": decision, "ordre": projection}
+
+
+@app.get("/static/{fichier}", tags=["interface"])
+def fichier_statique(fichier: str):
+    """Sert la bibliotheque de graphiques, installee localement.
+
+    Elle est livree avec le projet plutot que chargee depuis un site
+    exterieur : l'interface fonctionne alors sans acces reseau, et la version
+    ne peut pas changer dans notre dos.
+    """
+    from fastapi.responses import FileResponse
+
+    chemin = (Path(__file__).parent / "static" / fichier).resolve()
+    dossier = (Path(__file__).parent / "static").resolve()
+    # Sans ce controle, un nom de fichier comme ../../.env sortirait du dossier.
+    if dossier not in chemin.parents or not chemin.is_file():
+        raise HTTPException(status_code=404, detail="fichier inconnu")
+    return FileResponse(chemin, media_type="application/javascript")
 
 
 @app.get("/interface", response_class=HTMLResponse, tags=["interface"])

@@ -25,6 +25,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from api import derive as module_derive
 from api import donnees, main, modele
+from api import ordre as module_ordre
 
 
 # ---------------------------------------------------------------------------
@@ -371,7 +372,10 @@ def test_interface_sert_une_page_html(client):
     reponse = client.get("/interface")
     assert reponse.status_code == 200
     assert "text/html" in reponse.headers["content-type"]
-    assert "<canvas" in reponse.text
+    # La bibliotheque est servie par le projet, jamais par un site exterieur.
+    assert '/static/lightweight-charts.js' in reponse.text
+    assert 'id="graphique"' in reponse.text
+    assert "cdn" not in reponse.text.lower()
 
 
 def test_interface_accessible_sans_cle(client, monkeypatch):
@@ -394,3 +398,68 @@ def test_les_deux_cotes_peuvent_se_declencher(client):
                             json={"symbole": "BTCUSDT", "style": "conservateur"}).json()
         decisions[probabilite] = corps["decision"]
     assert decisions == {0.62: "acheter", 0.38: "vendre", 0.50: "attendre"}
+
+
+# ---------------------------------------------------------------------------
+#  Ordre projete : take profit, stop loss et pronostic
+# ---------------------------------------------------------------------------
+
+class PipelineFactice:
+    """Modele a barrieres : renvoie les trois probabilites dans l'ordre -1, 0, 1."""
+
+    classes_ = np.array([-1, 0, 1])
+
+    def __init__(self, probabilites=(0.25, 0.35, 0.40)):
+        self.probabilites = probabilites
+
+    def predict_proba(self, X):
+        return np.tile(self.probabilites, (len(X), 1))
+
+
+@pytest.fixture
+def client_avec_barrieres(client, monkeypatch):
+    monkeypatch.setattr(module_ordre, "charger_barrieres", lambda: {
+        "pipeline": PipelineFactice(), "colonnes": [], "largeur_barrieres": 3.0,
+        "horizon": 12, "entraine_le": "2026-09-18T15:48:00+00:00",
+    })
+    return client
+
+
+def test_ordre_place_les_niveaux_autour_du_prix(client_avec_barrieres):
+    corps = client_avec_barrieres.get("/ordre/BTCUSDT?interval=1h&style=agressif").json()
+    ordre = corps["ordre"]
+    assert ordre["take_profit"] > ordre["entree"] > ordre["stop_loss"]   # configuration d'achat
+    assert ordre["distance_pct"] > 0
+    assert ordre["largeur_sigma"] == 3.0
+    assert ordre["horizon_bougies"] == 12
+    assert ordre["ratio_gain_risque"] == 1.0
+
+
+def test_ordre_deduit_les_frais_du_gain_affiche(client_avec_barrieres):
+    """Le gain annonce doit etre celui qu'on touche, frais deduits."""
+    ordre = client_avec_barrieres.get("/ordre/BTCUSDT").json()["ordre"]
+    assert ordre["gain_net_si_take_profit_pct"] == pytest.approx(ordre["distance_pct"] - 0.2, abs=1e-6)
+    assert ordre["perte_nette_si_stop_loss_pct"] == pytest.approx(-ordre["distance_pct"] - 0.2, abs=1e-6)
+
+
+def test_ordre_donne_le_pronostic_du_modele_a_barrieres(client_avec_barrieres):
+    ordre = client_avec_barrieres.get("/ordre/BTCUSDT").json()["ordre"]
+    assert ordre["pronostic_sens"] == 1                 # 0,40 est la plus forte
+    assert sum(ordre["probabilites"].values()) == pytest.approx(1.0, abs=1e-6)
+    assert set(ordre["probabilites"]) == {"stop loss touche en premier",
+                                          "aucune barriere touchee",
+                                          "take profit touche en premier"}
+
+
+def test_ordre_sans_modele_a_barrieres_donne_503(client, monkeypatch):
+    def absent():
+        raise module_ordre.ModeleBarrieresIndisponible("modele introuvable")
+
+    monkeypatch.setattr(module_ordre, "charger_barrieres", absent)
+    assert client.get("/ordre/BTCUSDT").status_code == 503
+
+
+def test_fichier_statique_refuse_de_sortir_du_dossier(client):
+    """Sans ce controle, un nom comme ../../.env sortirait du dossier statique."""
+    assert client.get("/static/lightweight-charts.js").status_code == 200
+    assert client.get("/static/..%2F..%2FREADME.md").status_code == 404

@@ -3,248 +3,468 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CryptoBot — bougies et décisions du modèle</title>
+<title>CryptoBot — terminal</title>
 <!--
-  Page de demonstration, servie par l'API elle-meme (meme origine, donc aucun
-  CORS a regler). Le graphique est dessine en Canvas, sans aucune
-  bibliotheque : rien a telecharger, la page fonctionne hors ligne.
+  Terminal de demonstration, servi par l'API elle-meme (meme origine, donc
+  aucun CORS a regler).
+
+  Le graphique utilise lightweight-charts de TradingView, livree AVEC le projet
+  (api/static/) plutot que chargee depuis un site exterieur : l'interface
+  fonctionne sans acces reseau et la version ne peut pas changer dans notre dos.
 -->
+<script src="/static/lightweight-charts.js"></script>
 <style>
   :root {
-    --fond: #0f141c; --surface: #161d27; --trait: #26303e;
-    --encre: #e6ebf2; --encre-douce: #93a0b3;
-    --hausse: #1baf7a; --baisse: #e34948; --attente: #7a8397; --accent: #f0b93c;
+    --fond:       #0a0e14;
+    --surface:    #111722;
+    --surface-2:  #161d2b;
+    --trait:      #1f2937;
+    --trait-fort: #2b3648;
+    --encre:      #e8edf5;
+    --encre-2:    #9aa7bb;
+    --encre-3:    #63708a;
+    --hausse:     #17b26a;
+    --baisse:     #f04438;
+    --neutre:     #64748b;
+    --accent:     #eab308;
   }
   * { box-sizing: border-box; }
+  html, body { height: 100%; }
   body {
     margin: 0; background: var(--fond); color: var(--encre);
-    font-family: "Segoe UI", system-ui, sans-serif; font-size: 15px;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 14px; line-height: 1.5;
   }
-  .page { max-width: 1180px; margin: 0 auto; padding: 24px 16px 48px; }
-  header { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: baseline;
-           border-bottom: 1px solid var(--trait); padding-bottom: 16px; }
-  h1 { font-size: 1.3rem; margin: 0; font-weight: 600; }
-  .avertissement { color: var(--accent); font-size: 13px; }
-  .controles { display: flex; flex-wrap: wrap; gap: 12px; margin: 20px 0; align-items: center; }
-  label { color: var(--encre-douce); font-size: 13px; display: flex; gap: 6px; align-items: center; }
-  select, button {
-    background: var(--surface); color: var(--encre); border: 1px solid var(--trait);
-    border-radius: 6px; padding: 7px 11px; font: inherit; font-size: 14px;
+  .chiffre { font-variant-numeric: tabular-nums;
+             font-family: ui-monospace, "Cascadia Mono", "JetBrains Mono", monospace; }
+
+  /* ---------- Barre du haut ---------- */
+  /* Grille plutot que flex : en flex, le groupe de reglages se faisait ecraser
+     a 44 px par le bloc d'etat et ses boutons debordaient de l'ecran. Ici
+     chaque zone a sa colonne, et minmax(0, 1fr) autorise vraiment le repli. */
+  .barre {
+    display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(0, auto);
+    gap: 10px 18px; align-items: center;
+    padding: 12px 20px; background: var(--surface); border-bottom: 1px solid var(--trait);
   }
-  button { cursor: pointer; }
-  button:hover, select:hover { border-color: var(--encre-douce); }
-  button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .cartes { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1px;
-            background: var(--trait); border: 1px solid var(--trait); margin-bottom: 20px; }
-  .carte { background: var(--surface); padding: 14px 16px; }
-  .carte .v { font-size: 1.5rem; font-weight: 600; font-variant-numeric: tabular-nums; display: block; }
-  .carte .l { color: var(--encre-douce); font-size: 11px; letter-spacing: .08em;
-              text-transform: uppercase; display: block; margin-top: 4px; }
-  .acheter { color: var(--hausse); } .vendre { color: var(--baisse); } .attendre { color: var(--attente); }
-  figure { margin: 0; background: var(--surface); border: 1px solid var(--trait); padding: 12px; }
-  canvas { width: 100%; height: auto; display: block; }
-  .legende { display: flex; flex-wrap: wrap; gap: 16px; color: var(--encre-douce);
-             font-size: 12.5px; margin-top: 10px; }
-  .pastille { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; }
-  footer { color: var(--encre-douce); font-size: 12.5px; margin-top: 18px; }
+  @media (max-width: 860px) { .barre { grid-template-columns: minmax(0, 1fr); } }
+  /* Le groupe de reglages occupe la place disponible et se replie tout seul ;
+     l'etat reste a droite tant qu'il y a de la place, puis passe a la ligne.
+     min-width: 0 est indispensable : sans lui, un enfant flex refuse de
+     retrecir et fait deborder la page horizontalement. */
+  .reglages { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; min-width: 0; }
+  .marque { font-weight: 650; letter-spacing: -.01em; margin-right: 4px; }
+  .marque span { color: var(--encre-3); font-weight: 400; font-size: 12px; margin-left: 8px; }
+  .champ { display: flex; align-items: center; gap: 7px; color: var(--encre-3); font-size: 12px; }
+  select {
+    background: var(--surface-2); color: var(--encre); border: 1px solid var(--trait);
+    border-radius: 6px; padding: 6px 9px; font: inherit; font-size: 13px;
+  }
+  .segments { display: flex; border: 1px solid var(--trait); border-radius: 6px; overflow: hidden; }
+  .segments button {
+    background: var(--surface-2); color: var(--encre-2); border: 0; border-right: 1px solid var(--trait);
+    padding: 6px 12px; font: inherit; font-size: 13px; cursor: pointer;
+  }
+  .segments button:last-child { border-right: 0; }
+  .segments button[aria-pressed="true"] { background: var(--trait-fort); color: var(--encre); font-weight: 600; }
+  select:hover, .segments button:hover { border-color: var(--trait-fort); color: var(--encre); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .etat { display: flex; align-items: center; gap: 7px; color: var(--encre-3); font-size: 12px;
+          min-width: 0; justify-self: end; }
+  .etat span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pastille { width: 8px; height: 8px; border-radius: 50%; background: var(--neutre); }
+  .pastille.vivant { background: var(--hausse); }
+  .pastille.mort { background: var(--baisse); }
+
+  /* ---------- Disposition ---------- */
+  .terminal { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 1px;
+              background: var(--trait); min-height: calc(100vh - 53px); }
+  @media (max-width: 900px) { .terminal { grid-template-columns: minmax(0, 1fr); } }
+  .colonne { background: var(--fond); display: flex; flex-direction: column; min-width: 0; }
+
+  /* ---------- Bandeau de chiffres ---------- */
+  .chiffres { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+              gap: 1px; background: var(--trait); border-bottom: 1px solid var(--trait); }
+  .bloc { background: var(--surface); padding: 11px 16px; }
+  .bloc .l { color: var(--encre-3); font-size: 10.5px; letter-spacing: .07em;
+             text-transform: uppercase; display: block; }
+  .bloc .v { font-size: 1.15rem; font-weight: 600; display: block; margin-top: 3px; }
+  .hausse { color: var(--hausse); } .baisse { color: var(--baisse); } .neutre { color: var(--neutre); }
+
+  /* ---------- Graphique ---------- */
+  .zone-graphique { position: relative; flex: 1; min-height: 420px; min-width: 0; }
+  #graphique { position: absolute; inset: 0; }
+  .legende {
+    position: absolute; top: 12px; left: 14px; z-index: 3; pointer-events: none;
+    background: rgba(17, 23, 34, .82); border: 1px solid var(--trait); border-radius: 6px;
+    padding: 8px 12px; font-size: 12px; color: var(--encre-2); min-width: 210px;
+  }
+  .legende b { color: var(--encre); font-weight: 600; }
+  .legende .ligne { display: flex; justify-content: space-between; gap: 18px; }
+
+  /* ---------- Panneau de droite ---------- */
+  .panneau { background: var(--surface); border-left: 0; padding: 0; overflow-y: auto; }
+  .carte { border-bottom: 1px solid var(--trait); padding: 16px 18px; }
+  .carte h2 { font-size: 11px; letter-spacing: .09em; text-transform: uppercase;
+              color: var(--encre-3); margin: 0 0 12px; font-weight: 600; }
+  .verdict { display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px; }
+  .verdict .mot { font-size: 1.45rem; font-weight: 650; text-transform: capitalize; }
+  .verdict .detail { color: var(--encre-3); font-size: 12px; }
+
+  .jauge { margin-top: 12px; }
+  .jauge .rail { position: relative; height: 26px; background: var(--surface-2);
+                 border: 1px solid var(--trait); border-radius: 5px; overflow: hidden; }
+  .jauge .zone-vente { position: absolute; left: 0; top: 0; bottom: 0; background: rgba(240, 68, 56, .16); }
+  .jauge .zone-achat { position: absolute; right: 0; top: 0; bottom: 0; background: rgba(23, 178, 106, .16); }
+  .jauge .curseur { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--encre); }
+  .jauge .reperes { display: flex; justify-content: space-between; color: var(--encre-3);
+                    font-size: 11px; margin-top: 5px; }
+
+  .lignes { display: grid; gap: 9px; }
+  .ligne { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .ligne .c { color: var(--encre-3); font-size: 12.5px; }
+  .ligne .d { font-size: 13.5px; font-weight: 550; text-align: right; }
+  .ligne.souligne { border-top: 1px solid var(--trait); padding-top: 9px; }
+
+  .barres { display: grid; gap: 7px; margin-top: 4px; }
+  .mesure { display: grid; grid-template-columns: 1fr 44px; gap: 10px; align-items: center; }
+  .mesure .piste { height: 7px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
+  .mesure .remplissage { height: 100%; }
+  .mesure .etiquette { color: var(--encre-2); font-size: 12px; margin-bottom: 3px; display: block; }
+  .mesure .part { font-size: 12px; color: var(--encre-2); text-align: right; }
+
+  .avis { color: var(--accent); font-size: 11.5px; padding: 12px 18px; border-bottom: 1px solid var(--trait);
+          background: rgba(234, 179, 8, .06); }
   .erreur { color: var(--baisse); }
+  .vide { color: var(--encre-3); font-size: 12.5px; }
 </style>
 </head>
 <body>
-<div class="page">
 
-  <header>
-    <h1>CryptoBot — bougies et décisions du modèle</h1>
-    <span class="avertissement">modèle expérimental, non rentable une fois les frais déduits</span>
-  </header>
+<div class="barre">
+  <span class="marque">CryptoBot <span>terminal de démonstration</span></span>
 
-  <div class="controles">
-    <label for="paire">Paire
-      <select id="paire">
-        <option>BTCUSDT</option><option>ETHUSDT</option><option>BNBUSDT</option>
-        <option>SOLUSDT</option><option>XRPUSDT</option>
-      </select>
-    </label>
-    <label for="interval">Pas de temps
-      <select id="interval"><option>15m</option><option selected>1h</option><option>4h</option></select>
-    </label>
-    <label for="style">Style
-      <select id="style"><option value="conservateur">Conservateur</option><option value="agressif">Agressif</option></select>
-    </label>
-    <label for="source">Données
-      <select id="source"><option value="binance">Binance en direct</option><option value="base">Base du projet</option></select>
-    </label>
-    <button id="rafraichir" type="button">Rafraîchir</button>
-    <label for="auto"><input type="checkbox" id="auto" checked> Rafraîchissement automatique</label>
-  </div>
+  <div class="reglages">
+  <label class="champ" for="paire">Paire
+    <select id="paire">
+      <option>BTCUSDT</option><option>ETHUSDT</option><option>BNBUSDT</option>
+      <option>SOLUSDT</option><option>XRPUSDT</option>
+    </select>
+  </label>
 
-  <div class="cartes">
-    <div class="carte"><span class="v" id="prix">—</span><span class="l">Dernier prix</span></div>
-    <div class="carte"><span class="v" id="decision">—</span><span class="l">Décision sur la dernière bougie</span></div>
-    <div class="carte"><span class="v" id="proba">—</span><span class="l">Probabilité de hausse</span></div>
-    <div class="carte"><span class="v" id="seuil">—</span><span class="l">Seuils du style (achat / vente)</span></div>
-  </div>
-
-  <figure>
-    <canvas id="graphique" width="1140" height="460" role="img"
-            aria-label="Graphique en chandeliers avec les décisions du modèle"></canvas>
-    <div class="legende">
-      <span><span class="pastille" style="background:var(--hausse)"></span>bougie en hausse</span>
-      <span><span class="pastille" style="background:var(--baisse)"></span>bougie en baisse</span>
-      <span>▲ le modèle achète</span>
-      <span>▼ le modèle vend</span>
-      <span>· aucune marque : le modèle attend</span>
+  <div class="champ">Pas de temps
+    <div class="segments" id="intervalles" role="group" aria-label="Pas de temps">
+      <button type="button" data-valeur="15m">15m</button>
+      <button type="button" data-valeur="1h" aria-pressed="true">1h</button>
+      <button type="button" data-valeur="4h">4h</button>
     </div>
-  </figure>
+  </div>
 
-  <footer id="etat">Chargement…</footer>
+  <div class="champ">Style
+    <div class="segments" id="styles" role="group" aria-label="Style de trading">
+      <button type="button" data-valeur="conservateur" aria-pressed="true">Conservateur</button>
+      <button type="button" data-valeur="agressif">Agressif</button>
+    </div>
+  </div>
+
+  <label class="champ" for="source">Données
+    <select id="source">
+      <option value="binance">Binance en direct</option>
+      <option value="base">Base du projet</option>
+    </select>
+  </label>
+  </div>
+
+  <div class="etat">
+    <span class="pastille" id="pastille"></span>
+    <span id="etat">Chargement…</span>
+  </div>
+</div>
+
+<div class="terminal">
+
+  <div class="colonne">
+    <div class="chiffres">
+      <div class="bloc"><span class="l">Dernier prix</span><span class="v chiffre" id="prix">—</span></div>
+      <div class="bloc"><span class="l">Variation 24 h</span><span class="v chiffre" id="variation">—</span></div>
+      <div class="bloc"><span class="l">Décision</span><span class="v" id="decision">—</span></div>
+      <div class="bloc"><span class="l">Probabilité de hausse</span><span class="v chiffre" id="proba">—</span></div>
+      <div class="bloc"><span class="l">Volatilité récente</span><span class="v chiffre" id="volatilite">—</span></div>
+    </div>
+
+    <div class="zone-graphique">
+      <div id="graphique"></div>
+      <div class="legende" id="legende"></div>
+    </div>
+  </div>
+
+  <aside class="colonne panneau">
+    <p class="avis">Modèle expérimental : environ 60 % de bonnes réponses, mais perdant une fois les
+      frais de 0,2 % déduits. À ne pas utiliser pour investir.</p>
+
+    <section class="carte">
+      <h2>Décision du modèle</h2>
+      <div class="verdict">
+        <span class="mot" id="decision-mot">—</span>
+        <span class="detail" id="decision-detail"></span>
+      </div>
+      <div class="jauge">
+        <div class="rail" id="rail">
+          <div class="zone-vente" id="zone-vente"></div>
+          <div class="zone-achat" id="zone-achat"></div>
+          <div class="curseur" id="curseur"></div>
+        </div>
+        <div class="reperes">
+          <span>vendre ≤ <span class="chiffre" id="seuil-vente">—</span></span>
+          <span><span class="chiffre" id="seuil-achat">—</span> ≥ acheter</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="carte">
+      <h2>Ordre projeté</h2>
+      <div class="lignes" id="ordre-lignes">
+        <p class="vide">En attente des données…</p>
+      </div>
+    </section>
+
+    <section class="carte">
+      <h2>Pronostic à l'échéance</h2>
+      <p class="vide" id="pronostic-intro">Modèle à trois barrières de l'étape 3 : que touchera-t-on en premier ?</p>
+      <div class="barres" id="barres"></div>
+    </section>
+  </aside>
 </div>
 
 <script>
 const $ = (id) => document.getElementById(id);
-const canvas = $("graphique");
-const ctx = canvas.getContext("2d");
+const COULEURS = { hausse: "#17b26a", baisse: "#f04438", neutre: "#64748b",
+                   encre: "#e8edf5", encre2: "#9aa7bb", trait: "#1f2937", fond: "#0a0e14" };
+
+let etatChoix = { interval: "1h", style: "conservateur" };
 let minuterie = null;
+let chart, serieBougies, marqueurs, lignesPrix = [];
 
-const couleurs = {
-  hausse: "#1baf7a", baisse: "#e34948", trait: "#26303e",
-  encre: "#e6ebf2", douce: "#93a0b3", fond: "#161d27",
-};
+function creerGraphique() {
+  chart = LightweightCharts.createChart($("graphique"), {
+    layout: { background: { color: COULEURS.fond }, textColor: COULEURS.encre2,
+              fontFamily: "ui-monospace, monospace", attributionLogo: false },
+    grid: { vertLines: { color: COULEURS.trait }, horzLines: { color: COULEURS.trait } },
+    rightPriceScale: { borderColor: COULEURS.trait, scaleMargins: { top: 0.12, bottom: 0.12 } },
+    timeScale: { borderColor: COULEURS.trait, timeVisible: true, secondsVisible: false },
+    crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+    localization: { locale: "fr-FR" },
+    autoSize: true,
+  });
+  serieBougies = chart.addSeries(LightweightCharts.CandlestickSeries, {
+    upColor: COULEURS.hausse, downColor: COULEURS.baisse,
+    borderUpColor: COULEURS.hausse, borderDownColor: COULEURS.baisse,
+    wickUpColor: COULEURS.hausse, wickDownColor: COULEURS.baisse,
+  });
+  marqueurs = LightweightCharts.createSeriesMarkers(serieBougies, []);
 
-function formaterPrix(valeur) {
-  const decimales = valeur >= 100 ? 2 : valeur >= 1 ? 3 : 5;
+  // La légende suit la croix de visée : c'est ce qu'attend un lecteur habitué
+  // aux plateformes de trading.
+  chart.subscribeCrosshairMove((parametres) => {
+    const bougie = parametres.seriesData?.get(serieBougies);
+    afficherLegende(bougie || derniereBougie);
+  });
+}
+
+let derniereBougie = null;
+
+function afficherLegende(bougie) {
+  if (!bougie) { $("legende").innerHTML = ""; return; }
+  const monte = bougie.close >= bougie.open;
+  const ligne = (nom, valeur) =>
+    `<div class="ligne"><span>${nom}</span><b class="chiffre">${formater(valeur)}</b></div>`;
+  $("legende").innerHTML =
+    `<div class="ligne"><span><b>${$("paire").value}</b> · ${etatChoix.interval}</span>
+       <b class="chiffre ${monte ? "hausse" : "baisse"}">${formater(bougie.close)}</b></div>`
+    + ligne("ouverture", bougie.open) + ligne("plus haut", bougie.high) + ligne("plus bas", bougie.low);
+}
+
+function formater(valeur) {
+  if (valeur === null || valeur === undefined || Number.isNaN(valeur)) return "—";
+  const decimales = valeur >= 1000 ? 2 : valeur >= 1 ? 3 : 5;
   return valeur.toLocaleString("fr-FR", { minimumFractionDigits: decimales,
                                           maximumFractionDigits: decimales });
 }
 
-function dessiner(bougies) {
-  // Dessin a la resolution reelle de l'ecran, sinon tout est flou.
-  const ratio = window.devicePixelRatio || 1;
-  const largeur = canvas.clientWidth, hauteur = 460;
-  canvas.width = largeur * ratio;
-  canvas.height = hauteur * ratio;
-  canvas.style.height = hauteur + "px";
-  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-  ctx.clearRect(0, 0, largeur, hauteur);
+function pourcent(valeur, signe = false) {
+  const texte = (valeur >= 0 && signe ? "+" : "") + valeur.toFixed(2) + " %";
+  return texte;
+}
 
-  if (!bougies.length) return;
+function poserNiveaux(ordre) {
+  lignesPrix.forEach((l) => serieBougies.removePriceLine(l));
+  lignesPrix = [];
+  if (!ordre) return;
+  const achat = ordre.sens >= 0;
+  const niveaux = [
+    { price: ordre.entree, color: COULEURS.encre2, title: "entrée", style: 0 },
+    { price: ordre.take_profit, color: COULEURS.hausse, title: "take profit", style: 2 },
+    { price: ordre.stop_loss, color: COULEURS.baisse, title: "stop loss", style: 2 },
+  ];
+  niveaux.forEach((n) => lignesPrix.push(serieBougies.createPriceLine({
+    price: n.price, color: n.color, lineWidth: 1, lineStyle: n.style,
+    axisLabelVisible: true, title: n.title,
+  })));
+}
 
-  const margeG = 12, margeD = 78, margeH = 14, margeB = 26;
-  const aire = { x: margeG, y: margeH, w: largeur - margeG - margeD, h: hauteur - margeH - margeB };
-
-  const hauts = bougies.map(b => b.high), bas = bougies.map(b => b.low);
-  let max = Math.max(...hauts), min = Math.min(...bas);
-  const marge = (max - min) * 0.08 || max * 0.01;
-  max += marge; min -= marge;
-
-  const yDe = (prix) => aire.y + aire.h * (1 - (prix - min) / (max - min));
-  const pas = aire.w / bougies.length;
-  const corps = Math.max(1.5, Math.min(pas * 0.62, 14));
-
-  // Repères horizontaux et prix à droite
-  ctx.font = "12px ui-monospace, monospace";
-  ctx.textBaseline = "middle";
-  for (let i = 0; i <= 4; i++) {
-    const prix = min + (max - min) * (i / 4);
-    const y = yDe(prix);
-    ctx.strokeStyle = couleurs.trait;
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(aire.x, y); ctx.lineTo(aire.x + aire.w, y); ctx.stroke();
-    ctx.fillStyle = couleurs.douce;
-    ctx.textAlign = "left";
-    ctx.fillText(formaterPrix(prix), aire.x + aire.w + 8, y);
-  }
-
-  bougies.forEach((bougie, i) => {
-    const centre = aire.x + pas * (i + 0.5);
-    const monte = bougie.close >= bougie.open;
-    const couleur = monte ? couleurs.hausse : couleurs.baisse;
-
-    ctx.strokeStyle = couleur;
-    ctx.lineWidth = 1.2;
-    ctx.beginPath();
-    ctx.moveTo(centre, yDe(bougie.high));
-    ctx.lineTo(centre, yDe(bougie.low));
-    ctx.stroke();
-
-    const haut = yDe(Math.max(bougie.open, bougie.close));
-    const bas2 = yDe(Math.min(bougie.open, bougie.close));
-    ctx.fillStyle = couleur;
-    ctx.fillRect(centre - corps / 2, haut, corps, Math.max(1, bas2 - haut));
-
-    if (bougie.decision === "acheter" || bougie.decision === "vendre") {
-      const achat = bougie.decision === "acheter";
-      const y = achat ? yDe(bougie.low) + 12 : yDe(bougie.high) - 12;
-      ctx.fillStyle = achat ? couleurs.hausse : couleurs.baisse;
-      ctx.beginPath();
-      ctx.moveTo(centre, achat ? y - 8 : y + 8);
-      ctx.lineTo(centre - 5, achat ? y : y);
-      ctx.lineTo(centre + 5, achat ? y : y);
-      ctx.closePath();
-      ctx.fill();
-    }
-  });
-
-  // Dates aux deux extrémités : le graphique reste lisible sans surcharge.
-  ctx.fillStyle = couleurs.douce;
-  ctx.textBaseline = "top";
-  const quand = (b) => new Date(b.open_time).toLocaleString("fr-FR",
+function remplirOrdre(ordre, decision) {
+  const achat = ordre.sens >= 0;
+  const hypothetique = ordre.sens === 0;
+  const sens = hypothetique ? "aucun ordre ouvert" : (achat ? "achat" : "vente");
+  const echeance = new Date(ordre.echeance).toLocaleString("fr-FR",
         { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
-  ctx.textAlign = "left";
-  ctx.fillText(quand(bougies[0]), aire.x, aire.y + aire.h + 8);
-  ctx.textAlign = "right";
-  ctx.fillText(quand(bougies[bougies.length - 1]), aire.x + aire.w, aire.y + aire.h + 8);
+
+  const ligne = (cle, valeur, classe = "") =>
+    `<div class="ligne"><span class="c">${cle}</span><span class="d chiffre ${classe}">${valeur}</span></div>`;
+
+  $("ordre-lignes").innerHTML =
+    ligne("Sens", sens)
+    + ligne("Entrée", formater(ordre.entree))
+    + ligne("Take profit", formater(ordre.take_profit) + `<br><span class="c">${pourcent(achat ? ordre.distance_pct : -ordre.distance_pct, true)}</span>`, "hausse")
+    + ligne("Stop loss", formater(ordre.stop_loss) + `<br><span class="c">${pourcent(achat ? -ordre.distance_pct : ordre.distance_pct, true)}</span>`, "baisse")
+    + `<div class="ligne souligne"><span class="c">Gain net si take profit</span>
+         <span class="d chiffre hausse">${pourcent(ordre.gain_net_si_take_profit_pct, true)}</span></div>`
+    + ligne("Perte nette si stop loss", pourcent(ordre.perte_nette_si_stop_loss_pct, true), "baisse")
+    + ligne("Ratio gain / risque", ordre.ratio_gain_risque.toFixed(2) + " : 1")
+    + ligne("Barrières", ordre.largeur_sigma + " σ (" + pourcent(ordre.distance_pct) + ")")
+    + ligne("Échéance", echeance + `<br><span class="c">${ordre.horizon_bougies} bougies</span>`)
+    + (hypothetique
+        ? `<p class="vide">Le modèle attend : ces niveaux montrent où l'ordre serait placé s'il se déclenchait.</p>`
+        : "");
+
+  const ordreDesClasses = ["take profit touché en premier", "aucune barrière touchée",
+                           "stop loss touché en premier"];
+  const couleurs = { "take profit touché en premier": COULEURS.hausse,
+                     "aucune barrière touchée": COULEURS.neutre,
+                     "stop loss touché en premier": COULEURS.baisse };
+  const normaliser = (cle) => cle.replace("touche", "touché").replace("barriere", "barrière");
+
+  const probabilites = {};
+  Object.entries(ordre.probabilites).forEach(([cle, valeur]) => { probabilites[normaliser(cle)] = valeur; });
+
+  $("barres").innerHTML = ordreDesClasses.map((cle) => {
+    const part = (probabilites[cle] ?? 0) * 100;
+    return `<div>
+      <span class="etiquette">${cle}</span>
+      <div class="mesure">
+        <div class="piste"><div class="remplissage" style="width:${part.toFixed(1)}%;background:${couleurs[cle]}"></div></div>
+        <span class="part chiffre">${part.toFixed(1)} %</span>
+      </div></div>`;
+  }).join("");
+}
+
+function placerJauge(decision) {
+  const rail = $("rail").clientWidth || 300;
+  const borne = (p) => Math.max(0, Math.min(1, (p - 0.30) / 0.40));   // fenêtre 0,30 – 0,70
+  $("zone-vente").style.width = (borne(decision.seuil_vente) * 100) + "%";
+  $("zone-achat").style.width = ((1 - borne(decision.seuil_achat)) * 100) + "%";
+  $("curseur").style.left = (borne(decision.probabilite_hausse) * 100) + "%";
+  $("seuil-vente").textContent = (decision.seuil_vente * 100).toFixed(1) + " %";
+  $("seuil-achat").textContent = (decision.seuil_achat * 100).toFixed(1) + " %";
+}
+
+async function appeler(chemin, parametres) {
+  const reponse = await fetch(`${chemin}?${new URLSearchParams(parametres)}`);
+  if (!reponse.ok) {
+    const corps = await reponse.json().catch(() => ({}));
+    throw new Error(corps.detail || `erreur ${reponse.status}`);
+  }
+  return reponse.json();
 }
 
 async function charger() {
-  const parametres = new URLSearchParams({
-    interval: $("interval").value, style: $("style").value,
-    source: $("source").value, limite: "120",
-  });
+  const paire = $("paire").value;
+  const commun = { interval: etatChoix.interval, style: etatChoix.style, source: $("source").value };
+  $("pastille").className = "pastille";
   $("etat").textContent = "Chargement…";
   $("etat").classList.remove("erreur");
+
   try {
-    const reponse = await fetch(`/graphique/${$("paire").value}?${parametres}`);
-    if (!reponse.ok) {
-      const corps = await reponse.json().catch(() => ({}));
-      throw new Error(corps.detail || `erreur ${reponse.status}`);
-    }
-    const donnees = await reponse.json();
-    const serie = donnees.donnees;
-    dessiner(serie);
+    const [graphique, ordre] = await Promise.all([
+      appeler(`/graphique/${paire}`, { ...commun, limite: "200" }),
+      appeler(`/ordre/${paire}`, commun),
+    ]);
 
-    const derniere = serie[serie.length - 1];
-    $("prix").textContent = formaterPrix(derniere.close);
-    $("decision").textContent = derniere.decision;
-    $("decision").className = "v " + derniere.decision;
-    $("proba").textContent = (derniere.probabilite_hausse * 100).toFixed(1) + " %";
-    $("seuil").textContent = (donnees.seuils.achat * 100).toFixed(1) + " / "
-                           + (donnees.seuils.vente * 100).toFixed(1) + " %";
+    const serie = graphique.donnees;
+    serieBougies.setData(serie.map((b) => ({
+      time: Math.floor(new Date(b.open_time).getTime() / 1000),
+      open: b.open, high: b.high, low: b.low, close: b.close,
+    })));
+    marqueurs.setMarkers(serie.filter((b) => b.decision !== "attendre").map((b) => ({
+      time: Math.floor(new Date(b.open_time).getTime() / 1000),
+      position: b.decision === "acheter" ? "belowBar" : "aboveBar",
+      color: b.decision === "acheter" ? COULEURS.hausse : COULEURS.baisse,
+      shape: b.decision === "acheter" ? "arrowUp" : "arrowDown",
+      text: b.decision === "acheter" ? "A" : "V",
+    })));
 
-    const source = donnees.source === "binance" ? "Binance en direct" : "base du projet";
-    $("etat").textContent = `${serie.length} bougies · ${source} · dernière bougie close le `
-      + new Date(derniere.open_time).toLocaleString("fr-FR")
-      + ` · mis à jour à ${new Date().toLocaleTimeString("fr-FR")}`;
+    derniereBougie = serie[serie.length - 1];
+    afficherLegende(derniereBougie);
+    poserNiveaux(ordre.ordre);
+    remplirOrdre(ordre.ordre, ordre.decision);
+    placerJauge(ordre.decision);
+
+    const decision = ordre.decision.decision;
+    $("prix").textContent = formater(derniereBougie.close);
+    $("decision").textContent = decision;
+    $("decision").className = "v " + (decision === "acheter" ? "hausse"
+                                     : decision === "vendre" ? "baisse" : "neutre");
+    $("decision-mot").textContent = decision;
+    $("decision-mot").className = "mot " + (decision === "acheter" ? "hausse"
+                                           : decision === "vendre" ? "baisse" : "neutre");
+    $("decision-detail").textContent = `probabilité ${(ordre.decision.probabilite_hausse * 100).toFixed(1)} %`
+      + ` · style ${etatChoix.style}`;
+    $("proba").textContent = (ordre.decision.probabilite_hausse * 100).toFixed(1) + " %";
+    $("volatilite").textContent = ordre.ordre.volatilite_recente_pct.toFixed(3) + " %";
+
+    // Variation sur 24 h, calculée depuis les bougies affichées.
+    const parJour = { "15m": 96, "1h": 24, "4h": 6 }[etatChoix.interval];
+    const reference = serie[Math.max(0, serie.length - 1 - parJour)];
+    const variation = (derniereBougie.close / reference.close - 1) * 100;
+    $("variation").textContent = pourcent(variation, true);
+    $("variation").className = "v chiffre " + (variation >= 0 ? "hausse" : "baisse");
+
+    $("pastille").className = "pastille vivant";
+    const source = graphique.source === "binance" ? "Binance en direct" : "base du projet";
+    $("etat").textContent = `${serie.length} bougies · ${source} · `
+      + new Date(derniereBougie.open_time).toLocaleString("fr-FR")
+      + ` · actualisé ${new Date().toLocaleTimeString("fr-FR")}`;
   } catch (erreur) {
-    $("etat").textContent = "Impossible de charger les données : " + erreur.message;
+    $("pastille").className = "pastille mort";
+    $("etat").textContent = "Erreur : " + erreur.message;
     $("etat").classList.add("erreur");
   }
 }
 
-function programmerRafraichissement() {
-  if (minuterie) clearInterval(minuterie);
-  // 30 secondes : une bougie 15 minutes ne change pas plus vite, et cela
-  // menage le quota de l'API Binance.
-  if ($("auto").checked) minuterie = setInterval(charger, 30000);
+function brancherSegments(id, cle) {
+  $(id).addEventListener("click", (evenement) => {
+    const bouton = evenement.target.closest("button");
+    if (!bouton) return;
+    [...$(id).children].forEach((b) => b.setAttribute("aria-pressed", String(b === bouton)));
+    etatChoix[cle] = bouton.dataset.valeur;
+    charger();
+  });
 }
 
-["paire", "interval", "style", "source"].forEach(id => $(id).addEventListener("change", charger));
-$("rafraichir").addEventListener("click", charger);
-$("auto").addEventListener("change", programmerRafraichissement);
-window.addEventListener("resize", () => charger());
+function programmer() {
+  if (minuterie) clearInterval(minuterie);
+  // 30 secondes : une bougie 15 minutes ne bouge pas plus vite, et cela ménage
+  // le quota de l'API Binance.
+  minuterie = setInterval(charger, 30000);
+}
 
+creerGraphique();
+brancherSegments("intervalles", "interval");
+brancherSegments("styles", "style");
+["paire", "source"].forEach((id) => $(id).addEventListener("change", charger));
 charger();
-programmerRafraichissement();
+programmer();
 </script>
+
 </body>
 </html>
