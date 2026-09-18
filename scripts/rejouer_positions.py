@@ -152,8 +152,8 @@ def main():
 
     total = 0
     for paire in args.pairs:
-        bougies = donnees.bougies_binance(
-            paire, min(int(args.jours * 86400 / INTERVAL_SECONDS["15m"]), 1000))
+        bougies = donnees.bougies_binance(paire, jours=args.jours)
+        log.info("%s : %d bougies lues", paire, len(bougies))
         for interval in args.intervalles:
             for style in args.styles:
                 positions = rejouer(bougies, paire, interval, style, largeur, horizon)

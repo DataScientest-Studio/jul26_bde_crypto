@@ -42,7 +42,8 @@ def dernieres_bougies(symbole: str, profil: str = "day_trading",
 
 
 def bougies_binance(symbole: str, par_intervalle: int = 300,
-                    inclure_en_cours: bool = False) -> pd.DataFrame:
+                    inclure_en_cours: bool = False,
+                    jours: float | None = None) -> pd.DataFrame:
     """Les dernieres bougies lues DIRECTEMENT chez Binance.
 
     La base n'est alimentee que lorsqu'on lance la collecte : elle a donc
@@ -61,6 +62,11 @@ def bougies_binance(symbole: str, par_intervalle: int = 300,
     maintenant = pd.Timestamp.now(tz="UTC")
     morceaux = []
     for interval in ("15m", "1h", "4h"):
+        if jours is not None:
+            # Une duree donne un nombre de bougies DIFFERENT selon le pas de
+            # temps : un an represente 35 000 bougies de 15 min mais 2 190 de
+            # 4 h. Demander le meme nombre partout remonterait seize ans en 4 h.
+            par_intervalle = int(jours * 86400 / INTERVAL_SECONDS[interval]) + 1
         if par_intervalle <= 1000:
             brut = client.klines(symbole, interval, limit=par_intervalle)
         else:
