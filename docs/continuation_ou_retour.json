@@ -1,0 +1,455 @@
+{
+  "quantile_des_chocs": 0.95,
+  "par_jeu_de_donnees": {
+    "BTCUSDT|15m": {
+      "bougies": 999,
+      "chocs_haussiers": 50,
+      "chocs_baissiers": 50,
+      "horizons": [
+        {
+          "horizon_bougies": 1,
+          "marche_en_general_pct": 0.003,
+          "apres_forte_hausse_pct": 0.103,
+          "apres_forte_baisse_pct": 0.057,
+          "ecart_hausse_pct": 0.1,
+          "ecart_baisse_pct": 0.055
+        },
+        {
+          "horizon_bougies": 4,
+          "marche_en_general_pct": 0.013,
+          "apres_forte_hausse_pct": 0.103,
+          "apres_forte_baisse_pct": 0.12,
+          "ecart_hausse_pct": 0.091,
+          "ecart_baisse_pct": 0.107
+        },
+        {
+          "horizon_bougies": 12,
+          "marche_en_general_pct": 0.024,
+          "apres_forte_hausse_pct": -0.144,
+          "apres_forte_baisse_pct": 0.059,
+          "ecart_hausse_pct": -0.168,
+          "ecart_baisse_pct": 0.035
+        },
+        {
+          "horizon_bougies": 24,
+          "marche_en_general_pct": 0.019,
+          "apres_forte_hausse_pct": -0.069,
+          "apres_forte_baisse_pct": 0.035,
+          "ecart_hausse_pct": -0.088,
+          "ecart_baisse_pct": 0.017
+        },
+        {
+          "horizon_bougies": 48,
+          "marche_en_general_pct": -0.003,
+          "apres_forte_hausse_pct": -0.178,
+          "apres_forte_baisse_pct": -0.086,
+          "ecart_hausse_pct": -0.176,
+          "ecart_baisse_pct": -0.083
+        }
+      ]
+    },
+    "BTCUSDT|1h": {
+      "bougies": 999,
+      "chocs_haussiers": 50,
+      "chocs_baissiers": 50,
+      "horizons": [
+        {
+          "horizon_bougies": 1,
+          "marche_en_general_pct": 0.023,
+          "apres_forte_hausse_pct": 0.222,
+          "apres_forte_baisse_pct": 0.062,
+          "ecart_hausse_pct": 0.199,
+          "ecart_baisse_pct": 0.039
+        },
+        {
+          "horizon_bougies": 4,
+          "marche_en_general_pct": 0.083,
+          "apres_forte_hausse_pct": 0.274,
+          "apres_forte_baisse_pct": -0.007,
+          "ecart_hausse_pct": 0.191,
+          "ecart_baisse_pct": -0.091
+        },
+        {
+          "horizon_bougies": 12,
+          "marche_en_general_pct": 0.238,
+          "apres_forte_hausse_pct": 0.536,
+          "apres_forte_baisse_pct": 0.379,
+          "ecart_hausse_pct": 0.298,
+          "ecart_baisse_pct": 0.141
+        },
+        {
+          "horizon_bougies": 24,
+          "marche_en_general_pct": 0.459,
+          "apres_forte_hausse_pct": 1.058,
+          "apres_forte_baisse_pct": 0.367,
+          "ecart_hausse_pct": 0.599,
+          "ecart_baisse_pct": -0.092
+        },
+        {
+          "horizon_bougies": 48,
+          "marche_en_general_pct": 0.916,
+          "apres_forte_hausse_pct": 1.63,
+          "apres_forte_baisse_pct": 0.706,
+          "ecart_hausse_pct": 0.714,
+          "ecart_baisse_pct": -0.211
+        }
+      ]
+    },
+    "BTCUSDT|4h": {
+      "bougies": 999,
+      "chocs_haussiers": 50,
+      "chocs_baissiers": 50,
+      "horizons": [
+        {
+          "horizon_bougies": 1,
+          "marche_en_general_pct": 0.018,
+          "apres_forte_hausse_pct": -0.042,
+          "apres_forte_baisse_pct": 0.262,
+          "ecart_hausse_pct": -0.06,
+          "ecart_baisse_pct": 0.244
+        },
+        {
+          "horizon_bougies": 4,
+          "marche_en_general_pct": 0.07,
+          "apres_forte_hausse_pct": 0.188,
+          "apres_forte_baisse_pct": 0.154,
+          "ecart_hausse_pct": 0.119,
+          "ecart_baisse_pct": 0.085
+        },
+        {
+          "horizon_bougies": 12,
+          "marche_en_general_pct": 0.182,
+          "apres_forte_hausse_pct": 0.708,
+          "apres_forte_baisse_pct": -0.071,
+          "ecart_hausse_pct": 0.526,
+          "ecart_baisse_pct": -0.253
+        },
+        {
+          "horizon_bougies": 24,
+          "marche_en_general_pct": 0.351,
+          "apres_forte_hausse_pct": 1.185,
+          "apres_forte_baisse_pct": -0.063,
+          "ecart_hausse_pct": 0.835,
+          "ecart_baisse_pct": -0.414
+        },
+        {
+          "horizon_bougies": 48,
+          "marche_en_general_pct": 0.669,
+          "apres_forte_hausse_pct": 1.544,
+          "apres_forte_baisse_pct": 0.478,
+          "ecart_hausse_pct": 0.875,
+          "ecart_baisse_pct": -0.19
+        }
+      ]
+    },
+    "ETHUSDT|15m": {
+      "bougies": 999,
+      "chocs_haussiers": 50,
+      "chocs_baissiers": 50,
+      "horizons": [
+        {
+          "horizon_bougies": 1,
+          "marche_en_general_pct": 0.004,
+          "apres_forte_hausse_pct": 0.168,
+          "apres_forte_baisse_pct": 0.063,
+          "ecart_hausse_pct": 0.164,
+          "ecart_baisse_pct": 0.058
+        },
+        {
+          "horizon_bougies": 4,
+          "marche_en_general_pct": 0.019,
+          "apres_forte_hausse_pct": 0.162,
+          "apres_forte_baisse_pct": 0.214,
+          "ecart_hausse_pct": 0.143,
+          "ecart_baisse_pct": 0.195
+        },
+        {
+          "horizon_bougies": 12,
+          "marche_en_general_pct": 0.042,
+          "apres_forte_hausse_pct": 0.172,
+          "apres_forte_baisse_pct": 0.122,
+          "ecart_hausse_pct": 0.13,
+          "ecart_baisse_pct": 0.079
+        },
+        {
+          "horizon_bougies": 24,
+          "marche_en_general_pct": 0.059,
+          "apres_forte_hausse_pct": 0.059,
+          "apres_forte_baisse_pct": -0.051,
+          "ecart_hausse_pct": -0.0,
+          "ecart_baisse_pct": -0.11
+        },
+        {
+          "horizon_bougies": 48,
+          "marche_en_general_pct": 0.073,
+          "apres_forte_hausse_pct": -0.037,
+          "apres_forte_baisse_pct": -0.202,
+          "ecart_hausse_pct": -0.11,
+          "ecart_baisse_pct": -0.275
+        }
+      ]
+    },
+    "ETHUSDT|1h": {
+      "bougies": 999,
+      "chocs_haussiers": 50,
+      "chocs_baissiers": 50,
+      "horizons": [
+        {
+          "horizon_bougies": 1,
+          "marche_en_general_pct": 0.032,
+          "apres_forte_hausse_pct": 0.15,
+          "apres_forte_baisse_pct": -0.035,
+          "ecart_hausse_pct": 0.118,
+          "ecart_baisse_pct": -0.067
+        },
+        {
+          "horizon_bougies": 4,
+          "marche_en_general_pct": 0.12,
+          "apres_forte_hausse_pct": 0.173,
+          "apres_forte_baisse_pct": -0.068,
+          "ecart_hausse_pct": 0.053,
+          "ecart_baisse_pct": -0.187
+        },
+        {
+          "horizon_bougies": 12,
+          "marche_en_general_pct": 0.35,
+          "apres_forte_hausse_pct": 0.707,
+          "apres_forte_baisse_pct": 0.283,
+          "ecart_hausse_pct": 0.357,
+          "ecart_baisse_pct": -0.067
+        },
+        {
+          "horizon_bougies": 24,
+          "marche_en_general_pct": 0.687,
+          "apres_forte_hausse_pct": 1.207,
+          "apres_forte_baisse_pct": 0.252,
+          "ecart_hausse_pct": 0.52,
+          "ecart_baisse_pct": -0.434
+        },
+        {
+          "horizon_bougies": 48,
+          "marche_en_general_pct": 1.367,
+          "apres_forte_hausse_pct": 1.273,
+          "apres_forte_baisse_pct": 1.118,
+          "ecart_hausse_pct": -0.093,
+          "ecart_baisse_pct": -0.249
+        }
+      ]
+    },
+    "ETHUSDT|4h": {
+      "bougies": 999,
+      "chocs_haussiers": 50,
+      "chocs_baissiers": 50,
+      "horizons": [
+        {
+          "horizon_bougies": 1,
+          "marche_en_general_pct": 0.026,
+          "apres_forte_hausse_pct": 0.126,
+          "apres_forte_baisse_pct": -0.008,
+          "ecart_hausse_pct": 0.1,
+          "ecart_baisse_pct": -0.034
+        },
+        {
+          "horizon_bougies": 4,
+          "marche_en_general_pct": 0.101,
+          "apres_forte_hausse_pct": -0.056,
+          "apres_forte_baisse_pct": -0.107,
+          "ecart_hausse_pct": -0.157,
+          "ecart_baisse_pct": -0.208
+        },
+        {
+          "horizon_bougies": 12,
+          "marche_en_general_pct": 0.265,
+          "apres_forte_hausse_pct": 0.28,
+          "apres_forte_baisse_pct": -0.755,
+          "ecart_hausse_pct": 0.015,
+          "ecart_baisse_pct": -1.02
+        },
+        {
+          "horizon_bougies": 24,
+          "marche_en_general_pct": 0.509,
+          "apres_forte_hausse_pct": 0.309,
+          "apres_forte_baisse_pct": -0.732,
+          "ecart_hausse_pct": -0.2,
+          "ecart_baisse_pct": -1.24
+        },
+        {
+          "horizon_bougies": 48,
+          "marche_en_general_pct": 1.031,
+          "apres_forte_hausse_pct": 1.96,
+          "apres_forte_baisse_pct": -0.477,
+          "ecart_hausse_pct": 0.929,
+          "ecart_baisse_pct": -1.508
+        }
+      ]
+    },
+    "SOLUSDT|15m": {
+      "bougies": 999,
+      "chocs_haussiers": 50,
+      "chocs_baissiers": 50,
+      "horizons": [
+        {
+          "horizon_bougies": 1,
+          "marche_en_general_pct": 0.007,
+          "apres_forte_hausse_pct": 0.164,
+          "apres_forte_baisse_pct": 0.169,
+          "ecart_hausse_pct": 0.157,
+          "ecart_baisse_pct": 0.161
+        },
+        {
+          "horizon_bougies": 4,
+          "marche_en_general_pct": 0.031,
+          "apres_forte_hausse_pct": 0.205,
+          "apres_forte_baisse_pct": 0.185,
+          "ecart_hausse_pct": 0.174,
+          "ecart_baisse_pct": 0.155
+        },
+        {
+          "horizon_bougies": 12,
+          "marche_en_general_pct": 0.072,
+          "apres_forte_hausse_pct": 0.063,
+          "apres_forte_baisse_pct": 0.416,
+          "ecart_hausse_pct": -0.008,
+          "ecart_baisse_pct": 0.344
+        },
+        {
+          "horizon_bougies": 24,
+          "marche_en_general_pct": 0.108,
+          "apres_forte_hausse_pct": 0.324,
+          "apres_forte_baisse_pct": 0.358,
+          "ecart_hausse_pct": 0.217,
+          "ecart_baisse_pct": 0.25
+        },
+        {
+          "horizon_bougies": 48,
+          "marche_en_general_pct": 0.174,
+          "apres_forte_hausse_pct": 0.623,
+          "apres_forte_baisse_pct": 0.217,
+          "ecart_hausse_pct": 0.449,
+          "ecart_baisse_pct": 0.043
+        }
+      ]
+    },
+    "SOLUSDT|1h": {
+      "bougies": 999,
+      "chocs_haussiers": 50,
+      "chocs_baissiers": 50,
+      "horizons": [
+        {
+          "horizon_bougies": 1,
+          "marche_en_general_pct": 0.043,
+          "apres_forte_hausse_pct": 0.13,
+          "apres_forte_baisse_pct": 0.127,
+          "ecart_hausse_pct": 0.087,
+          "ecart_baisse_pct": 0.084
+        },
+        {
+          "horizon_bougies": 4,
+          "marche_en_general_pct": 0.158,
+          "apres_forte_hausse_pct": 0.06,
+          "apres_forte_baisse_pct": 0.147,
+          "ecart_hausse_pct": -0.097,
+          "ecart_baisse_pct": -0.01
+        },
+        {
+          "horizon_bougies": 12,
+          "marche_en_general_pct": 0.455,
+          "apres_forte_hausse_pct": 0.854,
+          "apres_forte_baisse_pct": 0.512,
+          "ecart_hausse_pct": 0.399,
+          "ecart_baisse_pct": 0.057
+        },
+        {
+          "horizon_bougies": 24,
+          "marche_en_general_pct": 0.846,
+          "apres_forte_hausse_pct": 1.58,
+          "apres_forte_baisse_pct": 0.762,
+          "ecart_hausse_pct": 0.733,
+          "ecart_baisse_pct": -0.084
+        },
+        {
+          "horizon_bougies": 48,
+          "marche_en_general_pct": 1.575,
+          "apres_forte_hausse_pct": 2.243,
+          "apres_forte_baisse_pct": 2.26,
+          "ecart_hausse_pct": 0.668,
+          "ecart_baisse_pct": 0.685
+        }
+      ]
+    },
+    "SOLUSDT|4h": {
+      "bougies": 999,
+      "chocs_haussiers": 50,
+      "chocs_baissiers": 50,
+      "horizons": [
+        {
+          "horizon_bougies": 1,
+          "marche_en_general_pct": 0.034,
+          "apres_forte_hausse_pct": -0.024,
+          "apres_forte_baisse_pct": 0.031,
+          "ecart_hausse_pct": -0.057,
+          "ecart_baisse_pct": -0.003
+        },
+        {
+          "horizon_bougies": 4,
+          "marche_en_general_pct": 0.134,
+          "apres_forte_hausse_pct": -0.071,
+          "apres_forte_baisse_pct": 0.153,
+          "ecart_hausse_pct": -0.204,
+          "ecart_baisse_pct": 0.019
+        },
+        {
+          "horizon_bougies": 12,
+          "marche_en_general_pct": 0.355,
+          "apres_forte_hausse_pct": 0.731,
+          "apres_forte_baisse_pct": 0.334,
+          "ecart_hausse_pct": 0.376,
+          "ecart_baisse_pct": -0.021
+        },
+        {
+          "horizon_bougies": 24,
+          "marche_en_general_pct": 0.699,
+          "apres_forte_hausse_pct": 1.43,
+          "apres_forte_baisse_pct": 0.624,
+          "ecart_hausse_pct": 0.731,
+          "ecart_baisse_pct": -0.075
+        },
+        {
+          "horizon_bougies": 48,
+          "marche_en_general_pct": 1.444,
+          "apres_forte_hausse_pct": 3.354,
+          "apres_forte_baisse_pct": 1.726,
+          "ecart_hausse_pct": 1.91,
+          "ecart_baisse_pct": 0.281
+        }
+      ]
+    }
+  },
+  "moyenne": [
+    {
+      "horizon_bougies": 1,
+      "ecart_hausse_pct": 0.09,
+      "ecart_baisse_pct": 0.06
+    },
+    {
+      "horizon_bougies": 4,
+      "ecart_hausse_pct": 0.035,
+      "ecart_baisse_pct": 0.007
+    },
+    {
+      "horizon_bougies": 12,
+      "ecart_hausse_pct": 0.214,
+      "ecart_baisse_pct": -0.078
+    },
+    {
+      "horizon_bougies": 24,
+      "ecart_hausse_pct": 0.372,
+      "ecart_baisse_pct": -0.242
+    },
+    {
+      "horizon_bougies": 48,
+      "ecart_hausse_pct": 0.574,
+      "ecart_baisse_pct": -0.167
+    }
+  ]
+}

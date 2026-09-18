@@ -188,11 +188,12 @@
     </div>
   </div>
 
-  <label class="champ" for="fenetre">Bougies
+  <label class="champ" for="fenetre">Période
     <select id="fenetre">
-      <option value="80">80</option>
-      <option value="150" selected>150</option>
-      <option value="300">300</option>
+      <option value="1">1 jour</option>
+      <option value="3" selected>3 jours</option>
+      <option value="7">1 semaine</option>
+      <option value="30">1 mois</option>
     </select>
   </label>
 
@@ -351,6 +352,18 @@ function heureLocale(texteIso, avecDate = true) {
     ? { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }
     : { hour: "2-digit", minute: "2-digit" };
   return new Date(texteIso).toLocaleString("fr-FR", options);
+}
+
+// Duree d'une bougie, en secondes. Sert a convertir la periode demandee en
+// nombre de bougies : 3 jours font 288 bougies de 15 min mais seulement 18
+// bougies de 4 h. Sans cette conversion, changer de pas de temps changeait
+// aussi la periode affichee, ce qui rend toute comparaison impossible.
+const DUREES = { "15m": 900, "1h": 3600, "4h": 14400 };
+
+function nombreDeBougies() {
+  const jours = Number($("fenetre").value);
+  const bougies = Math.round((jours * 86400) / DUREES[etatChoix.interval]);
+  return Math.min(Math.max(bougies, 20), 500);
 }
 
 function formater(valeur) {
@@ -633,7 +646,7 @@ async function charger() {
 
   try {
     const [graphique, ordre, carnet] = await Promise.all([
-      appeler(`/graphique/${paire}`, { ...commun, limite: $("fenetre").value }),
+      appeler(`/graphique/${paire}`, { ...commun, limite: String(nombreDeBougies()) }),
       appeler(`/ordre/${paire}`, commun),
       appeler(`/positions/${paire}`, commun, "POST"),
     ]);
@@ -708,7 +721,8 @@ async function charger() {
       ? new Date(graphique.bougie_en_cours.close_time) : null;
     majCompteARebours();
 
-    $("etat").textContent = `${serie.length} bougies · ${source} · dernière close `
+    const premiere = heureLocale(serie[0].open_time);
+    $("etat").textContent = `${serie.length} bougies depuis le ${premiere} · ${source} · dernière close `
       + `${heureLocale(derniereBougie.open_time, false)}–${heureLocale(finDerniere.toISOString(), false)}`
       + ` · actualisé ${new Date().toLocaleTimeString("fr-FR")} (heures locales)`;
   } catch (erreur) {
