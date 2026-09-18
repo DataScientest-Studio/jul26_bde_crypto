@@ -133,6 +133,27 @@
   .mesure .etiquette { color: var(--encre-2); font-size: 12px; margin-bottom: 3px; display: block; }
   .mesure .part { font-size: 12px; color: var(--encre-2); text-align: right; }
 
+  .position { border: 1px solid var(--trait); border-radius: 7px; padding: 12px 14px;
+              margin-bottom: 10px; background: var(--surface-2); }
+  .position.achat { border-left: 3px solid var(--hausse); }
+  .position.vente { border-left: 3px solid var(--baisse); }
+  .position .tete { display: flex; justify-content: space-between; align-items: baseline;
+                    margin-bottom: 8px; }
+  .position .sens { font-weight: 650; text-transform: capitalize; }
+  .position .gain { font-size: 1.15rem; font-weight: 650; }
+  .position .detail { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px;
+                      color: var(--encre-3); font-size: 12px; }
+  .position .detail b { color: var(--encre-2); font-weight: 550; }
+
+  .histo { display: grid; gap: 1px; background: var(--trait); border: 1px solid var(--trait);
+           border-radius: 6px; overflow: hidden; }
+  .histo .l { display: grid; grid-template-columns: 52px 1fr auto; gap: 8px;
+              background: var(--surface); padding: 7px 10px; font-size: 12px; align-items: center; }
+  .histo .l .issue { color: var(--encre-3); }
+  .etiquettes { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .puce { font-size: 11px; padding: 3px 8px; border-radius: 20px; border: 1px solid var(--trait);
+          color: var(--encre-2); background: var(--surface-2); }
+
   .avis { color: var(--accent); font-size: 11.5px; padding: 12px 18px; border-bottom: 1px solid var(--trait);
           background: rgba(234, 179, 8, .06); }
   .erreur { color: var(--baisse); }
@@ -227,6 +248,17 @@
       <div class="lignes" id="ordre-lignes">
         <p class="vide">En attente des données…</p>
       </div>
+    </section>
+
+    <section class="carte">
+      <h2>Position ouverte</h2>
+      <div id="positions-ouvertes"><p class="vide">Aucune position ouverte.</p></div>
+    </section>
+
+    <section class="carte">
+      <h2>Trades terminés</h2>
+      <div class="etiquettes" id="bilan"></div>
+      <div class="histo" id="historique"></div>
     </section>
 
     <section class="carte">
@@ -383,6 +415,50 @@ function remplirOrdre(ordre, decision) {
   }).join("");
 }
 
+function remplirCarnet(carnet) {
+  const ouvertes = carnet.ouvertes;
+  $("positions-ouvertes").innerHTML = ouvertes.length ? ouvertes.map((p) => {
+    const achat = p.sens === 1;
+    const gain = p.gain_en_cours_net_pct;
+    const classe = gain >= 0 ? "hausse" : "baisse";
+    return `<div class="position ${achat ? "achat" : "vente"}">
+      <div class="tete">
+        <span class="sens">${achat ? "achat" : "vente"}</span>
+        <span class="gain chiffre ${classe}">${pourcent(gain, true)}</span>
+      </div>
+      <div class="detail">
+        <span>entrée <b class="chiffre">${formater(p.prix_entree)}</b></span>
+        <span>actuel <b class="chiffre">${formater(p.prix_actuel)}</b></span>
+        <span>take profit <b class="chiffre">${formater(p.take_profit)}</b></span>
+        <span>stop loss <b class="chiffre">${formater(p.stop_loss)}</b></span>
+        <span>ouverte <b>${heureLocale(p.ouverte_sur_la_bougie)}</b></span>
+        <span>échéance <b>${heureLocale(p.echeance)}</b></span>
+      </div></div>`;
+  }).join("") : `<p class="vide">Aucune position ouverte : le modèle attend un signal.</p>`;
+
+  const bilan = carnet.bilan;
+  const issues = bilan.par_issue || {};
+  $("bilan").innerHTML = bilan.positions_fermees
+    ? [`<span class="puce">${bilan.positions_fermees} trades</span>`,
+       `<span class="puce">${bilan.taux_de_reussite_pct ?? 0} % gagnants</span>`,
+       `<span class="puce">moyenne ${pourcent(bilan.gain_moyen_net_pct ?? 0, true)}</span>`,
+       `<span class="puce">capital ${formater(bilan.capital_simule)} € sur ${formater(bilan.capital_initial)} €</span>`,
+       ...Object.entries(issues).map(([issue, n]) => `<span class="puce">${n} × ${issue}</span>`),
+      ].join("")
+    : `<span class="puce">aucun trade terminé pour l'instant</span>`;
+
+  $("historique").innerHTML = carnet.historique.length
+    ? carnet.historique.slice(0, 12).map((h) => {
+        const classe = (h.rendement_net_pct ?? 0) >= 0 ? "hausse" : "baisse";
+        return `<div class="l">
+          <span class="${h.sens === 1 ? "hausse" : "baisse"}">${h.sens === 1 ? "achat" : "vente"}</span>
+          <span class="issue">${h.statut} · ${heureLocale(h.fermee_a)}</span>
+          <span class="chiffre ${classe}">${pourcent(h.rendement_net_pct ?? 0, true)}</span>
+        </div>`;
+      }).join("")
+    : `<div class="l"><span class="issue">Les trades fermés apparaîtront ici.</span></div>`;
+}
+
 function placerJauge(decision) {
   const rail = $("rail").clientWidth || 300;
   const borne = (p) => Math.max(0, Math.min(1, (p - 0.30) / 0.40));   // fenêtre 0,30 – 0,70
@@ -393,8 +469,8 @@ function placerJauge(decision) {
   $("seuil-achat").textContent = (decision.seuil_achat * 100).toFixed(1) + " %";
 }
 
-async function appeler(chemin, parametres) {
-  const reponse = await fetch(`${chemin}?${new URLSearchParams(parametres)}`);
+async function appeler(chemin, parametres, methode = "GET") {
+  const reponse = await fetch(`${chemin}?${new URLSearchParams(parametres)}`, { method: methode });
   if (!reponse.ok) {
     const corps = await reponse.json().catch(() => ({}));
     throw new Error(corps.detail || `erreur ${reponse.status}`);
@@ -410,9 +486,10 @@ async function charger() {
   $("etat").classList.remove("erreur");
 
   try {
-    const [graphique, ordre] = await Promise.all([
+    const [graphique, ordre, carnet] = await Promise.all([
       appeler(`/graphique/${paire}`, { ...commun, limite: "200" }),
       appeler(`/ordre/${paire}`, commun),
+      appeler(`/positions/${paire}`, commun, "POST"),
     ]);
 
     const serie = graphique.donnees;
@@ -428,6 +505,9 @@ async function charger() {
                     open: c.open, high: c.high, low: c.low, close: c.close });
     }
     serieBougies.setData(points);
+    // Sans cela, la bibliotheque garde un espacement fixe et laisse la moitie
+    // gauche vide quand la fenetre est large.
+    chart.timeScale().fitContent();
     marqueurs.setMarkers(serie.filter((b) => b.decision !== "attendre").map((b) => ({
       time: enSecondesLocales(b.open_time),
       position: b.decision === "acheter" ? "belowBar" : "aboveBar",
@@ -436,12 +516,19 @@ async function charger() {
       text: b.decision === "acheter" ? "A" : "V",
     })));
 
+    remplirCarnet(carnet);
     derniereBougie = graphique.bougie_en_cours
       ? { ...graphique.bougie_en_cours, en_cours: true }
       : serie[serie.length - 1];
     const derniereClose = serie[serie.length - 1];
     afficherLegende(derniereBougie);
-    poserNiveaux(ordre.ordre);
+    // S'il existe une position ouverte, ce sont SES niveaux qu'on trace :
+    // ce sont eux qui vont reellement decider du resultat.
+    const ouverte = carnet.ouvertes[0];
+    poserNiveaux(ouverte
+      ? { sens: ouverte.sens, entree: ouverte.prix_entree,
+          take_profit: ouverte.take_profit, stop_loss: ouverte.stop_loss }
+      : ordre.ordre);
     remplirOrdre(ordre.ordre, ordre.decision);
     placerJauge(ordre.decision);
 

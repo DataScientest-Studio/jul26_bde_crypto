@@ -11,6 +11,9 @@
                             a celles de l'entrainement ?
     GET  /ordre/{paire}     l'ordre projete : take profit, stop loss, et ce que
                             le modele a barrieres prevoit qu'il devienne
+    POST /positions/{paire} suit le carnet de positions virtuelles : ferme
+                            celles dont une barriere est touchee, ouvre si le
+                            modele donne un signal, et rend le bilan
 
 SECURITE
     Si la variable d'environnement CRYPTOBOT_API_KEY est definie, toutes les
@@ -38,6 +41,7 @@ from fastapi.responses import HTMLResponse
 
 from api import derive as module_derive
 from api import donnees, modele, ordre as module_ordre
+from api import positions as module_positions
 from api.schemas import DemandeDePrediction, Derive, Prediction, Sante
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -258,6 +262,48 @@ def ordre(symbole: str, interval: str = Query("1h"), style: str = Query("conserv
         raise HTTPException(status_code=422, detail=str(exc))
 
     return {"decision": decision, "ordre": projection}
+
+
+@app.post("/positions/{symbole}", tags=["interface"], dependencies=[Depends(verifier_cle)])
+def positions(symbole: str, interval: str = Query("1h"), style: str = Query("conservateur"),
+              source: str = Query("binance", pattern="^(binance|base)$")) -> dict:
+    """Fait vivre le carnet de positions virtuelles, puis en rend l'etat.
+
+    Aucun argent reel : on note ce que le bot AURAIT fait. Une seule position
+    a la fois par paire, pas de temps et style, comme dans le backtest de
+    l'etape 3 - sinon les resultats seraient flattes par des trades qui se
+    recouvrent.
+    """
+    symbole = symbole.upper()
+    profondeur = modele.BOUGIES_MINIMUM * 2
+    try:
+        toutes = (donnees.bougies_binance(symbole, profondeur, inclure_en_cours=True)
+                  if source == "binance"
+                  else donnees.dernieres_bougies(symbole, par_intervalle=profondeur))
+    except Exception as exc:
+        origine = "Binance" if source == "binance" else "base"
+        raise HTTPException(status_code=503, detail=f"{origine} indisponible ({type(exc).__name__})")
+
+    maintenant = pd.Timestamp.now(tz="UTC")
+    cloturees = toutes[toutes["close_time"] <= maintenant]
+    serie = toutes[(toutes["symbol"] == symbole) & (toutes["interval"] == interval)]
+    prix_actuel = float(serie.sort_values("open_time")["close"].iloc[-1])
+
+    try:
+        decision = modele.predire(cloturees, symbole, interval, style)
+        projection = module_ordre.projeter(cloturees, symbole, interval, decision["sens"])
+        mouvement = module_positions.synchroniser(cloturees, symbole, interval, style,
+                                                  decision, projection)
+        etat = module_positions.etat(symbole, interval, style, prix_actuel)
+    except (modele.ModeleIndisponible, module_ordre.ModeleBarrieresIndisponible) as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail=f"carnet indisponible ({type(exc).__name__})")
+
+    return {"symbole": symbole, "interval": interval, "style": style,
+            "mouvement": mouvement, **etat}
 
 
 @app.get("/static/{fichier}", tags=["interface"])

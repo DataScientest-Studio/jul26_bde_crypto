@@ -26,6 +26,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from api import derive as module_derive
 from api import donnees, main, modele
 from api import ordre as module_ordre
+from api import positions as module_positions
 
 
 # ---------------------------------------------------------------------------
@@ -487,3 +488,39 @@ def test_graphique_separe_la_bougie_en_cours(client, monkeypatch):
     # Aucune decision ne porte sur elle : elle n'est pas dans la serie predite.
     horodatages = {b["open_time"] for b in corps["donnees"]}
     assert corps["bougie_en_cours"]["open_time"] not in horodatages
+
+
+# ---------------------------------------------------------------------------
+#  Carnet de positions virtuelles
+# ---------------------------------------------------------------------------
+
+def test_positions_ouvre_puis_rend_le_bilan(client_avec_barrieres, monkeypatch):
+    """Le carnet s'ouvre sur signal et rend un etat lisible."""
+    appels = {}
+
+    def synchroniser_factice(bougies, symbole, interval, style, decision, ordre):
+        appels["decision"] = decision["decision"]
+        return {"positions_fermees": 0, "position_ouverte": True}
+
+    monkeypatch.setattr(module_positions, "synchroniser", synchroniser_factice)
+    monkeypatch.setattr(module_positions, "etat", lambda *a, **k: {
+        "ouvertes": [{"sens": 1, "prix_entree": 100.0, "take_profit": 103.0,
+                      "stop_loss": 97.0, "gain_en_cours_net_pct": 0.8,
+                      "ouverte_sur_la_bougie": "2026-09-18T10:00:00+00:00",
+                      "echeance": "2026-09-18T22:00:00+00:00", "prix_actuel": 100.9}],
+        "historique": [], "bilan": {"positions_fermees": 0, "capital_simule": 10000.0}})
+
+    reponse = client_avec_barrieres.post("/positions/BTCUSDT?interval=1h&style=agressif")
+    assert reponse.status_code == 200
+    corps = reponse.json()
+    assert corps["mouvement"]["position_ouverte"] is True
+    assert corps["ouvertes"][0]["gain_en_cours_net_pct"] == 0.8
+    assert appels["decision"] in {"acheter", "vendre", "attendre"}
+
+
+def test_positions_carnet_indisponible_donne_503(client_avec_barrieres, monkeypatch):
+    def tombe(*args, **kwargs):
+        raise ConnectionError("base eteinte")
+
+    monkeypatch.setattr(module_positions, "synchroniser", tombe)
+    assert client_avec_barrieres.post("/positions/BTCUSDT").status_code == 503
