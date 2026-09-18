@@ -191,9 +191,11 @@
   <label class="champ" for="fenetre">Période
     <select id="fenetre">
       <option value="1">1 jour</option>
-      <option value="3" selected>3 jours</option>
-      <option value="7">1 semaine</option>
+      <option value="3">3 jours</option>
+      <option value="7" selected>1 semaine</option>
       <option value="30">1 mois</option>
+      <option value="90">3 mois</option>
+      <option value="365">1 an</option>
     </select>
   </label>
 
@@ -363,7 +365,11 @@ const DUREES = { "15m": 900, "1h": 3600, "4h": 14400 };
 function nombreDeBougies() {
   const jours = Number($("fenetre").value);
   const bougies = Math.round((jours * 86400) / DUREES[etatChoix.interval]);
-  return Math.min(Math.max(bougies, 20), 500);
+  // Plafond a 3000 : au-dela, une bougie fait moins d'un pixel et le calcul
+  // des indicateurs devient lent pour rien. En 15 min, un an represente
+  // 35 000 bougies - la barre d'etat annonce donc la periode REELLEMENT
+  // couverte, qui peut etre plus courte que celle demandee.
+  return Math.min(Math.max(bougies, 20), 3000);
 }
 
 function formater(valeur) {
@@ -570,6 +576,11 @@ function marqueursDesTrades(carnet, serie) {
     if (entree >= debut) marques.push(ouverture(position.sens, entree));
   });
 
+  // Au-dela d'une trentaine de marqueurs, les textes se chevauchent et le
+  // graphique devient illisible : on ne garde alors que les fleches et les
+  // points, le detail restant lisible dans la liste de droite.
+  if (marques.length > 30) marques.forEach((m) => { m.text = ""; });
+
   // La bibliotheque exige des marqueurs tries dans le temps.
   return marques.sort((a, b) => a.time - b.time);
 }
@@ -664,9 +675,10 @@ async function charger() {
                     open: c.open, high: c.high, low: c.low, close: c.close });
     }
     serieBougies.setData(points);
-    // Sans cela, la bibliotheque garde un espacement fixe et laisse la moitie
-    // gauche vide quand la fenetre est large.
-    chart.timeScale().fitContent();
+    // Ajustement APRES le rendu : appele juste apres setData, il s'applique
+    // parfois avant que la serie soit posee et le graphique reste tasse d'un
+    // cote. requestAnimationFrame attend la fin du cycle de dessin.
+    requestAnimationFrame(() => chart.timeScale().fitContent());
     // Les marqueurs racontent les TRADES, pas les avis du modele : une fleche
     // a l'ouverture, un point a la fermeture avec le resultat. C'est ce qui
     // permet de juger le bot d'un coup d'oeil.
@@ -721,7 +733,12 @@ async function charger() {
       ? new Date(graphique.bougie_en_cours.close_time) : null;
     majCompteARebours();
 
-    const premiere = heureLocale(serie[0].open_time);
+    // Sur une longue periode, l'annee est indispensable : "18/09" tout court
+    // laisse croire qu'il s'agit d'aujourd'hui.
+    const longue = Number($("fenetre").value) >= 30;
+    const premiere = new Date(serie[0].open_time).toLocaleString("fr-FR", longue
+      ? { day: "2-digit", month: "2-digit", year: "numeric" }
+      : { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
     $("etat").textContent = `${serie.length} bougies depuis le ${premiere} · ${source} · dernière close `
       + `${heureLocale(derniereBougie.open_time, false)}–${heureLocale(finDerniere.toISOString(), false)}`
       + ` · actualisé ${new Date().toLocaleTimeString("fr-FR")} (heures locales)`;
@@ -761,6 +778,30 @@ function programmer() {
   minuterie = setInterval(charger, 30000);
 }
 
+// Les reglages se lisent dans l'adresse : /interface?paire=ETHUSDT&interval=4h&periode=90
+// Pratique pour partager exactement la meme vue a quelqu'un d'autre.
+function appliquerAdresse() {
+  const parametres = new URLSearchParams(location.search);
+  const paire = parametres.get("paire");
+  if (paire && [...$("paire").options].some((o) => o.value === paire.toUpperCase())) {
+    $("paire").value = paire.toUpperCase();
+  }
+  const periode = parametres.get("periode");
+  if (periode && [...$("fenetre").options].some((o) => o.value === periode)) {
+    $("fenetre").value = periode;
+  }
+  ["interval", "style"].forEach((cle) => {
+    const valeur = parametres.get(cle);
+    const groupe = cle === "interval" ? "intervalles" : "styles";
+    const bouton = [...$(groupe).children].find((b) => b.dataset.valeur === valeur);
+    if (bouton) {
+      [...$(groupe).children].forEach((b) => b.setAttribute("aria-pressed", String(b === bouton)));
+      etatChoix[cle] = valeur;
+    }
+  });
+}
+
+appliquerAdresse();
 creerGraphique();
 brancherSegments("intervalles", "interval");
 brancherSegments("styles", "style");

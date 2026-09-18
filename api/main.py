@@ -177,7 +177,7 @@ def prediction(demande: DemandeDePrediction) -> Prediction:
 
 
 @app.get("/graphique/{symbole}", tags=["interface"], dependencies=[Depends(verifier_cle)])
-def graphique(symbole: str, interval: str = Query("15m"), limite: int = Query(120, ge=20, le=500),
+def graphique(symbole: str, interval: str = Query("15m"), limite: int = Query(120, ge=20, le=3000),
               style: str = Query("conservateur"),
               source: str = Query("binance", pattern="^(binance|base)$")) -> dict:
     """Les dernieres bougies AVEC la decision du modele pour chacune.

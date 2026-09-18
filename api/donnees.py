@@ -55,15 +55,24 @@ def bougies_binance(symbole: str, par_intervalle: int = 300,
     predire dessus. Elle se reconnait a sa date de fermeture dans le futur.
     """
     from src.binance_rest import BinanceClient
-    from src.preprocessing import normalize_klines
+    from src.preprocessing import INTERVAL_SECONDS, deduplicate, normalize_klines
 
     client = BinanceClient()
     maintenant = pd.Timestamp.now(tz="UTC")
     morceaux = []
     for interval in ("15m", "1h", "4h"):
-        brut = client.klines(symbole, interval, limit=min(par_intervalle, 1000))
-        df = normalize_klines(brut, symbole, interval)
-        morceaux.append(df if inclure_en_cours else df[df["close_time"] < maintenant])
+        if par_intervalle <= 1000:
+            brut = client.klines(symbole, interval, limit=par_intervalle)
+        else:
+            # Binance plafonne a 1000 bougies par appel. Pour remonter plus
+            # loin, on part d'une date calculee et on laisse le client
+            # enchainer les lots - la meme fonction que la collecte de
+            # l'etape 1, qui gere la pagination et les quotas.
+            debut = maintenant - pd.Timedelta(seconds=INTERVAL_SECONDS[interval]) * par_intervalle
+            brut = client.fetch_klines_history(symbole, interval, debut.strftime("%Y-%m-%d"))
+        df = deduplicate(normalize_klines(brut, symbole, interval))
+        df = df if inclure_en_cours else df[df["close_time"] < maintenant]
+        morceaux.append(df.tail(par_intervalle))
     return pd.concat(morceaux, ignore_index=True)[COLONNES]
 
 
