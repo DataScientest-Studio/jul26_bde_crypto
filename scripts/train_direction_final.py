@@ -56,11 +56,11 @@ import numpy as np
 import pandas as pd
 
 from src import config
-from scripts.backtest_direction import FRAIS, construire_ordres, exposition_maximale, simuler
+from src.preprocessing import INTERVAL_SECONDS
+from scripts.backtest_direction import FRAIS, exposition_maximale, simuler
 from scripts.pistes_amelioration import (
     RECENTES, STYLES, colonnes_de, construire, construire_colonnes_seules, entrainer,
 )
-from scripts.profils_de_risque import mesurer
 
 warnings.filterwarnings("ignore")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -72,6 +72,60 @@ RESULTATS = config.DOCS / "modele_final_direction.json"
 SUIVI = f"sqlite:///{(config.ROOT / 'mlflow.db').as_posix()}"
 ARTEFACTS = config.ROOT / "mlartifacts"
 EXPERIENCE = "cryptobot_direction"
+
+
+def seuils_par_cote(probabilites, niveau: float) -> dict:
+    """Un seuil pour acheter, un autre pour vendre.
+
+    POURQUOI DEUX SEUILS. Les probabilites du modele ne sont pas symetriques :
+    elles descendent bas du cote baisse mais ne depassent jamais 0,564 du cote
+    hausse. Avec un seuil unique sur la distance a 0,5, le style conservateur
+    se retrouvait AU-DESSUS du maximum atteignable en achat : il ne pouvait
+    structurellement jamais acheter et ne produisait que des ventes. Ce n'est
+    pas un modele baissier - les hausses reelles sont a 50 % - c'est un modele
+    plus sur de lui quand il annonce une baisse.
+
+    Chaque cote recoit donc son propre seuil, regle pour declencher le meme
+    nombre de signaux : la moitie du budget d'ordres pour chacun.
+    """
+    budget = max(int(len(probabilites) * niveau / 2), 1)
+    hausse = probabilites[probabilites >= 0.5]
+    baisse = probabilites[probabilites < 0.5]
+    seuil_achat = (float(np.quantile(hausse, 1 - budget / len(hausse)))
+                   if len(hausse) > budget else 0.5)
+    seuil_vente = (float(np.quantile(baisse, budget / len(baisse)))
+                   if len(baisse) > budget else 0.5)
+    return {"achat": round(seuil_achat, 4), "vente": round(seuil_vente, 4)}
+
+
+def decider(probabilites, seuils: dict):
+    """+1 acheter, -1 vendre, 0 attendre."""
+    return np.where(probabilites >= seuils["achat"], 1,
+                    np.where(probabilites <= seuils["vente"], -1, 0))
+
+
+def mesurer_deux_seuils(probabilites, y, rendements, seuils, jours) -> dict:
+    """Memes mesures qu'avec un seuil unique, mais sur les deux cotes."""
+    from scripts.profils_de_risque import wilson
+
+    sens = decider(probabilites, seuils)
+    agit = sens != 0
+    n = int(agit.sum())
+    if not n:
+        return {"ordres": 0}
+    juste = (sens[agit] > 0) == (y[agit] == 1)
+    brut = rendements[agit] * sens[agit]
+    bas, haut = wilson(int(juste.sum()), n)
+    return {
+        "ordres": n,
+        "achats": int((sens == 1).sum()),
+        "ventes": int((sens == -1).sum()),
+        "ordres_par_jour": round(n / jours, 2),
+        "accuracy": round(float(juste.mean()), 4),
+        "ic95": [round(bas, 4), round(haut, 4)],
+        "rendement_moyen_brut_pct": round(float(brut.mean() * 100), 4),
+        "rendement_moyen_net_pct": round(float((brut.mean() - 0.002) * 100), 4),
+    }
 
 
 def empreintes() -> dict:
@@ -111,24 +165,34 @@ def main():
     rendements = recentes["rendement_suivant"].to_numpy()
     accuracy_globale = float(((proba >= 0.5).astype(int) == y).mean())
 
+    probabilites_seuils = modele.predict_proba(periode_seuils[colonnes])[:, 1]
     styles, mesures_mlflow = {}, {"accuracy_globale": accuracy_globale}
     for style, niveau in STYLES.items():
-        seuil = float(np.quantile(confiance_seuils, 1 - niveau))
-        mesure = mesurer(proba, y, rendements, seuil, jours)
+        seuils = seuils_par_cote(probabilites_seuils, niveau)
+        mesure = mesurer_deux_seuils(proba, y, rendements, seuils, jours)
         # Backtest : 5 % du capital par ordre, frais standard, achat ET vente
         # (donc futures ; sur le spot, seuls les ordres a la hausse existent).
-        ordres = construire_ordres(modele, recentes, colonnes, seuil, "acheteur_vendeur")
+        sens = decider(proba, seuils)
+        duree = pd.to_timedelta(recentes["interval"].map(INTERVAL_SECONDS), unit="s")
+        ordres = pd.DataFrame({
+            "sens": sens.astype(float), "rendement": rendements,
+            "entree": (recentes["open_time"] + duree).to_numpy(),
+            "sortie": (recentes["open_time"] + 2 * duree).to_numpy(),
+        })[sens != 0]
         backtest = {cle: simuler(ordres, f) for cle, f in FRAIS.items()}
         expo = exposition_maximale(ordres["entree"].to_numpy(), ordres["sortie"].to_numpy()) \
             if len(ordres) else 0
 
-        styles[style] = {"seuil_probabilite": round(0.5 + seuil, 4),
+        styles[style] = {"seuils": seuils,
                          "part_des_bougies_visee_pct": niveau * 100,
                          "mesures_bougies_jamais_vues": mesure,
                          "backtest_bougies_jamais_vues": backtest,
                          "exposition_maximale_pct": expo * 5}
         mesures_mlflow.update({
-            f"{style}_seuil": 0.5 + seuil,
+            f"{style}_seuil_achat": seuils["achat"],
+            f"{style}_seuil_vente": seuils["vente"],
+            f"{style}_achats": mesure["achats"],
+            f"{style}_ventes": mesure["ventes"],
             f"{style}_accuracy": mesure["accuracy"],
             f"{style}_accuracy_ic95_bas": mesure["ic95"][0],
             f"{style}_accuracy_ic95_haut": mesure["ic95"][1],
@@ -136,9 +200,10 @@ def main():
             f"{style}_gain_net_par_ordre_pct": mesure["rendement_moyen_net_pct"],
             f"{style}_backtest_performance_pct": backtest["standard_0.10%"]["performance_pct"],
         })
-        log.info("  %-13s p >= %.4f | %4d ordres (%5.1f/jour) | accuracy %.4f [%.3f-%.3f] | backtest %+.2f %%",
-                 style, styles[style]["seuil_probabilite"], mesure["ordres"],
-                 mesure["ordres_par_jour"], mesure["accuracy"], *mesure["ic95"],
+        log.info("  %-13s achat >= %.4f | vente <= %.4f | %4d ordres (%4d achats, %4d ventes, "
+                 "%5.1f/jour) | accuracy %.4f [%.3f-%.3f] | backtest %+.2f %%",
+                 style, seuils["achat"], seuils["vente"], mesure["ordres"], mesure["achats"],
+                 mesure["ventes"], mesure["ordres_par_jour"], mesure["accuracy"], *mesure["ic95"],
                  backtest["standard_0.10%"]["performance_pct"])
 
     traces = empreintes()
@@ -182,9 +247,8 @@ def main():
             "colonnes": colonnes,
             "cible": "sens de la prochaine bougie",
             "profil": "day_trading",
-            "styles": {s: v["seuil_probabilite"] for s, v in styles.items()},
-            # Au-dela, le modele est trop sur de lui pour rester fiable.
-            "seuil_maximal": styles["conservateur"]["seuil_probabilite"],
+            "styles": {s: v["seuils"] for s, v in styles.items()},
+            "style_le_plus_prudent": "conservateur",
             "mesures": styles,
             "accuracy_globale": accuracy_globale,
             "entraine_le": datetime.now(timezone.utc).isoformat(),

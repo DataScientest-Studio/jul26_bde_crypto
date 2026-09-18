@@ -27,7 +27,8 @@ class Prediction(BaseModel):
     style: str
     bougie: str
     probabilite_hausse: float
-    seuil_du_style: float
+    seuil_achat: float
+    seuil_vente: float
     decision: Literal["acheter", "vendre", "attendre"]
     sens: int
     avertissement: str

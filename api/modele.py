@@ -59,7 +59,7 @@ def metadonnees() -> dict:
         "profil": paquet["profil"],
         "variables": len(paquet["colonnes"]),
         "styles": paquet["styles"],
-        "seuil_maximal": paquet["seuil_maximal"],
+        "style_le_plus_prudent": paquet.get("style_le_plus_prudent", "conservateur"),
         "entraine_le": paquet["entraine_le"],
         "extrait_sha256": paquet["extrait_sha256"],
         "accuracy_globale": paquet.get("accuracy_globale"),
@@ -91,10 +91,11 @@ def predire_serie(bougies: pd.DataFrame, symbole: str, interval: str, style: str
         raise ValueError(f"aucune bougie exploitable pour {symbole} {interval}")
 
     probabilites = paquet["modele"].predict_proba(lignes[paquet["colonnes"]])[:, 1]
-    seuil = float(paquet["styles"][style])
-    confiance = np.abs(probabilites - 0.5)
-    decisions = np.where(confiance < seuil - 0.5, "attendre",
-                         np.where(probabilites >= 0.5, "acheter", "vendre"))
+    # Un seuil par cote : les probabilites du modele ne sont pas symetriques,
+    # et un seuil unique ne produisait que des ventes.
+    seuils = paquet["styles"][style]
+    decisions = np.where(probabilites >= seuils["achat"], "acheter",
+                         np.where(probabilites <= seuils["vente"], "vendre", "attendre"))
 
     bougies_tracees = (bougies[(bougies["symbol"] == symbole) & (bougies["interval"] == interval)]
                        .sort_values("open_time").set_index("open_time"))
@@ -142,15 +143,14 @@ def predire(bougies: pd.DataFrame, symbole: str, interval: str, style: str) -> d
         raise ValueError(f"variables manquantes : {manquantes[:5]}")
 
     probabilite = float(paquet["modele"].predict_proba(ligne[paquet["colonnes"]])[0, 1])
-    seuil = float(paquet["styles"][style])
-    confiance = abs(probabilite - 0.5)
+    seuils = paquet["styles"][style]
 
-    if confiance < seuil - 0.5:
-        decision, sens = "attendre", 0
-    elif probabilite >= 0.5:
+    if probabilite >= seuils["achat"]:
         decision, sens = "acheter", 1
-    else:
+    elif probabilite <= seuils["vente"]:
         decision, sens = "vendre", -1
+    else:
+        decision, sens = "attendre", 0
 
     return {
         "symbole": symbole,
@@ -158,7 +158,8 @@ def predire(bougies: pd.DataFrame, symbole: str, interval: str, style: str) -> d
         "style": style,
         "bougie": ligne["open_time"].iloc[0].isoformat(),
         "probabilite_hausse": round(probabilite, 4),
-        "seuil_du_style": round(seuil, 4),
+        "seuil_achat": seuils["achat"],
+        "seuil_vente": seuils["vente"],
         "decision": decision,
         "sens": sens,
         # Rappel honnete : ce modele a un avantage reel mais faible, et il

@@ -202,7 +202,7 @@ def graphique(symbole: str, interval: str = Query("15m"), limite: int = Query(12
         raise HTTPException(status_code=422, detail=str(exc))
 
     return {"symbole": symbole, "interval": interval, "style": style, "source": source,
-            "seuil_du_style": modele.charger()["styles"][style],
+            "seuils": modele.charger()["styles"][style],
             "bougies": len(serie), "donnees": serie}
 
 

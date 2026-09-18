@@ -7,92 +7,100 @@
   "bougies_de_mesure": 14831,
   "styles": {
     "agressif": {
-      "seuil_probabilite": 0.5415,
+      "seuils": {
+        "achat": 0.5346,
+        "vente": 0.4315
+      },
       "part_des_bougies_visee_pct": 10.0,
       "mesures_bougies_jamais_vues": {
-        "ordres": 1378,
-        "part_des_bougies_pct": 9.291,
-        "ordres_par_jour": 58.07,
-        "accuracy": 0.5718,
+        "ordres": 586,
+        "achats": 252,
+        "ventes": 334,
+        "ordres_par_jour": 24.7,
+        "accuracy": 0.5973,
         "ic95": [
-          0.5456,
-          0.5977
+          0.5571,
+          0.6362
         ],
-        "rendement_moyen_brut_pct": 0.0144,
-        "rendement_moyen_net_pct": -0.1856
+        "rendement_moyen_brut_pct": 0.0259,
+        "rendement_moyen_net_pct": -0.1741
       },
       "backtest_bougies_jamais_vues": {
         "standard_0.10%": {
-          "ordres": 1378,
-          "capital_final": 8799.4,
-          "performance_pct": -12.01,
-          "perte_max_pct": -12.36,
-          "ordres_gagnants_pct": 23.29,
-          "gain_moyen_net_par_ordre_pct": -0.1856,
-          "frais_payes_eur_approx": 1378.0
+          "ordres": 586,
+          "capital_final": 9502.67,
+          "performance_pct": -4.97,
+          "perte_max_pct": -5.3,
+          "ordres_gagnants_pct": 25.6,
+          "gain_moyen_net_par_ordre_pct": -0.174,
+          "frais_payes_eur_approx": 586.0
         },
         "bnb_0.075%": {
-          "ordres": 1378,
-          "capital_final": 9107.61,
-          "performance_pct": -8.92,
-          "perte_max_pct": -9.43,
-          "ordres_gagnants_pct": 29.54,
-          "gain_moyen_net_par_ordre_pct": -0.1356,
-          "frais_payes_eur_approx": 1034.0
+          "ordres": 586,
+          "capital_final": 9642.84,
+          "performance_pct": -3.57,
+          "perte_max_pct": -3.99,
+          "ordres_gagnants_pct": 32.08,
+          "gain_moyen_net_par_ordre_pct": -0.1241,
+          "frais_payes_eur_approx": 440.0
         },
         "sans_frais": {
-          "ordres": 1378,
-          "capital_final": 10099.03,
-          "performance_pct": 0.99,
-          "perte_max_pct": -0.83,
-          "ordres_gagnants_pct": 57.18,
-          "gain_moyen_net_par_ordre_pct": 0.0144,
+          "ordres": 586,
+          "capital_final": 10076.05,
+          "performance_pct": 0.76,
+          "perte_max_pct": -0.42,
+          "ordres_gagnants_pct": 59.73,
+          "gain_moyen_net_par_ordre_pct": 0.0259,
           "frais_payes_eur_approx": 0.0
         }
       },
-      "exposition_maximale_pct": 45
+      "exposition_maximale_pct": 35
     },
     "conservateur": {
-      "seuil_probabilite": 0.607,
+      "seuils": {
+        "achat": 0.5415,
+        "vente": 0.3921
+      },
       "part_des_bougies_visee_pct": 2.0,
       "mesures_bougies_jamais_vues": {
-        "ordres": 334,
-        "part_des_bougies_pct": 2.252,
-        "ordres_par_jour": 14.08,
-        "accuracy": 0.6108,
+        "ordres": 469,
+        "achats": 252,
+        "ventes": 217,
+        "ordres_par_jour": 19.76,
+        "accuracy": 0.5991,
         "ic95": [
-          0.5575,
-          0.6615
+          0.5542,
+          0.6425
         ],
-        "rendement_moyen_brut_pct": 0.0079,
-        "rendement_moyen_net_pct": -0.1921
+        "rendement_moyen_brut_pct": 0.0434,
+        "rendement_moyen_net_pct": -0.1566
       },
       "backtest_bougies_jamais_vues": {
         "standard_0.10%": {
-          "ordres": 334,
-          "capital_final": 9684.3,
-          "performance_pct": -3.16,
-          "perte_max_pct": -3.26,
-          "ordres_gagnants_pct": 23.35,
-          "gain_moyen_net_par_ordre_pct": -0.192,
-          "frais_payes_eur_approx": 334.0
+          "ordres": 469,
+          "capital_final": 9639.26,
+          "performance_pct": -3.61,
+          "perte_max_pct": -3.97,
+          "ordres_gagnants_pct": 27.29,
+          "gain_moyen_net_par_ordre_pct": -0.1566,
+          "frais_payes_eur_approx": 469.0
         },
         "bnb_0.075%": {
-          "ordres": 334,
-          "capital_final": 9765.44,
-          "performance_pct": -2.35,
-          "perte_max_pct": -2.47,
-          "ordres_gagnants_pct": 29.64,
-          "gain_moyen_net_par_ordre_pct": -0.1421,
-          "frais_payes_eur_approx": 250.0
+          "ordres": 469,
+          "capital_final": 9752.9,
+          "performance_pct": -2.47,
+          "perte_max_pct": -2.92,
+          "ordres_gagnants_pct": 33.05,
+          "gain_moyen_net_par_ordre_pct": -0.1066,
+          "frais_payes_eur_approx": 352.0
         },
         "sans_frais": {
-          "ordres": 334,
-          "capital_final": 10013.09,
-          "performance_pct": 0.13,
-          "perte_max_pct": -0.39,
-          "ordres_gagnants_pct": 61.08,
-          "gain_moyen_net_par_ordre_pct": 0.0079,
+          "ordres": 469,
+          "capital_final": 10102.09,
+          "performance_pct": 1.02,
+          "perte_max_pct": -0.27,
+          "ordres_gagnants_pct": 59.91,
+          "gain_moyen_net_par_ordre_pct": 0.0434,
           "frais_payes_eur_approx": 0.0
         }
       },

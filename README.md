@@ -132,10 +132,13 @@ conservateur / agressif pour le produit final.
 **Livrables** : section 11 du notebook, `models/direction_day_trading.joblib`,
 expérience MLflow `cryptobot_direction`.
 
-| Style | Le bot agit si la probabilité dépasse | Ordres/jour | Bonnes réponses | Backtest |
-|---|---|---|---|---|
-| Agressif | 0,5604 | 53 | 0,573 | −11,3 % |
-| Conservateur | 0,5901 | 13 | 0,584 | −3,1 % |
+| Style | Achète si p ≥ | Vend si p ≤ | Ordres/jour | Bonnes réponses | Backtest |
+|---|---|---|---|---|---|
+| Agressif | 0,5346 | 0,4315 | 25 | 0,597 | −5,0 % |
+| Conservateur | 0,5415 | 0,3921 | 20 | 0,599 | −3,6 % |
+
+Un seuil **par côté** : les probabilités du modèle ne sont pas symétriques, et
+un seuil unique rendait l'achat structurellement impossible en conservateur.
 
 Mesures faites sur 14 831 bougies **postérieures à l'extrait figé**, jamais vues
 par le modèle (24 août → 16 septembre).

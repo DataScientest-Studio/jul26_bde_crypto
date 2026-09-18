@@ -65,8 +65,9 @@ def client(monkeypatch):
         "colonnes": [],          # complete plus bas, une fois les variables connues
         "cible": "sens de la prochaine bougie",
         "profil": "day_trading",
-        "styles": {"agressif": 0.5604, "conservateur": 0.5901},
-        "seuil_maximal": 0.5901,
+        "styles": {"agressif": {"achat": 0.5604, "vente": 0.4396},
+                   "conservateur": {"achat": 0.5901, "vente": 0.4099}},
+        "style_le_plus_prudent": "conservateur",
         "entraine_le": "2026-09-17T10:35:00+00:00",
         "extrait_sha256": "a" * 64,
         "accuracy_globale": 0.5288,
@@ -125,7 +126,7 @@ def test_health_degrade_si_une_base_manque(client, monkeypatch):
 def test_modele_expose_ses_metadonnees(client):
     corps = client.get("/modele").json()
     assert corps["cible"] == "sens de la prochaine bougie"
-    assert corps["styles"] == {"agressif": 0.5604, "conservateur": 0.5901}
+    assert corps["styles"]["agressif"] == {"achat": 0.5604, "vente": 0.4396}
 
 
 # ---------------------------------------------------------------------------
@@ -154,7 +155,7 @@ def test_prediction_attend_quand_la_confiance_est_insuffisante(client, monkeypat
 
 def test_prediction_vend_quand_la_baisse_est_probable(client):
     paquet = modele.charger()
-    paquet["modele"] = ModeleFactice(0.35)      # confiance 0,15 > seuil agressif
+    paquet["modele"] = ModeleFactice(0.35)      # sous le seuil de vente 0,4396
     corps = client.post("/prediction",
                         json={"symbole": "BTCUSDT", "interval": "1h", "style": "agressif"}).json()
     assert corps["decision"] == "vendre"
@@ -163,7 +164,7 @@ def test_prediction_vend_quand_la_baisse_est_probable(client):
 
 def test_le_style_conservateur_est_plus_exigeant(client):
     paquet = modele.charger()
-    paquet["modele"] = ModeleFactice(0.58)      # entre les deux seuils
+    paquet["modele"] = ModeleFactice(0.58)      # au-dessus de 0,5604, sous 0,5901
     agressif = client.post("/prediction",
                            json={"symbole": "BTCUSDT", "style": "agressif"}).json()
     conservateur = client.post("/prediction",
@@ -376,3 +377,20 @@ def test_interface_sert_une_page_html(client):
 def test_interface_accessible_sans_cle(client, monkeypatch):
     monkeypatch.setattr(main, "CLE_ATTENDUE", "secret")
     assert client.get("/interface").status_code == 200
+
+
+def test_les_deux_cotes_peuvent_se_declencher(client):
+    """Le modele doit pouvoir acheter ET vendre.
+
+    Avec un seuil unique sur la distance a 0,5, le style conservateur se
+    retrouvait au-dessus du maximum de probabilite atteignable en achat : il ne
+    produisait que des ventes. Un seuil par cote corrige ce defaut.
+    """
+    paquet = modele.charger()
+    decisions = {}
+    for probabilite in (0.62, 0.38, 0.50):
+        paquet["modele"] = ModeleFactice(probabilite)
+        corps = client.post("/prediction",
+                            json={"symbole": "BTCUSDT", "style": "conservateur"}).json()
+        decisions[probabilite] = corps["decision"]
+    assert decisions == {0.62: "acheter", 0.38: "vendre", 0.50: "attendre"}

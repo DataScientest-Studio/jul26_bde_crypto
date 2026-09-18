@@ -82,7 +82,7 @@
     <div class="carte"><span class="v" id="prix">—</span><span class="l">Dernier prix</span></div>
     <div class="carte"><span class="v" id="decision">—</span><span class="l">Décision sur la dernière bougie</span></div>
     <div class="carte"><span class="v" id="proba">—</span><span class="l">Probabilité de hausse</span></div>
-    <div class="carte"><span class="v" id="seuil">—</span><span class="l">Seuil du style choisi</span></div>
+    <div class="carte"><span class="v" id="seuil">—</span><span class="l">Seuils du style (achat / vente)</span></div>
   </div>
 
   <figure>
@@ -218,7 +218,8 @@ async function charger() {
     $("decision").textContent = derniere.decision;
     $("decision").className = "v " + derniere.decision;
     $("proba").textContent = (derniere.probabilite_hausse * 100).toFixed(1) + " %";
-    $("seuil").textContent = (donnees.seuil_du_style * 100).toFixed(1) + " %";
+    $("seuil").textContent = (donnees.seuils.achat * 100).toFixed(1) + " / "
+                           + (donnees.seuils.vente * 100).toFixed(1) + " %";
 
     const source = donnees.source === "binance" ? "Binance en direct" : "base du projet";
     $("etat").textContent = `${serie.length} bougies · ${source} · dernière bougie close le `
