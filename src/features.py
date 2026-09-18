@@ -85,9 +85,20 @@ def _volume(df: pd.DataFrame) -> dict[str, pd.Series]:
     """Le volume brut depend de la paire : on ne garde que des rapports."""
     vol = df["volume"]
     moyenne = vol.rolling(24).mean()
+    # OBV : cumul du volume signe depuis le DEBUT de la serie. Sa valeur
+    # absolue depend donc du point de depart, ce qui est sans importance tant
+    # qu'on reste sur un seul fichier - mais devient un bug des que l'API
+    # calcule les variables sur une fenetre de quelques centaines de bougies :
+    # elle obtenait -0,0318 la ou l'entrainement avait 0,0089.
+    #
+    # On garde la meme idee (le volume a-t-il pousse a la hausse ou a la
+    # baisse sur 12 bougies ?) mais rapportee au volume de la periode : le
+    # resultat est borne entre -1 et +1, et identique quelle que soit la
+    # fenetre fournie.
+    obv = volume.on_balance_volume(df["close"], vol)
     return {
         "volume_relatif": vol / moyenne,
-        "obv_normalise": volume.on_balance_volume(df["close"], vol).pct_change(12),
+        "obv_normalise": (obv - obv.shift(12)) / vol.rolling(12).sum().replace(0, np.nan),
         "mfi": volume.money_flow_index(df["high"], df["low"], df["close"], vol),
         "trades_relatifs": df["nb_trades"] / df["nb_trades"].rolling(24).mean(),
     }

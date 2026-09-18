@@ -1,0 +1,566 @@
+{
+  "mesures": [
+    {
+      "mesure_le": "2026-09-18T07:58:43.913534+00:00",
+      "fenetre_jours": 90,
+      "source": "base",
+      "reference": {
+        "periode": [
+          "2024-08-29 00:00:00+00:00",
+          "2026-02-01 13:45:00+00:00"
+        ],
+        "lignes": 326751
+      },
+      "groupes_analyses": 15,
+      "groupes_en_derive_forte": [
+        "ETHUSDT|15m",
+        "ETHUSDT|1h",
+        "BNBUSDT|15m",
+        "BNBUSDT|1h",
+        "SOLUSDT|15m",
+        "SOLUSDT|1h",
+        "SOLUSDT|4h",
+        "XRPUSDT|15m",
+        "XRPUSDT|1h"
+      ],
+      "verdict": "reentrainement conseille : ETHUSDT|15m, ETHUSDT|1h, BNBUSDT|15m, BNBUSDT|1h, SOLUSDT|15m, SOLUSDT|1h, SOLUSDT|4h, XRPUSDT|15m, XRPUSDT|1h"
+    }
+  ],
+  "derniere_mesure": {
+    "mesure_le": "2026-09-18T07:58:43.913534+00:00",
+    "fenetre_jours": 90,
+    "source": "base",
+    "reference": {
+      "periode": [
+        "2024-08-29 00:00:00+00:00",
+        "2026-02-01 13:45:00+00:00"
+      ],
+      "lignes": 326751
+    },
+    "groupes_analyses": 15,
+    "groupes_en_derive_forte": [
+      "ETHUSDT|15m",
+      "ETHUSDT|1h",
+      "BNBUSDT|15m",
+      "BNBUSDT|1h",
+      "SOLUSDT|15m",
+      "SOLUSDT|1h",
+      "SOLUSDT|4h",
+      "XRPUSDT|15m",
+      "XRPUSDT|1h"
+    ],
+    "verdict": "reentrainement conseille : ETHUSDT|15m, ETHUSDT|1h, BNBUSDT|15m, BNBUSDT|1h, SOLUSDT|15m, SOLUSDT|1h, SOLUSDT|4h, XRPUSDT|15m, XRPUSDT|1h",
+    "detail_par_groupe": {
+      "BTCUSDT|15m": {
+        "reference": {
+          "periode": [
+            "2024-08-29 00:00:00+00:00",
+            "2026-02-01 13:45:00+00:00"
+          ],
+          "lignes": 326751,
+          "extrait_sha256": "e7313c3291b11fba2abc3ea9b4fd83e13b00ef0fffacb2ec1b827bd6a6e0c2f0",
+          "portee": "BTCUSDT|15m"
+        },
+        "bougies_analysees": 8640,
+        "psi_median": 0.0116,
+        "psi_maximum": 0.1292,
+        "variables_en_derive_forte": 0,
+        "variables_en_derive_moderee": 2,
+        "verdict": "derive moderee isolee : sans consequence immediate",
+        "variables_les_plus_derivantes": [
+          {
+            "variable": "atr_relatif_ctx_4h",
+            "psi": 0.1292,
+            "statut": "derive moderee"
+          },
+          {
+            "variable": "ecart_sma_30_ctx_4h",
+            "psi": 0.1041,
+            "statut": "derive moderee"
+          },
+          {
+            "variable": "atr_relatif_ctx_1h",
+            "psi": 0.0919,
+            "statut": "stable"
+          }
+        ]
+      },
+      "BTCUSDT|1h": {
+        "reference": {
+          "periode": [
+            "2024-08-29 00:00:00+00:00",
+            "2026-02-01 13:45:00+00:00"
+          ],
+          "lignes": 326751,
+          "extrait_sha256": "e7313c3291b11fba2abc3ea9b4fd83e13b00ef0fffacb2ec1b827bd6a6e0c2f0",
+          "portee": "BTCUSDT|1h"
+        },
+        "bougies_analysees": 8640,
+        "psi_median": 0.0081,
+        "psi_maximum": 0.1716,
+        "variables_en_derive_forte": 0,
+        "variables_en_derive_moderee": 1,
+        "verdict": "derive moderee isolee : sans consequence immediate",
+        "variables_les_plus_derivantes": [
+          {
+            "variable": "taille_trade_moyen",
+            "psi": 0.1716,
+            "statut": "derive moderee"
+          },
+          {
+            "variable": "part_acheteuse_moy_12",
+            "psi": 0.0745,
+            "statut": "stable"
+          },
+          {
+            "variable": "ecart_sma_30_ctx_4h",
+            "psi": 0.0382,
+            "statut": "stable"
+          }
+        ]
+      },
+      "BTCUSDT|4h": {
+        "reference": {
+          "periode": [
+            "2024-08-29 00:00:00+00:00",
+            "2026-02-01 13:45:00+00:00"
+          ],
+          "lignes": 326751,
+          "extrait_sha256": "e7313c3291b11fba2abc3ea9b4fd83e13b00ef0fffacb2ec1b827bd6a6e0c2f0",
+          "portee": "BTCUSDT|4h"
+        },
+        "bougies_analysees": 4261,
+        "psi_median": 0.0028,
+        "psi_maximum": 0.0309,
+        "variables_en_derive_forte": 0,
+        "variables_en_derive_moderee": 0,
+        "verdict": "stable : les donnees ressemblent a celles de l'entrainement",
+        "variables_les_plus_derivantes": [
+          {
+            "variable": "part_acheteuse_moy_12",
+            "psi": 0.0309,
+            "statut": "stable"
+          },
+          {
+            "variable": "part_acheteuse",
+            "psi": 0.0068,
+            "statut": "stable"
+          },
+          {
+            "variable": "adx",
+            "psi": 0.0065,
+            "statut": "stable"
+          }
+        ]
+      },
+      "ETHUSDT|15m": {
+        "reference": {
+          "periode": [
+            "2024-08-29 00:00:00+00:00",
+            "2026-02-01 13:45:00+00:00"
+          ],
+          "lignes": 326751,
+          "extrait_sha256": "e7313c3291b11fba2abc3ea9b4fd83e13b00ef0fffacb2ec1b827bd6a6e0c2f0",
+          "portee": "ETHUSDT|15m"
+        },
+        "bougies_analysees": 8640,
+        "psi_median": 0.0689,
+        "psi_maximum": 0.7088,
+        "variables_en_derive_forte": 5,
+        "variables_en_derive_moderee": 4,
+        "verdict": "derive forte : reentrainement conseille",
+        "variables_les_plus_derivantes": [
+          {
+            "variable": "atr_relatif_ctx_4h",
+            "psi": 0.7088,
+            "statut": "derive forte"
+          },
+          {
+            "variable": "atr_relatif_ctx_1h",
+            "psi": 0.498,
+            "statut": "derive forte"
+          },
+          {
+            "variable": "taille_trade_moyen",
+            "psi": 0.4362,
+            "statut": "derive forte"
+          }
+        ]
+      },
+      "ETHUSDT|1h": {
+        "reference": {
+          "periode": [
+            "2024-08-29 00:00:00+00:00",
+            "2026-02-01 13:45:00+00:00"
+          ],
+          "lignes": 326751,
+          "extrait_sha256": "e7313c3291b11fba2abc3ea9b4fd83e13b00ef0fffacb2ec1b827bd6a6e0c2f0",
+          "portee": "ETHUSDT|1h"
+        },
+        "bougies_analysees": 8640,
+        "psi_median": 0.0285,
+        "psi_maximum": 0.8679,
+        "variables_en_derive_forte": 1,
+        "variables_en_derive_moderee": 3,
+        "verdict": "derive forte : reentrainement conseille",
+        "variables_les_plus_derivantes": [
+          {
+            "variable": "taille_trade_moyen",
+            "psi": 0.8679,
+            "statut": "derive forte"
+          },
+          {
+            "variable": "atr_relatif_ctx_4h",
+            "psi": 0.244,
+            "statut": "derive moderee"
+          },
+          {
+            "variable": "atr_relatif",
+            "psi": 0.1678,
+            "statut": "derive moderee"
+          }
+        ]
+      },
+      "ETHUSDT|4h": {
+        "reference": {
+          "periode": [
+            "2024-08-29 00:00:00+00:00",
+            "2026-02-01 13:45:00+00:00"
+          ],
+          "lignes": 326751,
+          "extrait_sha256": "e7313c3291b11fba2abc3ea9b4fd83e13b00ef0fffacb2ec1b827bd6a6e0c2f0",
+          "portee": "ETHUSDT|4h"
+        },
+        "bougies_analysees": 4261,
+        "psi_median": 0.0037,
+        "psi_maximum": 0.0681,
+        "variables_en_derive_forte": 0,
+        "variables_en_derive_moderee": 0,
+        "verdict": "stable : les donnees ressemblent a celles de l'entrainement",
+        "variables_les_plus_derivantes": [
+          {
+            "variable": "taille_trade_moyen",
+            "psi": 0.0681,
+            "statut": "stable"
+          },
+          {
+            "variable": "atr_relatif",
+            "psi": 0.0345,
+            "statut": "stable"
+          },
+          {
+            "variable": "vol_24",
+            "psi": 0.0233,
+            "statut": "stable"
+          }
+        ]
+      },
+      "BNBUSDT|15m": {
+        "reference": {
+          "periode": [
+            "2024-08-29 00:00:00+00:00",
+            "2026-02-01 13:45:00+00:00"
+          ],
+          "lignes": 326751,
+          "extrait_sha256": "e7313c3291b11fba2abc3ea9b4fd83e13b00ef0fffacb2ec1b827bd6a6e0c2f0",
+          "portee": "BNBUSDT|15m"
+        },
+        "bougies_analysees": 8640,
+        "psi_median": 0.0645,
+        "psi_maximum": 0.6811,
+        "variables_en_derive_forte": 5,
+        "variables_en_derive_moderee": 4,
+        "verdict": "derive forte : reentrainement conseille",
+        "variables_les_plus_derivantes": [
+          {
+            "variable": "taille_trade_moyen",
+            "psi": 0.6811,
+            "statut": "derive forte"
+          },
+          {
+            "variable": "atr_relatif_ctx_4h",
+            "psi": 0.4392,
+            "statut": "derive forte"
+          },
+          {
+            "variable": "atr_relatif_ctx_1h",
+            "psi": 0.3738,
+            "statut": "derive forte"
+          }
+        ]
+      },
+      "BNBUSDT|1h": {
+        "reference": {
+          "periode": [
+            "2024-08-29 00:00:00+00:00",
+            "2026-02-01 13:45:00+00:00"
+          ],
+          "lignes": 326751,
+          "extrait_sha256": "e7313c3291b11fba2abc3ea9b4fd83e13b00ef0fffacb2ec1b827bd6a6e0c2f0",
+          "portee": "BNBUSDT|1h"
+        },
+        "bougies_analysees": 8640,
+        "psi_median": 0.01,
+        "psi_maximum": 1.3802,
+        "variables_en_derive_forte": 1,
+        "variables_en_derive_moderee": 0,
+        "verdict": "derive forte : reentrainement conseille",
+        "variables_les_plus_derivantes": [
+          {
+            "variable": "taille_trade_moyen",
+            "psi": 1.3802,
+            "statut": "derive forte"
+          },
+          {
+            "variable": "atr_relatif_ctx_4h",
+            "psi": 0.0851,
+            "statut": "stable"
+          },
+          {
+            "variable": "atr_relatif",
+            "psi": 0.0627,
+            "statut": "stable"
+          }
+        ]
+      },
+      "BNBUSDT|4h": {
+        "reference": {
+          "periode": [
+            "2024-08-29 00:00:00+00:00",
+            "2026-02-01 13:45:00+00:00"
+          ],
+          "lignes": 326751,
+          "extrait_sha256": "e7313c3291b11fba2abc3ea9b4fd83e13b00ef0fffacb2ec1b827bd6a6e0c2f0",
+          "portee": "BNBUSDT|4h"
+        },
+        "bougies_analysees": 4261,
+        "psi_median": 0.005,
+        "psi_maximum": 0.1285,
+        "variables_en_derive_forte": 0,
+        "variables_en_derive_moderee": 1,
+        "verdict": "derive moderee isolee : sans consequence immediate",
+        "variables_les_plus_derivantes": [
+          {
+            "variable": "taille_trade_moyen",
+            "psi": 0.1285,
+            "statut": "derive moderee"
+          },
+          {
+            "variable": "part_acheteuse_moy_12",
+            "psi": 0.0331,
+            "statut": "stable"
+          },
+          {
+            "variable": "atr_relatif",
+            "psi": 0.0248,
+            "statut": "stable"
+          }
+        ]
+      },
+      "SOLUSDT|15m": {
+        "reference": {
+          "periode": [
+            "2024-08-29 00:00:00+00:00",
+            "2026-02-01 13:45:00+00:00"
+          ],
+          "lignes": 326751,
+          "extrait_sha256": "e7313c3291b11fba2abc3ea9b4fd83e13b00ef0fffacb2ec1b827bd6a6e0c2f0",
+          "portee": "SOLUSDT|15m"
+        },
+        "bougies_analysees": 8640,
+        "psi_median": 0.0958,
+        "psi_maximum": 2.1417,
+        "variables_en_derive_forte": 7,
+        "variables_en_derive_moderee": 9,
+        "verdict": "derive forte : reentrainement conseille",
+        "variables_les_plus_derivantes": [
+          {
+            "variable": "taille_trade_moyen",
+            "psi": 2.1417,
+            "statut": "derive forte"
+          },
+          {
+            "variable": "atr_relatif_ctx_4h",
+            "psi": 1.0517,
+            "statut": "derive forte"
+          },
+          {
+            "variable": "atr_relatif_ctx_1h",
+            "psi": 0.7779,
+            "statut": "derive forte"
+          }
+        ]
+      },
+      "SOLUSDT|1h": {
+        "reference": {
+          "periode": [
+            "2024-08-29 00:00:00+00:00",
+            "2026-02-01 13:45:00+00:00"
+          ],
+          "lignes": 326751,
+          "extrait_sha256": "e7313c3291b11fba2abc3ea9b4fd83e13b00ef0fffacb2ec1b827bd6a6e0c2f0",
+          "portee": "SOLUSDT|1h"
+        },
+        "bougies_analysees": 8640,
+        "psi_median": 0.0401,
+        "psi_maximum": 0.8103,
+        "variables_en_derive_forte": 4,
+        "variables_en_derive_moderee": 2,
+        "verdict": "derive forte : reentrainement conseille",
+        "variables_les_plus_derivantes": [
+          {
+            "variable": "taille_trade_moyen",
+            "psi": 0.8103,
+            "statut": "derive forte"
+          },
+          {
+            "variable": "atr_relatif_ctx_4h",
+            "psi": 0.4456,
+            "statut": "derive forte"
+          },
+          {
+            "variable": "atr_relatif",
+            "psi": 0.3429,
+            "statut": "derive forte"
+          }
+        ]
+      },
+      "SOLUSDT|4h": {
+        "reference": {
+          "periode": [
+            "2024-08-29 00:00:00+00:00",
+            "2026-02-01 13:45:00+00:00"
+          ],
+          "lignes": 326751,
+          "extrait_sha256": "e7313c3291b11fba2abc3ea9b4fd83e13b00ef0fffacb2ec1b827bd6a6e0c2f0",
+          "portee": "SOLUSDT|4h"
+        },
+        "bougies_analysees": 4261,
+        "psi_median": 0.0054,
+        "psi_maximum": 0.2868,
+        "variables_en_derive_forte": 1,
+        "variables_en_derive_moderee": 0,
+        "verdict": "derive forte : reentrainement conseille",
+        "variables_les_plus_derivantes": [
+          {
+            "variable": "taille_trade_moyen",
+            "psi": 0.2868,
+            "statut": "derive forte"
+          },
+          {
+            "variable": "atr_relatif",
+            "psi": 0.0831,
+            "statut": "stable"
+          },
+          {
+            "variable": "vol_24",
+            "psi": 0.0569,
+            "statut": "stable"
+          }
+        ]
+      },
+      "XRPUSDT|15m": {
+        "reference": {
+          "periode": [
+            "2024-08-29 00:00:00+00:00",
+            "2026-02-01 13:45:00+00:00"
+          ],
+          "lignes": 326751,
+          "extrait_sha256": "e7313c3291b11fba2abc3ea9b4fd83e13b00ef0fffacb2ec1b827bd6a6e0c2f0",
+          "portee": "XRPUSDT|15m"
+        },
+        "bougies_analysees": 8640,
+        "psi_median": 0.0949,
+        "psi_maximum": 0.8161,
+        "variables_en_derive_forte": 7,
+        "variables_en_derive_moderee": 8,
+        "verdict": "derive forte : reentrainement conseille",
+        "variables_les_plus_derivantes": [
+          {
+            "variable": "atr_relatif_ctx_4h",
+            "psi": 0.8161,
+            "statut": "derive forte"
+          },
+          {
+            "variable": "taille_trade_moyen",
+            "psi": 0.6658,
+            "statut": "derive forte"
+          },
+          {
+            "variable": "atr_relatif_ctx_1h",
+            "psi": 0.5714,
+            "statut": "derive forte"
+          }
+        ]
+      },
+      "XRPUSDT|1h": {
+        "reference": {
+          "periode": [
+            "2024-08-29 00:00:00+00:00",
+            "2026-02-01 13:45:00+00:00"
+          ],
+          "lignes": 326751,
+          "extrait_sha256": "e7313c3291b11fba2abc3ea9b4fd83e13b00ef0fffacb2ec1b827bd6a6e0c2f0",
+          "portee": "XRPUSDT|1h"
+        },
+        "bougies_analysees": 8640,
+        "psi_median": 0.0507,
+        "psi_maximum": 0.5342,
+        "variables_en_derive_forte": 4,
+        "variables_en_derive_moderee": 4,
+        "verdict": "derive forte : reentrainement conseille",
+        "variables_les_plus_derivantes": [
+          {
+            "variable": "taille_trade_moyen",
+            "psi": 0.5342,
+            "statut": "derive forte"
+          },
+          {
+            "variable": "atr_relatif_ctx_4h",
+            "psi": 0.3924,
+            "statut": "derive forte"
+          },
+          {
+            "variable": "atr_relatif",
+            "psi": 0.303,
+            "statut": "derive forte"
+          }
+        ]
+      },
+      "XRPUSDT|4h": {
+        "reference": {
+          "periode": [
+            "2024-08-29 00:00:00+00:00",
+            "2026-02-01 13:45:00+00:00"
+          ],
+          "lignes": 326751,
+          "extrait_sha256": "e7313c3291b11fba2abc3ea9b4fd83e13b00ef0fffacb2ec1b827bd6a6e0c2f0",
+          "portee": "XRPUSDT|4h"
+        },
+        "bougies_analysees": 4261,
+        "psi_median": 0.0089,
+        "psi_maximum": 0.1106,
+        "variables_en_derive_forte": 0,
+        "variables_en_derive_moderee": 1,
+        "verdict": "derive moderee isolee : sans consequence immediate",
+        "variables_les_plus_derivantes": [
+          {
+            "variable": "taille_trade_moyen",
+            "psi": 0.1106,
+            "statut": "derive moderee"
+          },
+          {
+            "variable": "atr_relatif",
+            "psi": 0.0607,
+            "statut": "stable"
+          },
+          {
+            "variable": "vol_24",
+            "psi": 0.0472,
+            "statut": "stable"
+          }
+        ]
+      }
+    }
+  }
+}

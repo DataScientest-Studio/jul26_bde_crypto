@@ -158,6 +158,72 @@ python -m scripts.train_direction_final      # modèle final, MLflow, .joblib
 python scripts/make_notebook.py              # régénérer le notebook
 ```
 
+## Étape 4 — Déploiement ✅
+
+API du modèle et des bases, conteneurisée, testée, avec mesure de la dérive
+des données.
+
+**Livrable** : [`docs/rapport_etape4.pdf`](docs/rapport_etape4.pdf)
+
+### Lancer l'ensemble
+
+```bash
+docker compose up -d        # bases + API + interfaces web
+```
+
+L'API répond sur <http://localhost:8000>, avec sa documentation interactive
+sur <http://localhost:8000/docs> (générée automatiquement, on peut y essayer
+chaque route depuis le navigateur).
+
+| Route | Ce qu'elle fait |
+|---|---|
+| `GET /health` | l'API, le modèle et les deux bases répondent-ils ? |
+| `GET /modele` | d'où vient le modèle, ce qu'il vaut, ses deux seuils |
+| `GET /paires` | les paires disponibles en base |
+| `GET /bougies/{paire}` | les dernières bougies (lecture de PostgreSQL) |
+| `GET /couverture` | volume et retard de collecte par jeu de données |
+| `POST /prediction` | acheter / vendre / attendre, selon le style choisi |
+| `GET /derive` | les données récentes ressemblent-elles à celles de l'entraînement ? |
+
+Exemple :
+
+```bash
+curl -X POST http://localhost:8000/prediction \
+     -H "Content-Type: application/json" \
+     -d '{"symbole":"BTCUSDT","interval":"1h","style":"conservateur"}'
+```
+
+Le **style** est le bouton conservateur / agressif : il fixe la probabilité
+minimale à partir de laquelle le bot agit. En dessous, il répond `attendre`.
+
+**Sécurité** : si `CRYPTOBOT_API_KEY` est renseignée dans `.env`, toutes les
+routes sauf `/` et `/health` exigent l'en-tête `X-API-Key`. Sans cette
+variable, l'API reste ouverte, ce qui convient en développement seulement.
+
+### Tests
+
+```bash
+pytest tests/ -q        # 91 tests, quelques secondes
+```
+
+Les tests de l'API n'ont besoin ni des bases ni du modèle de 100 Mo : les
+accès extérieurs sont remplacés par des doublures, pour qu'un échec désigne un
+bug de l'API et non une base éteinte.
+
+### Dérive des données
+
+```bash
+python -m scripts.reference_derive          # photographie des données d'entraînement
+python -m scripts.mesurer_derive            # mesure du jour, archivée dans docs/
+curl "http://localhost:8000/derive?symbole=BTCUSDT&interval=1h"
+```
+
+La mesure utilise l'indice PSI : pour chaque variable, on compare la
+répartition actuelle à celle de l'entraînement. En dessous de 0,10 c'est
+stable, au-delà de 0,25 un réentraînement est conseillé. La comparaison se
+fait **par paire et par pas de temps**, sans quoi on mesure des différences
+d'unités plutôt qu'une dérive.
+
 ## Profils de trading
 
 Un bot ne regarde pas le marché à la même échelle selon la stratégie visée.

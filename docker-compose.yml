@@ -60,6 +60,39 @@ services:
       start_period: 20s
 
   # ---------------------------------------------------------------------------
+  #  API du modele (etape 4)
+  # ---------------------------------------------------------------------------
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: crypto_api
+    restart: unless-stopped
+    environment:
+      # Les conteneurs se parlent par le NOM du service, pas par localhost.
+      POSTGRES_HOST: postgres
+      MONGO_HOST: mongo
+      POSTGRES_DB: ${POSTGRES_DB:-cryptobot}
+      POSTGRES_USER: ${POSTGRES_USER:-cryptobot}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cryptobot}
+      MONGO_USER: ${MONGO_USER:-cryptobot}
+      MONGO_PASSWORD: ${MONGO_PASSWORD:-cryptobot}
+      # Vide = API ouverte (developpement). Renseignee = en-tete X-API-Key exige.
+      CRYPTOBOT_API_KEY: ${CRYPTOBOT_API_KEY:-}
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      # Modele et reference de derive montes en lecture seule : les
+      # reentrainer ne demande pas de reconstruire l'image.
+      - ./models:/app/models:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+
+  # ---------------------------------------------------------------------------
   #  Interfaces web d'exploration
   #
   #  Elles ne servent QU'A REGARDER les donnees : aucun script du projet n'en
