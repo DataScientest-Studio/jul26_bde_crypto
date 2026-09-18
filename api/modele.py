@@ -67,6 +67,54 @@ def metadonnees() -> dict:
     }
 
 
+def predire_serie(bougies: pd.DataFrame, symbole: str, interval: str, style: str,
+                  limite: int = 200) -> list[dict]:
+    """Une prediction PAR BOUGIE, pour tracer un graphique.
+
+    Le graphique a besoin de la decision a chaque instant, pas seulement a la
+    derniere bougie : c'est ce qui permet d'afficher les fleches d'achat et de
+    vente au bon endroit. Un seul calcul de variables sert toute la serie.
+    """
+    import numpy as np
+
+    paquet = charger()
+    if style not in paquet["styles"]:
+        raise ValueError(f"style inconnu : {style} (attendu : {list(paquet['styles'])})")
+
+    variables = construire_groupes(bougies, FAMILLES)
+    variables = ajouter_contexte_lent(variables)
+    variables["pas_de_temps"] = np.log(variables["interval"].map(INTERVAL_SECONDS))
+
+    lignes = (variables[(variables["symbol"] == symbole) & (variables["interval"] == interval)]
+              .sort_values("open_time").tail(limite))
+    if lignes.empty:
+        raise ValueError(f"aucune bougie exploitable pour {symbole} {interval}")
+
+    probabilites = paquet["modele"].predict_proba(lignes[paquet["colonnes"]])[:, 1]
+    seuil = float(paquet["styles"][style])
+    confiance = np.abs(probabilites - 0.5)
+    decisions = np.where(confiance < seuil - 0.5, "attendre",
+                         np.where(probabilites >= 0.5, "acheter", "vendre"))
+
+    bougies_tracees = (bougies[(bougies["symbol"] == symbole) & (bougies["interval"] == interval)]
+                       .sort_values("open_time").set_index("open_time"))
+
+    serie = []
+    for horodatage, probabilite, decision in zip(lignes["open_time"], probabilites, decisions):
+        if horodatage not in bougies_tracees.index:
+            continue
+        bougie = bougies_tracees.loc[horodatage]
+        serie.append({
+            "open_time": horodatage.isoformat(),
+            "open": float(bougie["open"]), "high": float(bougie["high"]),
+            "low": float(bougie["low"]), "close": float(bougie["close"]),
+            "volume": float(bougie["volume"]),
+            "probabilite_hausse": round(float(probabilite), 4),
+            "decision": str(decision),
+        })
+    return serie
+
+
 def predire(bougies: pd.DataFrame, symbole: str, interval: str, style: str) -> dict:
     """Decision pour la DERNIERE bougie cloturee de ce couple paire/pas de temps.
 

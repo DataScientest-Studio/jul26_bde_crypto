@@ -81,6 +81,8 @@ def client(monkeypatch):
     monkeypatch.setattr(donnees, "etat_bases", lambda: {"postgresql": "ok", "mongodb": "ok"})
     monkeypatch.setattr(donnees, "paires_disponibles", lambda: ["BTCUSDT", "ETHUSDT"])
     monkeypatch.setattr(donnees, "journaliser_prediction", lambda prediction: None)
+    monkeypatch.setattr(donnees, "bougies_binance",
+                        lambda symbole, par_intervalle=300: bougies_factices())
 
     # Le modele factice accepte n'importe quelles colonnes : on prend celles
     # que la chaine de calcul produit reellement, pour verifier au passage
@@ -327,3 +329,50 @@ def test_route_derive_sans_reference_donne_503(client, monkeypatch):
 
     monkeypatch.setattr(module_derive, "charger_reference", absente)
     assert client.get("/derive").status_code == 503
+
+
+# ---------------------------------------------------------------------------
+#  Interface : graphique et page de demonstration
+# ---------------------------------------------------------------------------
+
+def test_graphique_renvoie_une_decision_par_bougie(client):
+    """Ce que consomme l'interface : un seul appel, tout le necessaire."""
+    corps = client.get("/graphique/btcusdt?interval=1h&limite=50&style=agressif").json()
+    assert corps["symbole"] == "BTCUSDT"
+    assert corps["source"] == "binance"          # marche en direct par defaut
+    assert corps["bougies"] == 50
+    premiere = corps["donnees"][0]
+    assert {"open", "high", "low", "close", "volume"} <= set(premiere)
+    assert premiere["decision"] in {"acheter", "vendre", "attendre"}
+    assert 0 <= premiere["probabilite_hausse"] <= 1
+
+
+def test_graphique_peut_lire_la_base(client):
+    corps = client.get("/graphique/BTCUSDT?source=base&limite=30").json()
+    assert corps["source"] == "base"
+    assert corps["bougies"] == 30
+
+
+def test_graphique_source_inconnue_refusee(client):
+    assert client.get("/graphique/BTCUSDT?source=coinbase").status_code == 422
+
+
+def test_graphique_binance_indisponible_donne_503(client, monkeypatch):
+    def tombe(*args, **kwargs):
+        raise ConnectionError("Binance injoignable")
+
+    monkeypatch.setattr(donnees, "bougies_binance", tombe)
+    assert client.get("/graphique/BTCUSDT").status_code == 503
+
+
+def test_interface_sert_une_page_html(client):
+    """La page est servie par l'API : meme origine, donc aucun CORS a regler."""
+    reponse = client.get("/interface")
+    assert reponse.status_code == 200
+    assert "text/html" in reponse.headers["content-type"]
+    assert "<canvas" in reponse.text
+
+
+def test_interface_accessible_sans_cle(client, monkeypatch):
+    monkeypatch.setattr(main, "CLE_ATTENDUE", "secret")
+    assert client.get("/interface").status_code == 200

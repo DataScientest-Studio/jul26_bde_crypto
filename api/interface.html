@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CryptoBot — bougies et décisions du modèle</title>
+<!--
+  Page de demonstration, servie par l'API elle-meme (meme origine, donc aucun
+  CORS a regler). Le graphique est dessine en Canvas, sans aucune
+  bibliotheque : rien a telecharger, la page fonctionne hors ligne.
+-->
+<style>
+  :root {
+    --fond: #0f141c; --surface: #161d27; --trait: #26303e;
+    --encre: #e6ebf2; --encre-douce: #93a0b3;
+    --hausse: #1baf7a; --baisse: #e34948; --attente: #7a8397; --accent: #f0b93c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--fond); color: var(--encre);
+    font-family: "Segoe UI", system-ui, sans-serif; font-size: 15px;
+  }
+  .page { max-width: 1180px; margin: 0 auto; padding: 24px 16px 48px; }
+  header { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: baseline;
+           border-bottom: 1px solid var(--trait); padding-bottom: 16px; }
+  h1 { font-size: 1.3rem; margin: 0; font-weight: 600; }
+  .avertissement { color: var(--accent); font-size: 13px; }
+  .controles { display: flex; flex-wrap: wrap; gap: 12px; margin: 20px 0; align-items: center; }
+  label { color: var(--encre-douce); font-size: 13px; display: flex; gap: 6px; align-items: center; }
+  select, button {
+    background: var(--surface); color: var(--encre); border: 1px solid var(--trait);
+    border-radius: 6px; padding: 7px 11px; font: inherit; font-size: 14px;
+  }
+  button { cursor: pointer; }
+  button:hover, select:hover { border-color: var(--encre-douce); }
+  button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .cartes { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1px;
+            background: var(--trait); border: 1px solid var(--trait); margin-bottom: 20px; }
+  .carte { background: var(--surface); padding: 14px 16px; }
+  .carte .v { font-size: 1.5rem; font-weight: 600; font-variant-numeric: tabular-nums; display: block; }
+  .carte .l { color: var(--encre-douce); font-size: 11px; letter-spacing: .08em;
+              text-transform: uppercase; display: block; margin-top: 4px; }
+  .acheter { color: var(--hausse); } .vendre { color: var(--baisse); } .attendre { color: var(--attente); }
+  figure { margin: 0; background: var(--surface); border: 1px solid var(--trait); padding: 12px; }
+  canvas { width: 100%; height: auto; display: block; }
+  .legende { display: flex; flex-wrap: wrap; gap: 16px; color: var(--encre-douce);
+             font-size: 12.5px; margin-top: 10px; }
+  .pastille { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; }
+  footer { color: var(--encre-douce); font-size: 12.5px; margin-top: 18px; }
+  .erreur { color: var(--baisse); }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <h1>CryptoBot — bougies et décisions du modèle</h1>
+    <span class="avertissement">modèle expérimental, non rentable une fois les frais déduits</span>
+  </header>
+
+  <div class="controles">
+    <label for="paire">Paire
+      <select id="paire">
+        <option>BTCUSDT</option><option>ETHUSDT</option><option>BNBUSDT</option>
+        <option>SOLUSDT</option><option>XRPUSDT</option>
+      </select>
+    </label>
+    <label for="interval">Pas de temps
+      <select id="interval"><option>15m</option><option selected>1h</option><option>4h</option></select>
+    </label>
+    <label for="style">Style
+      <select id="style"><option value="conservateur">Conservateur</option><option value="agressif">Agressif</option></select>
+    </label>
+    <label for="source">Données
+      <select id="source"><option value="binance">Binance en direct</option><option value="base">Base du projet</option></select>
+    </label>
+    <button id="rafraichir" type="button">Rafraîchir</button>
+    <label for="auto"><input type="checkbox" id="auto" checked> Rafraîchissement automatique</label>
+  </div>
+
+  <div class="cartes">
+    <div class="carte"><span class="v" id="prix">—</span><span class="l">Dernier prix</span></div>
+    <div class="carte"><span class="v" id="decision">—</span><span class="l">Décision sur la dernière bougie</span></div>
+    <div class="carte"><span class="v" id="proba">—</span><span class="l">Probabilité de hausse</span></div>
+    <div class="carte"><span class="v" id="seuil">—</span><span class="l">Seuil du style choisi</span></div>
+  </div>
+
+  <figure>
+    <canvas id="graphique" width="1140" height="460" role="img"
+            aria-label="Graphique en chandeliers avec les décisions du modèle"></canvas>
+    <div class="legende">
+      <span><span class="pastille" style="background:var(--hausse)"></span>bougie en hausse</span>
+      <span><span class="pastille" style="background:var(--baisse)"></span>bougie en baisse</span>
+      <span>▲ le modèle achète</span>
+      <span>▼ le modèle vend</span>
+      <span>· aucune marque : le modèle attend</span>
+    </div>
+  </figure>
+
+  <footer id="etat">Chargement…</footer>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const canvas = $("graphique");
+const ctx = canvas.getContext("2d");
+let minuterie = null;
+
+const couleurs = {
+  hausse: "#1baf7a", baisse: "#e34948", trait: "#26303e",
+  encre: "#e6ebf2", douce: "#93a0b3", fond: "#161d27",
+};
+
+function formaterPrix(valeur) {
+  const decimales = valeur >= 100 ? 2 : valeur >= 1 ? 3 : 5;
+  return valeur.toLocaleString("fr-FR", { minimumFractionDigits: decimales,
+                                          maximumFractionDigits: decimales });
+}
+
+function dessiner(bougies) {
+  // Dessin a la resolution reelle de l'ecran, sinon tout est flou.
+  const ratio = window.devicePixelRatio || 1;
+  const largeur = canvas.clientWidth, hauteur = 460;
+  canvas.width = largeur * ratio;
+  canvas.height = hauteur * ratio;
+  canvas.style.height = hauteur + "px";
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  ctx.clearRect(0, 0, largeur, hauteur);
+
+  if (!bougies.length) return;
+
+  const margeG = 12, margeD = 78, margeH = 14, margeB = 26;
+  const aire = { x: margeG, y: margeH, w: largeur - margeG - margeD, h: hauteur - margeH - margeB };
+
+  const hauts = bougies.map(b => b.high), bas = bougies.map(b => b.low);
+  let max = Math.max(...hauts), min = Math.min(...bas);
+  const marge = (max - min) * 0.08 || max * 0.01;
+  max += marge; min -= marge;
+
+  const yDe = (prix) => aire.y + aire.h * (1 - (prix - min) / (max - min));
+  const pas = aire.w / bougies.length;
+  const corps = Math.max(1.5, Math.min(pas * 0.62, 14));
+
+  // Repères horizontaux et prix à droite
+  ctx.font = "12px ui-monospace, monospace";
+  ctx.textBaseline = "middle";
+  for (let i = 0; i <= 4; i++) {
+    const prix = min + (max - min) * (i / 4);
+    const y = yDe(prix);
+    ctx.strokeStyle = couleurs.trait;
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(aire.x, y); ctx.lineTo(aire.x + aire.w, y); ctx.stroke();
+    ctx.fillStyle = couleurs.douce;
+    ctx.textAlign = "left";
+    ctx.fillText(formaterPrix(prix), aire.x + aire.w + 8, y);
+  }
+
+  bougies.forEach((bougie, i) => {
+    const centre = aire.x + pas * (i + 0.5);
+    const monte = bougie.close >= bougie.open;
+    const couleur = monte ? couleurs.hausse : couleurs.baisse;
+
+    ctx.strokeStyle = couleur;
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(centre, yDe(bougie.high));
+    ctx.lineTo(centre, yDe(bougie.low));
+    ctx.stroke();
+
+    const haut = yDe(Math.max(bougie.open, bougie.close));
+    const bas2 = yDe(Math.min(bougie.open, bougie.close));
+    ctx.fillStyle = couleur;
+    ctx.fillRect(centre - corps / 2, haut, corps, Math.max(1, bas2 - haut));
+
+    if (bougie.decision === "acheter" || bougie.decision === "vendre") {
+      const achat = bougie.decision === "acheter";
+      const y = achat ? yDe(bougie.low) + 12 : yDe(bougie.high) - 12;
+      ctx.fillStyle = achat ? couleurs.hausse : couleurs.baisse;
+      ctx.beginPath();
+      ctx.moveTo(centre, achat ? y - 8 : y + 8);
+      ctx.lineTo(centre - 5, achat ? y : y);
+      ctx.lineTo(centre + 5, achat ? y : y);
+      ctx.closePath();
+      ctx.fill();
+    }
+  });
+
+  // Dates aux deux extrémités : le graphique reste lisible sans surcharge.
+  ctx.fillStyle = couleurs.douce;
+  ctx.textBaseline = "top";
+  const quand = (b) => new Date(b.open_time).toLocaleString("fr-FR",
+        { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+  ctx.textAlign = "left";
+  ctx.fillText(quand(bougies[0]), aire.x, aire.y + aire.h + 8);
+  ctx.textAlign = "right";
+  ctx.fillText(quand(bougies[bougies.length - 1]), aire.x + aire.w, aire.y + aire.h + 8);
+}
+
+async function charger() {
+  const parametres = new URLSearchParams({
+    interval: $("interval").value, style: $("style").value,
+    source: $("source").value, limite: "120",
+  });
+  $("etat").textContent = "Chargement…";
+  $("etat").classList.remove("erreur");
+  try {
+    const reponse = await fetch(`/graphique/${$("paire").value}?${parametres}`);
+    if (!reponse.ok) {
+      const corps = await reponse.json().catch(() => ({}));
+      throw new Error(corps.detail || `erreur ${reponse.status}`);
+    }
+    const donnees = await reponse.json();
+    const serie = donnees.donnees;
+    dessiner(serie);
+
+    const derniere = serie[serie.length - 1];
+    $("prix").textContent = formaterPrix(derniere.close);
+    $("decision").textContent = derniere.decision;
+    $("decision").className = "v " + derniere.decision;
+    $("proba").textContent = (derniere.probabilite_hausse * 100).toFixed(1) + " %";
+    $("seuil").textContent = (donnees.seuil_du_style * 100).toFixed(1) + " %";
+
+    const source = donnees.source === "binance" ? "Binance en direct" : "base du projet";
+    $("etat").textContent = `${serie.length} bougies · ${source} · dernière bougie close le `
+      + new Date(derniere.open_time).toLocaleString("fr-FR")
+      + ` · mis à jour à ${new Date().toLocaleTimeString("fr-FR")}`;
+  } catch (erreur) {
+    $("etat").textContent = "Impossible de charger les données : " + erreur.message;
+    $("etat").classList.add("erreur");
+  }
+}
+
+function programmerRafraichissement() {
+  if (minuterie) clearInterval(minuterie);
+  // 30 secondes : une bougie 15 minutes ne change pas plus vite, et cela
+  // menage le quota de l'API Binance.
+  if ($("auto").checked) minuterie = setInterval(charger, 30000);
+}
+
+["paire", "interval", "style", "source"].forEach(id => $(id).addEventListener("change", charger));
+$("rafraichir").addEventListener("click", charger);
+$("auto").addEventListener("change", programmerRafraichissement);
+window.addEventListener("resize", () => charger());
+
+charger();
+programmerRafraichissement();
+</script>
+</body>
+</html>

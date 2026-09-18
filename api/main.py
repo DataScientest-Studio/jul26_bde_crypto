@@ -30,6 +30,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 
 from api import derive as module_derive
 from api import donnees, modele
@@ -53,6 +55,18 @@ app = FastAPI(
         "(environ 57 % de bonnes reponses) et n'est PAS rentable une fois les "
         "frais deduits : il est fourni a titre pedagogique."
     ),
+)
+
+
+# L'interface fournie est servie par l'API elle-meme : meme origine, donc pas
+# besoin de CORS pour elle. On l'ouvre quand meme pour qu'un front-end separe
+# (un projet React sur un autre port, par exemple) puisse appeler l'API sans
+# etre bloque par le navigateur. Acceptable ici : l'API n'ecoute qu'en local.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["*"],
 )
 
 
@@ -153,6 +167,54 @@ def prediction(demande: DemandeDePrediction) -> Prediction:
 
     donnees.journaliser_prediction(resultat)
     return Prediction(**resultat)
+
+
+@app.get("/graphique/{symbole}", tags=["interface"], dependencies=[Depends(verifier_cle)])
+def graphique(symbole: str, interval: str = Query("15m"), limite: int = Query(120, ge=20, le=500),
+              style: str = Query("conservateur"),
+              source: str = Query("binance", pattern="^(binance|base)$")) -> dict:
+    """Les dernieres bougies AVEC la decision du modele pour chacune.
+
+    C'est le format dont une interface a besoin : un seul appel donne de quoi
+    tracer les chandeliers et poser les fleches d'achat et de vente au bon
+    endroit.
+
+    `source=binance` lit le marche en direct (la base a toujours du retard
+    puisqu'elle n'est alimentee que lorsqu'on lance la collecte) ;
+    `source=base` lit les bougies stockees.
+    """
+    symbole = symbole.upper()
+    # Large marge : les indicateurs ont besoin de 100 bougies d'historique
+    # avant la premiere que l'on affiche.
+    profondeur = limite + modele.BOUGIES_MINIMUM * 2
+    try:
+        bougies_recentes = (donnees.bougies_binance(symbole, profondeur) if source == "binance"
+                            else donnees.dernieres_bougies(symbole, par_intervalle=profondeur))
+    except Exception as exc:
+        origine = "Binance" if source == "binance" else "base"
+        raise HTTPException(status_code=503, detail=f"{origine} indisponible ({type(exc).__name__})")
+
+    try:
+        serie = modele.predire_serie(bougies_recentes, symbole, interval, style, limite)
+    except modele.ModeleIndisponible as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+
+    return {"symbole": symbole, "interval": interval, "style": style, "source": source,
+            "seuil_du_style": modele.charger()["styles"][style],
+            "bougies": len(serie), "donnees": serie}
+
+
+@app.get("/interface", response_class=HTMLResponse, tags=["interface"])
+def interface() -> HTMLResponse:
+    """Page de demonstration, servie par l'API elle-meme.
+
+    Meme origine que les routes qu'elle appelle : rien a configurer, rien a
+    lancer en plus. Elle n'est pas protegee par la cle d'API - c'est la page
+    qui demande la cle a l'utilisateur si l'API en exige une.
+    """
+    return HTMLResponse((Path(__file__).parent / "interface.html").read_text(encoding="utf-8"))
 
 
 @app.get("/derive", response_model=Derive, tags=["surveillance"],
