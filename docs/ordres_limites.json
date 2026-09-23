@@ -1,0 +1,784 @@
+{
+  "tarifs_aller_retour": {
+    "spot au marche (0,100 %)": 0.002,
+    "spot avec BNB (0,075 %)": 0.0015,
+    "futures au marche (0,050 %)": 0.001,
+    "futures limite a l'entree (0,020 + 0,050 %)": 0.0007,
+    "futures tout en limite (0,020 %)": 0.0004
+  },
+  "sensibilite_aux_frais": [
+    {
+      "interval": "15m",
+      "style": "agressif",
+      "trades": 5581,
+      "gain_brut_moyen_pct": 0.0993,
+      "spot au marche (0,100 %)": {
+        "gain_moyen_net_pct": -0.1007,
+        "capital_simule": 7547.0
+      },
+      "spot avec BNB (0,075 %)": {
+        "gain_moyen_net_pct": -0.0507,
+        "capital_simule": 8677.0
+      },
+      "futures au marche (0,050 %)": {
+        "gain_moyen_net_pct": -0.0007,
+        "capital_simule": 9976.0
+      },
+      "futures limite a l'entree (0,020 + 0,050 %)": {
+        "gain_moyen_net_pct": 0.0293,
+        "capital_simule": 10847.0
+      },
+      "futures tout en limite (0,020 %)": {
+        "gain_moyen_net_pct": 0.0593,
+        "capital_simule": 11795.0
+      }
+    },
+    {
+      "interval": "15m",
+      "style": "conservateur",
+      "trades": 4685,
+      "gain_brut_moyen_pct": 0.1102,
+      "spot au marche (0,100 %)": {
+        "gain_moyen_net_pct": -0.0898,
+        "capital_simule": 8101.0
+      },
+      "spot avec BNB (0,075 %)": {
+        "gain_moyen_net_pct": -0.0398,
+        "capital_simule": 9107.0
+      },
+      "futures au marche (0,050 %)": {
+        "gain_moyen_net_pct": 0.0102,
+        "capital_simule": 10239.0
+      },
+      "futures limite a l'entree (0,020 + 0,050 %)": {
+        "gain_moyen_net_pct": 0.0402,
+        "capital_simule": 10984.0
+      },
+      "futures tout en limite (0,020 %)": {
+        "gain_moyen_net_pct": 0.0702,
+        "capital_simule": 11784.0
+      }
+    },
+    {
+      "interval": "1h",
+      "style": "agressif",
+      "trades": 1348,
+      "gain_brut_moyen_pct": 0.1597,
+      "spot au marche (0,100 %)": {
+        "gain_moyen_net_pct": -0.0403,
+        "capital_simule": 9727.0
+      },
+      "spot avec BNB (0,075 %)": {
+        "gain_moyen_net_pct": 0.0097,
+        "capital_simule": 10060.0
+      },
+      "futures au marche (0,050 %)": {
+        "gain_moyen_net_pct": 0.0597,
+        "capital_simule": 10405.0
+      },
+      "futures limite a l'entree (0,020 + 0,050 %)": {
+        "gain_moyen_net_pct": 0.0897,
+        "capital_simule": 10618.0
+      },
+      "futures tout en limite (0,020 %)": {
+        "gain_moyen_net_pct": 0.1197,
+        "capital_simule": 10834.0
+      }
+    },
+    {
+      "interval": "1h",
+      "style": "conservateur",
+      "trades": 1172,
+      "gain_brut_moyen_pct": 0.1643,
+      "spot au marche (0,100 %)": {
+        "gain_moyen_net_pct": -0.0357,
+        "capital_simule": 9788.0
+      },
+      "spot avec BNB (0,075 %)": {
+        "gain_moyen_net_pct": 0.0143,
+        "capital_simule": 10079.0
+      },
+      "futures au marche (0,050 %)": {
+        "gain_moyen_net_pct": 0.0643,
+        "capital_simule": 10379.0
+      },
+      "futures limite a l'entree (0,020 + 0,050 %)": {
+        "gain_moyen_net_pct": 0.0943,
+        "capital_simule": 10563.0
+      },
+      "futures tout en limite (0,020 %)": {
+        "gain_moyen_net_pct": 0.1243,
+        "capital_simule": 10750.0
+      }
+    },
+    {
+      "interval": "4h",
+      "style": "agressif",
+      "trades": 311,
+      "gain_brut_moyen_pct": 0.3022,
+      "spot au marche (0,100 %)": {
+        "gain_moyen_net_pct": 0.1022,
+        "capital_simule": 10154.0
+      },
+      "spot avec BNB (0,075 %)": {
+        "gain_moyen_net_pct": 0.1522,
+        "capital_simule": 10233.0
+      },
+      "futures au marche (0,050 %)": {
+        "gain_moyen_net_pct": 0.2022,
+        "capital_simule": 10313.0
+      },
+      "futures limite a l'entree (0,020 + 0,050 %)": {
+        "gain_moyen_net_pct": 0.2322,
+        "capital_simule": 10362.0
+      },
+      "futures tout en limite (0,020 %)": {
+        "gain_moyen_net_pct": 0.2622,
+        "capital_simule": 10410.0
+      }
+    },
+    {
+      "interval": "4h",
+      "style": "conservateur",
+      "trades": 270,
+      "gain_brut_moyen_pct": 0.2294,
+      "spot au marche (0,100 %)": {
+        "gain_moyen_net_pct": 0.0294,
+        "capital_simule": 10034.0
+      },
+      "spot avec BNB (0,075 %)": {
+        "gain_moyen_net_pct": 0.0794,
+        "capital_simule": 10102.0
+      },
+      "futures au marche (0,050 %)": {
+        "gain_moyen_net_pct": 0.1294,
+        "capital_simule": 10171.0
+      },
+      "futures limite a l'entree (0,020 + 0,050 %)": {
+        "gain_moyen_net_pct": 0.1594,
+        "capital_simule": 10212.0
+      },
+      "futures tout en limite (0,020 %)": {
+        "gain_moyen_net_pct": 0.1894,
+        "capital_simule": 10253.0
+      }
+    }
+  ],
+  "ordres_limites": {
+    "BTCUSDT|15m": [
+      {
+        "decalage_pct": 0.0,
+        "signaux": 1751,
+        "executes": 1726,
+        "taux_execution_pct": 98.6,
+        "gagnants_pct": 56.7,
+        "gain_moyen_net_pct": 0.0427,
+        "issues": {
+          "take profit": 759,
+          "stop loss": 522,
+          "echeance": 445
+        }
+      },
+      {
+        "decalage_pct": 0.05,
+        "signaux": 1751,
+        "executes": 1064,
+        "taux_execution_pct": 60.8,
+        "gagnants_pct": 56.3,
+        "gain_moyen_net_pct": 0.0435,
+        "issues": {
+          "take profit": 440,
+          "stop loss": 330,
+          "echeance": 294
+        }
+      },
+      {
+        "decalage_pct": 0.1,
+        "signaux": 1751,
+        "executes": 735,
+        "taux_execution_pct": 42.0,
+        "gagnants_pct": 56.7,
+        "gain_moyen_net_pct": 0.0642,
+        "issues": {
+          "take profit": 317,
+          "stop loss": 229,
+          "echeance": 189
+        }
+      }
+    ],
+    "BTCUSDT|1h": [
+      {
+        "decalage_pct": 0.0,
+        "signaux": 292,
+        "executes": 290,
+        "taux_execution_pct": 99.3,
+        "gagnants_pct": 58.3,
+        "gain_moyen_net_pct": 0.1204,
+        "issues": {
+          "take profit": 124,
+          "stop loss": 84,
+          "echeance": 82
+        }
+      },
+      {
+        "decalage_pct": 0.05,
+        "signaux": 292,
+        "executes": 237,
+        "taux_execution_pct": 81.2,
+        "gagnants_pct": 58.2,
+        "gain_moyen_net_pct": 0.1502,
+        "issues": {
+          "take profit": 101,
+          "stop loss": 68,
+          "echeance": 68
+        }
+      },
+      {
+        "decalage_pct": 0.1,
+        "signaux": 292,
+        "executes": 198,
+        "taux_execution_pct": 67.8,
+        "gagnants_pct": 57.6,
+        "gain_moyen_net_pct": 0.1477,
+        "issues": {
+          "take profit": 84,
+          "stop loss": 58,
+          "echeance": 56
+        }
+      }
+    ],
+    "BTCUSDT|4h": [
+      {
+        "decalage_pct": 0.0,
+        "signaux": 77,
+        "executes": 77,
+        "taux_execution_pct": 100.0,
+        "gagnants_pct": 53.2,
+        "gain_moyen_net_pct": 0.0493,
+        "issues": {
+          "take profit": 34,
+          "stop loss": 28,
+          "echeance": 15
+        }
+      },
+      {
+        "decalage_pct": 0.05,
+        "signaux": 77,
+        "executes": 71,
+        "taux_execution_pct": 92.2,
+        "gagnants_pct": 50.7,
+        "gain_moyen_net_pct": -0.0202,
+        "issues": {
+          "take profit": 31,
+          "stop loss": 27,
+          "echeance": 13
+        }
+      },
+      {
+        "decalage_pct": 0.1,
+        "signaux": 77,
+        "executes": 68,
+        "taux_execution_pct": 88.3,
+        "gagnants_pct": 50.0,
+        "gain_moyen_net_pct": -0.0497,
+        "issues": {
+          "take profit": 29,
+          "stop loss": 26,
+          "echeance": 13
+        }
+      }
+    ],
+    "ETHUSDT|15m": [
+      {
+        "decalage_pct": 0.0,
+        "signaux": 1411,
+        "executes": 1394,
+        "taux_execution_pct": 98.8,
+        "gagnants_pct": 56.4,
+        "gain_moyen_net_pct": 0.0786,
+        "issues": {
+          "take profit": 581,
+          "stop loss": 433,
+          "echeance": 380
+        }
+      },
+      {
+        "decalage_pct": 0.05,
+        "signaux": 1411,
+        "executes": 1037,
+        "taux_execution_pct": 73.5,
+        "gagnants_pct": 56.2,
+        "gain_moyen_net_pct": 0.0836,
+        "issues": {
+          "take profit": 437,
+          "stop loss": 326,
+          "echeance": 274
+        }
+      },
+      {
+        "decalage_pct": 0.1,
+        "signaux": 1411,
+        "executes": 803,
+        "taux_execution_pct": 56.9,
+        "gagnants_pct": 55.9,
+        "gain_moyen_net_pct": 0.0936,
+        "issues": {
+          "take profit": 340,
+          "stop loss": 255,
+          "echeance": 208
+        }
+      }
+    ],
+    "ETHUSDT|1h": [
+      {
+        "decalage_pct": 0.0,
+        "signaux": 375,
+        "executes": 373,
+        "taux_execution_pct": 99.5,
+        "gagnants_pct": 55.8,
+        "gain_moyen_net_pct": 0.1404,
+        "issues": {
+          "take profit": 144,
+          "stop loss": 131,
+          "echeance": 98
+        }
+      },
+      {
+        "decalage_pct": 0.05,
+        "signaux": 375,
+        "executes": 323,
+        "taux_execution_pct": 86.1,
+        "gagnants_pct": 56.0,
+        "gain_moyen_net_pct": 0.193,
+        "issues": {
+          "take profit": 128,
+          "stop loss": 111,
+          "echeance": 84
+        }
+      },
+      {
+        "decalage_pct": 0.1,
+        "signaux": 375,
+        "executes": 291,
+        "taux_execution_pct": 77.6,
+        "gagnants_pct": 57.7,
+        "gain_moyen_net_pct": 0.2093,
+        "issues": {
+          "take profit": 120,
+          "stop loss": 96,
+          "echeance": 75
+        }
+      }
+    ],
+    "ETHUSDT|4h": [
+      {
+        "decalage_pct": 0.0,
+        "signaux": 90,
+        "executes": 89,
+        "taux_execution_pct": 98.9,
+        "gagnants_pct": 59.6,
+        "gain_moyen_net_pct": 0.3025,
+        "issues": {
+          "take profit": 32,
+          "stop loss": 29,
+          "echeance": 28
+        }
+      },
+      {
+        "decalage_pct": 0.05,
+        "signaux": 90,
+        "executes": 86,
+        "taux_execution_pct": 95.6,
+        "gagnants_pct": 58.1,
+        "gain_moyen_net_pct": 0.214,
+        "issues": {
+          "take profit": 30,
+          "stop loss": 29,
+          "echeance": 27
+        }
+      },
+      {
+        "decalage_pct": 0.1,
+        "signaux": 90,
+        "executes": 80,
+        "taux_execution_pct": 88.9,
+        "gagnants_pct": 56.2,
+        "gain_moyen_net_pct": 0.1112,
+        "issues": {
+          "take profit": 29,
+          "stop loss": 29,
+          "echeance": 22
+        }
+      }
+    ],
+    "BNBUSDT|15m": [
+      {
+        "decalage_pct": 0.0,
+        "signaux": 1330,
+        "executes": 1309,
+        "taux_execution_pct": 98.4,
+        "gagnants_pct": 54.5,
+        "gain_moyen_net_pct": 0.0404,
+        "issues": {
+          "take profit": 548,
+          "stop loss": 437,
+          "echeance": 324
+        }
+      },
+      {
+        "decalage_pct": 0.05,
+        "signaux": 1330,
+        "executes": 892,
+        "taux_execution_pct": 67.1,
+        "gagnants_pct": 53.6,
+        "gain_moyen_net_pct": 0.0549,
+        "issues": {
+          "take profit": 371,
+          "stop loss": 293,
+          "echeance": 228
+        }
+      },
+      {
+        "decalage_pct": 0.1,
+        "signaux": 1330,
+        "executes": 631,
+        "taux_execution_pct": 47.4,
+        "gagnants_pct": 52.0,
+        "gain_moyen_net_pct": 0.051,
+        "issues": {
+          "take profit": 257,
+          "stop loss": 222,
+          "echeance": 152
+        }
+      }
+    ],
+    "BNBUSDT|1h": [
+      {
+        "decalage_pct": 0.0,
+        "signaux": 348,
+        "executes": 347,
+        "taux_execution_pct": 99.7,
+        "gagnants_pct": 56.8,
+        "gain_moyen_net_pct": 0.2092,
+        "issues": {
+          "take profit": 137,
+          "stop loss": 110,
+          "echeance": 100
+        }
+      },
+      {
+        "decalage_pct": 0.05,
+        "signaux": 348,
+        "executes": 289,
+        "taux_execution_pct": 83.0,
+        "gagnants_pct": 57.4,
+        "gain_moyen_net_pct": 0.2641,
+        "issues": {
+          "take profit": 115,
+          "stop loss": 91,
+          "echeance": 83
+        }
+      },
+      {
+        "decalage_pct": 0.1,
+        "signaux": 348,
+        "executes": 246,
+        "taux_execution_pct": 70.7,
+        "gagnants_pct": 57.3,
+        "gain_moyen_net_pct": 0.2695,
+        "issues": {
+          "take profit": 101,
+          "stop loss": 79,
+          "echeance": 66
+        }
+      }
+    ],
+    "BNBUSDT|4h": [
+      {
+        "decalage_pct": 0.0,
+        "signaux": 87,
+        "executes": 87,
+        "taux_execution_pct": 100.0,
+        "gagnants_pct": 40.2,
+        "gain_moyen_net_pct": -0.932,
+        "issues": {
+          "take profit": 29,
+          "stop loss": 42,
+          "echeance": 16
+        }
+      },
+      {
+        "decalage_pct": 0.05,
+        "signaux": 87,
+        "executes": 80,
+        "taux_execution_pct": 92.0,
+        "gagnants_pct": 40.0,
+        "gain_moyen_net_pct": -1.0015,
+        "issues": {
+          "take profit": 26,
+          "stop loss": 41,
+          "echeance": 13
+        }
+      },
+      {
+        "decalage_pct": 0.1,
+        "signaux": 87,
+        "executes": 77,
+        "taux_execution_pct": 88.5,
+        "gagnants_pct": 37.7,
+        "gain_moyen_net_pct": -1.1575,
+        "issues": {
+          "take profit": 23,
+          "stop loss": 41,
+          "echeance": 13
+        }
+      }
+    ],
+    "SOLUSDT|15m": [
+      {
+        "decalage_pct": 0.0,
+        "signaux": 1027,
+        "executes": 1011,
+        "taux_execution_pct": 98.4,
+        "gagnants_pct": 56.3,
+        "gain_moyen_net_pct": 0.0725,
+        "issues": {
+          "take profit": 445,
+          "stop loss": 313,
+          "echeance": 253
+        }
+      },
+      {
+        "decalage_pct": 0.05,
+        "signaux": 1027,
+        "executes": 783,
+        "taux_execution_pct": 76.2,
+        "gagnants_pct": 54.5,
+        "gain_moyen_net_pct": 0.0561,
+        "issues": {
+          "take profit": 330,
+          "stop loss": 246,
+          "echeance": 207
+        }
+      },
+      {
+        "decalage_pct": 0.1,
+        "signaux": 1027,
+        "executes": 638,
+        "taux_execution_pct": 62.1,
+        "gagnants_pct": 53.0,
+        "gain_moyen_net_pct": 0.0412,
+        "issues": {
+          "take profit": 259,
+          "stop loss": 206,
+          "echeance": 173
+        }
+      }
+    ],
+    "SOLUSDT|1h": [
+      {
+        "decalage_pct": 0.0,
+        "signaux": 324,
+        "executes": 318,
+        "taux_execution_pct": 98.1,
+        "gagnants_pct": 55.0,
+        "gain_moyen_net_pct": 0.122,
+        "issues": {
+          "take profit": 124,
+          "stop loss": 107,
+          "echeance": 87
+        }
+      },
+      {
+        "decalage_pct": 0.05,
+        "signaux": 324,
+        "executes": 281,
+        "taux_execution_pct": 86.7,
+        "gagnants_pct": 55.2,
+        "gain_moyen_net_pct": 0.1368,
+        "issues": {
+          "take profit": 104,
+          "stop loss": 92,
+          "echeance": 85
+        }
+      },
+      {
+        "decalage_pct": 0.1,
+        "signaux": 324,
+        "executes": 251,
+        "taux_execution_pct": 77.5,
+        "gagnants_pct": 54.2,
+        "gain_moyen_net_pct": 0.1218,
+        "issues": {
+          "take profit": 92,
+          "stop loss": 81,
+          "echeance": 78
+        }
+      }
+    ],
+    "SOLUSDT|4h": [
+      {
+        "decalage_pct": 0.0,
+        "signaux": 133,
+        "executes": 133,
+        "taux_execution_pct": 100.0,
+        "gagnants_pct": 54.9,
+        "gain_moyen_net_pct": 0.1858,
+        "issues": {
+          "take profit": 54,
+          "stop loss": 50,
+          "echeance": 29
+        }
+      },
+      {
+        "decalage_pct": 0.05,
+        "signaux": 133,
+        "executes": 123,
+        "taux_execution_pct": 92.5,
+        "gagnants_pct": 54.5,
+        "gain_moyen_net_pct": 0.1683,
+        "issues": {
+          "take profit": 48,
+          "stop loss": 47,
+          "echeance": 28
+        }
+      },
+      {
+        "decalage_pct": 0.1,
+        "signaux": 133,
+        "executes": 121,
+        "taux_execution_pct": 91.0,
+        "gagnants_pct": 53.7,
+        "gain_moyen_net_pct": 0.1302,
+        "issues": {
+          "take profit": 46,
+          "stop loss": 47,
+          "echeance": 28
+        }
+      }
+    ],
+    "XRPUSDT|15m": [
+      {
+        "decalage_pct": 0.0,
+        "signaux": 1334,
+        "executes": 1318,
+        "taux_execution_pct": 98.8,
+        "gagnants_pct": 56.9,
+        "gain_moyen_net_pct": 0.0867,
+        "issues": {
+          "take profit": 558,
+          "stop loss": 401,
+          "echeance": 359
+        }
+      },
+      {
+        "decalage_pct": 0.05,
+        "signaux": 1334,
+        "executes": 1043,
+        "taux_execution_pct": 78.2,
+        "gagnants_pct": 56.1,
+        "gain_moyen_net_pct": 0.0733,
+        "issues": {
+          "take profit": 430,
+          "stop loss": 328,
+          "echeance": 285
+        }
+      },
+      {
+        "decalage_pct": 0.1,
+        "signaux": 1334,
+        "executes": 829,
+        "taux_execution_pct": 62.1,
+        "gagnants_pct": 54.4,
+        "gain_moyen_net_pct": 0.055,
+        "issues": {
+          "take profit": 330,
+          "stop loss": 274,
+          "echeance": 225
+        }
+      }
+    ],
+    "XRPUSDT|1h": [
+      {
+        "decalage_pct": 0.0,
+        "signaux": 319,
+        "executes": 314,
+        "taux_execution_pct": 98.4,
+        "gagnants_pct": 57.6,
+        "gain_moyen_net_pct": 0.1195,
+        "issues": {
+          "take profit": 125,
+          "stop loss": 95,
+          "echeance": 94
+        }
+      },
+      {
+        "decalage_pct": 0.05,
+        "signaux": 319,
+        "executes": 283,
+        "taux_execution_pct": 88.7,
+        "gagnants_pct": 58.7,
+        "gain_moyen_net_pct": 0.1637,
+        "issues": {
+          "take profit": 116,
+          "stop loss": 80,
+          "echeance": 87
+        }
+      },
+      {
+        "decalage_pct": 0.1,
+        "signaux": 319,
+        "executes": 257,
+        "taux_execution_pct": 80.6,
+        "gagnants_pct": 58.8,
+        "gain_moyen_net_pct": 0.1963,
+        "issues": {
+          "take profit": 108,
+          "stop loss": 74,
+          "echeance": 75
+        }
+      }
+    ],
+    "XRPUSDT|4h": [
+      {
+        "decalage_pct": 0.0,
+        "signaux": 89,
+        "executes": 89,
+        "taux_execution_pct": 100.0,
+        "gagnants_pct": 57.3,
+        "gain_moyen_net_pct": 0.8556,
+        "issues": {
+          "take profit": 39,
+          "stop loss": 24,
+          "echeance": 26
+        }
+      },
+      {
+        "decalage_pct": 0.05,
+        "signaux": 89,
+        "executes": 84,
+        "taux_execution_pct": 94.4,
+        "gagnants_pct": 58.3,
+        "gain_moyen_net_pct": 0.8822,
+        "issues": {
+          "take profit": 37,
+          "stop loss": 23,
+          "echeance": 24
+        }
+      },
+      {
+        "decalage_pct": 0.1,
+        "signaux": 89,
+        "executes": 79,
+        "taux_execution_pct": 88.8,
+        "gagnants_pct": 57.0,
+        "gain_moyen_net_pct": 0.722,
+        "issues": {
+          "take profit": 33,
+          "stop loss": 23,
+          "echeance": 23
+        }
+      }
+    ]
+  }
+}

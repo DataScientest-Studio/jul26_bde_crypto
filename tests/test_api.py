@@ -502,6 +502,7 @@ def test_positions_ouvre_puis_rend_le_bilan(client_avec_barrieres, monkeypatch):
         appels["decision"] = decision["decision"]
         return {"positions_fermees": 0, "position_ouverte": True}
 
+    monkeypatch.setattr(module_positions, "bougies_a_rattraper", lambda *a: 0)
     monkeypatch.setattr(module_positions, "synchroniser", synchroniser_factice)
     monkeypatch.setattr(module_positions, "etat", lambda *a, **k: {
         "ouvertes": [{"sens": 1, "prix_entree": 100.0, "take_profit": 103.0,
@@ -522,5 +523,103 @@ def test_positions_carnet_indisponible_donne_503(client_avec_barrieres, monkeypa
     def tombe(*args, **kwargs):
         raise ConnectionError("base eteinte")
 
+    monkeypatch.setattr(module_positions, "bougies_a_rattraper", lambda *a: 0)
     monkeypatch.setattr(module_positions, "synchroniser", tombe)
     assert client_avec_barrieres.post("/positions/BTCUSDT").status_code == 503
+
+
+# ---------------------------------------------------------------------------
+#  Rattrapage du carnet
+# ---------------------------------------------------------------------------
+
+def _serie(prix: list[tuple[float, float, float]], interval: str = "1h") -> pd.DataFrame:
+    """Bougies (haut, bas, cloture) consecutives, pour piloter chaque scenario."""
+    temps = pd.date_range("2026-09-18", periods=len(prix), freq="1h", tz="UTC")
+    return pd.DataFrame({
+        "open_time": temps, "close_time": temps + pd.Timedelta("1h"),
+        "high": [p[0] for p in prix], "low": [p[1] for p in prix],
+        "close": [p[2] for p in prix],
+    })
+
+
+def _decisions(serie: pd.DataFrame, signaux: dict[int, str]) -> dict:
+    return {serie["open_time"].iloc[i].isoformat():
+            {"decision": d, "probabilite_hausse": 0.6} for i, d in signaux.items()}
+
+
+def test_simuler_take_profit_puis_nouvelle_position():
+    """Achat a 100, barriere a +/-2 % : le haut a 103 touche l'objectif."""
+    serie = _serie([(100, 100, 100), (101, 99.5, 100.5), (103, 100, 102.5),
+                    (103, 102, 102.5), (103, 102, 102.5)])
+    volatilite = np.full(len(serie), 0.01)            # 2 sigma = 2 %
+    positions = module_positions.simuler(
+        serie, _decisions(serie, {0: "acheter", 3: "vendre"}), volatilite,
+        largeur=2.0, horizon=12, interval="1h", symbole="BTCUSDT", style="agressif",
+        garder_ouverte=True)
+
+    assert positions[0]["statut"] == "take profit"
+    assert positions[0]["rendement_brut_pct"] == pytest.approx(2.0)
+    # Frais de 0,2 % deduits du gain net.
+    assert positions[0]["rendement_net_pct"] == pytest.approx(1.8)
+    # La vente de la bougie 3 n'a pas pu se solder : elle reste ouverte.
+    assert positions[1]["statut"] == "ouverte" and positions[1]["sens"] == -1
+
+
+def test_simuler_stop_loss_prioritaire_dans_la_meme_bougie():
+    """Les deux barrieres dans une bougie : l'hypothese prudente l'emporte."""
+    serie = _serie([(100, 100, 100), (103, 97, 100)])
+    positions = module_positions.simuler(
+        serie, _decisions(serie, {0: "acheter"}), np.full(2, 0.01), 2.0, 12,
+        "1h", "BTCUSDT", "agressif")
+    assert positions[0]["statut"] == "stop loss"
+
+
+def test_simuler_une_seule_position_a_la_fois():
+    """Un signal pendant qu'une position court est ignore."""
+    serie = _serie([(100, 100, 100)] + [(100.5, 99.5, 100)] * 4 + [(103, 100, 102)])
+    positions = module_positions.simuler(
+        serie, _decisions(serie, {0: "acheter", 2: "vendre", 3: "vendre"}),
+        np.full(len(serie), 0.01), 2.0, 12, "1h", "BTCUSDT", "agressif")
+    assert len(positions) == 1 and positions[0]["sens"] == 1
+
+
+def test_simuler_respecte_le_point_de_depart():
+    """Le rattrapage ne rejoue pas les bougies deja evaluees."""
+    serie = _serie([(100, 100, 100), (100, 100, 100), (100, 100, 100), (103, 100, 102)])
+    positions = module_positions.simuler(
+        serie, _decisions(serie, {0: "acheter", 2: "acheter"}), np.full(4, 0.01),
+        2.0, 12, "1h", "BTCUSDT", "agressif", debut=1)
+    assert [p["bougie_signal"] for p in positions] == [serie["open_time"].iloc[2]]
+
+
+def test_positions_rattrape_avant_le_suivi(client_avec_barrieres, monkeypatch):
+    """Des bougies manquees sont rejouees, et le resultat est rendu."""
+    ordre_des_appels = []
+    monkeypatch.setattr(module_positions, "bougies_a_rattraper", lambda *a: 72)
+    monkeypatch.setattr(module_positions, "rattraper", lambda *a, **k: (
+        ordre_des_appels.append("rattraper")
+        or {"bougies_rejouees": 72, "positions_ajoutees": 3, "positions_fermees": 1}))
+    monkeypatch.setattr(module_positions, "synchroniser", lambda *a, **k: (
+        ordre_des_appels.append("synchroniser")
+        or {"positions_fermees": 0, "position_ouverte": False}))
+    monkeypatch.setattr(module_positions, "etat", lambda *a, **k: {
+        "ouvertes": [], "historique": [], "bilan": {}})
+
+    corps = client_avec_barrieres.post("/positions/BTCUSDT?interval=1h").json()
+    assert ordre_des_appels == ["rattraper", "synchroniser"]
+    assert corps["rattrapage"]["positions_ajoutees"] == 3
+
+
+def test_positions_rattrapage_en_echec_naffecte_pas_le_carnet(client_avec_barrieres, monkeypatch):
+    """Un rattrapage qui echoue est journalise ; le carnet s'affiche quand meme."""
+    def tombe(*args, **kwargs):
+        raise ConnectionError("base eteinte")
+
+    monkeypatch.setattr(module_positions, "bougies_a_rattraper", tombe)
+    monkeypatch.setattr(module_positions, "synchroniser", lambda *a, **k: {
+        "positions_fermees": 0, "position_ouverte": False})
+    monkeypatch.setattr(module_positions, "etat", lambda *a, **k: {
+        "ouvertes": [], "historique": [], "bilan": {}})
+
+    reponse = client_avec_barrieres.post("/positions/BTCUSDT")
+    assert reponse.status_code == 200 and reponse.json()["rattrapage"] is None

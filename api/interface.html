@@ -30,10 +30,15 @@
   }
   * { box-sizing: border-box; }
   html, body { height: 100%; }
+  /* La page occupe exactement la hauteur de l'ecran et ne defile jamais :
+     sinon on se retrouve avec DEUX ascenseurs, celui de la page et celui du
+     graphique, et la molette agit sur l'un ou l'autre selon le pixel survole.
+     Seul le panneau de droite garde son propre defilement. */
   body {
     margin: 0; background: var(--fond); color: var(--encre);
     font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
     font-size: 14px; line-height: 1.5;
+    display: flex; flex-direction: column; overflow: hidden;
   }
   .chiffre { font-variant-numeric: tabular-nums;
              font-family: ui-monospace, "Cascadia Mono", "JetBrains Mono", monospace; }
@@ -46,6 +51,7 @@
     display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(0, auto);
     gap: 10px 18px; align-items: center;
     padding: 12px 20px; background: var(--surface); border-bottom: 1px solid var(--trait);
+    flex: 0 0 auto;
   }
   @media (max-width: 860px) { .barre { grid-template-columns: minmax(0, 1fr); } }
   /* Le groupe de reglages occupe la place disponible et se replie tout seul ;
@@ -77,10 +83,22 @@
   .pastille.mort { background: var(--baisse); }
 
   /* ---------- Disposition ---------- */
+  /* flex: 1 + min-height: 0 -> le terminal prend tout ce qui reste sous la
+     barre, sans jamais depasser. L'ancien calc(100vh - 53px) supposait une
+     barre de 53 px ; des qu'elle se repliait sur deux lignes, la page
+     debordait et l'ascenseur apparaissait. */
   .terminal { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 1px;
-              background: var(--trait); min-height: calc(100vh - 53px); }
-  @media (max-width: 900px) { .terminal { grid-template-columns: minmax(0, 1fr); } }
-  .colonne { background: var(--fond); display: flex; flex-direction: column; min-width: 0; }
+              background: var(--trait); flex: 1 1 auto; min-height: 0; }
+  .colonne { background: var(--fond); display: flex; flex-direction: column;
+             min-width: 0; min-height: 0; overflow: hidden; }
+  /* Sous 900 px les deux colonnes s'empilent : la page redevient defilante,
+     sans quoi le graphique et le panneau se partageraient un demi-ecran. */
+  @media (max-width: 900px) {
+    body { overflow: auto; }
+    .terminal { grid-template-columns: minmax(0, 1fr); }
+    .colonne { overflow: visible; }
+    .zone-graphique { min-height: 420px; }
+  }
 
   /* ---------- Bandeau de chiffres ---------- */
   .chiffres { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
@@ -92,7 +110,7 @@
   .hausse { color: var(--hausse); } .baisse { color: var(--baisse); } .neutre { color: var(--neutre); }
 
   /* ---------- Graphique ---------- */
-  .zone-graphique { position: relative; flex: 1; min-height: 420px; min-width: 0; }
+  .zone-graphique { position: relative; flex: 1 1 auto; min-height: 0; min-width: 0; }
   #graphique { position: absolute; inset: 0; }
   .legende {
     position: absolute; top: 12px; left: 14px; z-index: 3; pointer-events: none;
@@ -100,10 +118,26 @@
     padding: 8px 12px; font-size: 12px; color: var(--encre-2); min-width: 210px;
   }
   .legende b { color: var(--encre); font-weight: 600; }
+  /* Sans cette legende, les fleches et les points du graphique ne veulent rien
+     dire pour qui n'a pas ecrit le code - et au-dela de 30 marqueurs, leur
+     texte est masque pour ne pas surcharger la vue. */
+  .symboles {
+    position: absolute; left: 14px; bottom: 12px; z-index: 3; pointer-events: none;
+    display: flex; flex-wrap: wrap; gap: 6px 16px; max-width: calc(100% - 90px);
+    background: rgba(17, 23, 34, .82); border: 1px solid var(--trait); border-radius: 6px;
+    padding: 7px 12px; font-size: 11.5px; color: var(--encre-2);
+  }
+  .symboles span { display: inline-flex; align-items: center; gap: 6px; }
+  .symboles .fleche { font-style: normal; font-size: 10px; line-height: 1; }
+  .symboles .point { width: 9px; height: 9px; border-radius: 50%; background: currentColor; }
+  .symboles .pave { width: 16px; height: 9px; border-radius: 2px;
+                    background: currentColor; opacity: .38; }
+  .symboles .hausse { color: var(--hausse); } .symboles .baisse { color: var(--baisse); }
   .legende .ligne { display: flex; justify-content: space-between; gap: 18px; }
 
   /* ---------- Panneau de droite ---------- */
-  .panneau { background: var(--surface); border-left: 0; padding: 0; overflow-y: auto; }
+  .panneau { background: var(--surface); border-left: 0; padding: 0;
+             overflow-y: auto; min-height: 0; }
   .carte { border-bottom: 1px solid var(--trait); padding: 16px 18px; }
   .carte h2 { font-size: 11px; letter-spacing: .09em; text-transform: uppercase;
               color: var(--encre-3); margin: 0 0 12px; font-weight: 600; }
@@ -230,6 +264,14 @@
     <div class="zone-graphique">
       <div id="graphique"></div>
       <div class="legende" id="legende"></div>
+      <div class="symboles">
+        <span><i class="fleche hausse">&#9650;</i> ouverture d’un achat</span>
+        <span><i class="fleche baisse">&#9660;</i> ouverture d’une vente</span>
+        <span><i class="point hausse"></i> clôture gagnante</span>
+        <span><i class="point baisse"></i> clôture perdante</span>
+        <span><i class="pave hausse"></i> objectif de gain</span>
+        <span><i class="pave baisse"></i> perte acceptée</span>
+      </div>
     </div>
   </div>
 
@@ -320,6 +362,9 @@ function creerGraphique() {
 }
 
 let derniereBougie = null;
+// Paire + pas de temps + periode actuellement a l'ecran : sert a savoir si une
+// actualisation doit recadrer le graphique ou respecter le zoom en place.
+let derniereCleDeVue = null;
 let finBougieEnCours = null;
 
 function decalageTexte() {
@@ -651,6 +696,7 @@ async function appeler(chemin, parametres, methode = "GET") {
 async function charger() {
   const paire = $("paire").value;
   const commun = { interval: etatChoix.interval, style: etatChoix.style, source: $("source").value };
+  memoriserReglages();
   $("pastille").className = "pastille";
   $("etat").textContent = "Chargement…";
   $("etat").classList.remove("erreur");
@@ -674,11 +720,40 @@ async function charger() {
       points.push({ time: enSecondesLocales(c.open_time),
                     open: c.open, high: c.high, low: c.low, close: c.close });
     }
+    // Ce qui etait a l'ecran AVANT de remplacer les donnees. Sans cela, le
+    // rafraichissement toutes les 30 s recadrait tout et annulait le zoom ou
+    // le deplacement de l'utilisateur - impossible d'examiner une zone.
+    const cleDeVue = `${paire}|${etatChoix.interval}|${$("fenetre").value}`;
+    const memeVue = cleDeVue === derniereCleDeVue;
+    const vueAvant = memeVue ? chart.timeScale().getVisibleRange() : null;
+    const donneesAvant = serieBougies.data();
+    const finAvant = donneesAvant.length ? donneesAvant[donneesAvant.length - 1].time : null;
+    derniereCleDeVue = cleDeVue;
+
     serieBougies.setData(points);
     // Ajustement APRES le rendu : appele juste apres setData, il s'applique
     // parfois avant que la serie soit posee et le graphique reste tasse d'un
     // cote. requestAnimationFrame attend la fin du cycle de dessin.
-    requestAnimationFrame(() => chart.timeScale().fitContent());
+    requestAnimationFrame(() => {
+      if (!vueAvant) { chart.timeScale().fitContent(); return; }
+      // On ne recadre que si la paire, le pas de temps ou la periode ont
+      // change. Sinon on repose exactement la meme fenetre de temps, avec une
+      // exception : si l'utilisateur regardait le bord droit, on fait glisser
+      // la fenetre pour qu'il continue de voir la bougie en train de se former.
+      const finApres = points.length ? points[points.length - 1].time : finAvant;
+      // Si la fenetre conservee est entierement sortie des donnees (on etait
+      // zoome sur les bougies les plus anciennes, qui ont fini par tomber hors
+      // de la periode demandee), on recadre plutot que de montrer du vide.
+      if (points.length && (vueAvant.to < points[0].time || vueAvant.from > finApres)) {
+        chart.timeScale().fitContent(); return;
+      }
+      const colleAuDirect = finAvant !== null && vueAvant.to >= finAvant;
+      const glissement = colleAuDirect ? finApres - finAvant : 0;
+      try {
+        chart.timeScale().setVisibleRange({ from: vueAvant.from + glissement,
+                                            to: vueAvant.to + glissement });
+      } catch (e) { chart.timeScale().fitContent(); }
+    });
     // Les marqueurs racontent les TRADES, pas les avis du modele : une fleche
     // a l'ouverture, un point a la fermeture avec le resultat. C'est ce qui
     // permet de juger le bot d'un coup d'oeil.
@@ -778,20 +853,27 @@ function programmer() {
   minuterie = setInterval(charger, 30000);
 }
 
-// Les reglages se lisent dans l'adresse : /interface?paire=ETHUSDT&interval=4h&periode=90
-// Pratique pour partager exactement la meme vue a quelqu'un d'autre.
-function appliquerAdresse() {
-  const parametres = new URLSearchParams(location.search);
-  const paire = parametres.get("paire");
+// Application des reglages, quelle que soit leur provenance : `lire` rend la
+// valeur demandee ou null. Une valeur inconnue est ignoree, jamais appliquee.
+function appliquerReglages(lire) {
+  const paire = lire("paire");
   if (paire && [...$("paire").options].some((o) => o.value === paire.toUpperCase())) {
     $("paire").value = paire.toUpperCase();
   }
-  const periode = parametres.get("periode");
-  if (periode && [...$("fenetre").options].some((o) => o.value === periode)) {
-    $("fenetre").value = periode;
+  const periode = lire("periode");
+  if (periode && [...$("fenetre").options].some((o) => o.value === String(periode))) {
+    $("fenetre").value = String(periode);
+  }
+  const source = lire("source");
+  if (source && [...$("source").options].some((o) => o.value === source)) {
+    $("source").value = source;
+  }
+  const trades = lire("trades");
+  if (trades !== null && trades !== undefined) {
+    $("trades").checked = trades === true || trades === "1" || trades === "true";
   }
   ["interval", "style"].forEach((cle) => {
-    const valeur = parametres.get(cle);
+    const valeur = lire(cle);
     const groupe = cle === "interval" ? "intervalles" : "styles";
     const bouton = [...$(groupe).children].find((b) => b.dataset.valeur === valeur);
     if (bouton) {
@@ -801,7 +883,32 @@ function appliquerAdresse() {
   });
 }
 
-appliquerAdresse();
+// Les reglages survivent au rechargement : sans cela, on retombait a chaque
+// fois sur BTC / 1 h / 1 semaine, et il fallait re-selectionner sa periode
+// pour retrouver la vue qu'on examinait. Stockage local, propre a ce
+// navigateur : il peut etre indisponible (navigation privee), d'ou les try.
+const MEMOIRE = "cryptobot.reglages";
+
+function memoriserReglages() {
+  try {
+    localStorage.setItem(MEMOIRE, JSON.stringify({
+      paire: $("paire").value, periode: $("fenetre").value, source: $("source").value,
+      interval: etatChoix.interval, style: etatChoix.style, trades: $("trades").checked,
+    }));
+  } catch (e) { /* stockage refuse : on continue sans memoire */ }
+}
+
+function reglagesMemorises() {
+  try { return JSON.parse(localStorage.getItem(MEMOIRE)) || {}; } catch (e) { return {}; }
+}
+
+// La memoire d'abord, l'adresse ensuite : un lien partage
+// (/interface?paire=ETHUSDT&interval=4h&periode=90) doit toujours l'emporter
+// sur les preferences locales de celui qui l'ouvre.
+const memoire = reglagesMemorises();
+appliquerReglages((cle) => (cle in memoire ? memoire[cle] : null));
+const adresse = new URLSearchParams(location.search);
+appliquerReglages((cle) => adresse.get(cle));
 creerGraphique();
 brancherSegments("intervalles", "interval");
 brancherSegments("styles", "style");

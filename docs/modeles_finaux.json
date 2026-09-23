@@ -22,22 +22,22 @@
   },
   "day_trading": {
     "mesures": {
-      "bon_sens": 0.5064,
-      "taux_activite": 0.7241,
-      "accuracy_globale": 0.4253,
-      "ordres_evalues": 16316
+      "bon_sens": 0.5079,
+      "taux_activite": 0.721,
+      "accuracy_globale": 0.4255,
+      "ordres_evalues": 16243
     },
     "backtest": {
-      "operations": 4564,
+      "operations": 4591,
       "capital_initial": 10000.0,
-      "capital_final": 3540.31,
-      "performance_pct": -64.6,
-      "taux_reussite_pct": 39.18,
-      "gain_moyen_brut_pct": -0.0272,
-      "gain_moyen_net_pct": -0.227,
-      "cout_total_frais_pct": 912.8,
-      "perte_max_pct": -64.75,
-      "ratio_rendement_risque": -0.2419
+      "capital_final": 3713.48,
+      "performance_pct": -62.87,
+      "taux_reussite_pct": 40.08,
+      "gain_moyen_brut_pct": -0.0154,
+      "gain_moyen_net_pct": -0.2153,
+      "cout_total_frais_pct": 918.2,
+      "perte_max_pct": -63.24,
+      "ratio_rendement_risque": -0.2222
     },
     "fichier": "day_trading.joblib"
   },

@@ -275,6 +275,26 @@ def positions(symbole: str, interval: str = Query("1h"), style: str = Query("con
     recouvrent.
     """
     symbole = symbole.upper()
+
+    # Bougies manquees pendant que personne ne regardait (page fermee, Docker
+    # arrete) : on les rejoue AVANT le suivi normal, sinon le carnet aurait
+    # des trous. Au mieux : un echec ici ne doit pas empecher d'afficher le
+    # carnet tel qu'il est.
+    rattrapage = None
+    try:
+        manquantes = module_positions.bougies_a_rattraper(symbole, interval, style)
+        if manquantes:
+            barrieres = module_ordre.charger_barrieres()
+            profondeur_rattrapage = manquantes + modele.BOUGIES_MINIMUM + 30
+            historique = (donnees.bougies_binance(symbole, profondeur_rattrapage)
+                          if source == "binance"
+                          else donnees.dernieres_bougies(symbole, par_intervalle=profondeur_rattrapage))
+            rattrapage = module_positions.rattraper(
+                historique, symbole, interval, style,
+                float(barrieres["largeur_barrieres"]), int(barrieres["horizon"]))
+    except Exception as exc:
+        logger.warning("Rattrapage du carnet impossible (%s) : %s", type(exc).__name__, exc)
+
     profondeur = modele.BOUGIES_MINIMUM * 2
     try:
         toutes = (donnees.bougies_binance(symbole, profondeur, inclure_en_cours=True)
@@ -303,7 +323,7 @@ def positions(symbole: str, interval: str = Query("1h"), style: str = Query("con
         raise HTTPException(status_code=503, detail=f"carnet indisponible ({type(exc).__name__})")
 
     return {"symbole": symbole, "interval": interval, "style": style,
-            "mouvement": mouvement, **etat}
+            "mouvement": mouvement, "rattrapage": rattrapage, **etat}
 
 
 @app.get("/static/{fichier}", tags=["interface"])
