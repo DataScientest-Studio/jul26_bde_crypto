@@ -264,6 +264,8 @@ période plutôt qu'une dérive.
 
 L'application tourne seule, en continu, et se surveille.
 
+**Livrable** : [`docs/rapport_etape5.pdf`](docs/rapport_etape5.pdf)
+
 ### Airflow : trois DAG
 
 | DAG | Quand | Ce qu'il fait |
