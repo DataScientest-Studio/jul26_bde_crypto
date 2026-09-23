@@ -117,10 +117,8 @@ jobs:
       - name: Demarrage de la pile
         run: docker compose up -d --build --wait --wait-timeout 300
       - name: Verification de l'exterieur
-        run: |
-          # Prometheus lit ses cibles toutes les 15 s : on lui laisse un tour.
-          sleep 30
-          python3 scripts/verifier_deploiement.py --profils supervision
+        # Le script attend lui-meme que Prometheus ait lu chaque cible.
+        run: python3 scripts/verifier_deploiement.py --profils supervision
       - name: Journaux en cas d'echec
         if: failure()
         run: docker compose logs --tail=80

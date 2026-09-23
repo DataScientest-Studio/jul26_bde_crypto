@@ -45,14 +45,14 @@ def test_les_trois_dag_sont_presents(dagbag):
 
 
 def test_collecte_toutes_les_15_minutes_apres_cloture(dagbag):
-    dag = dagbag.get_dag("cryptobot_collecte")
+    dag = dagbag.dags["cryptobot_collecte"]
     assert dag.schedule == "1-59/15 * * * *"
     assert dag.catchup is False
     assert dag.max_active_runs == 1
 
 
 def test_ordre_de_la_collecte(dagbag):
-    dag = dagbag.get_dag("cryptobot_collecte")
+    dag = dagbag.dags["cryptobot_collecte"]
     assert dag.get_task("ingerer_bougies").downstream_task_ids == {
         "controler_qualite", "calculer_variables"}
     # Le bot ne depend pas de la base : il tourne meme si l'ingestion echoue.
@@ -60,7 +60,7 @@ def test_ordre_de_la_collecte(dagbag):
 
 
 def test_reentrainement_publie_seulement_apres_le_duel(dagbag):
-    dag = dagbag.get_dag("cryptobot_reentrainement")
+    dag = dagbag.dags["cryptobot_reentrainement"]
     chemin = ["figer_extrait", "entrainer_et_comparer", "challenger_promu", "publier"]
     for amont, aval in zip(chemin, chemin[1:]):
         assert aval in dag.get_task(amont).downstream_task_ids
@@ -68,7 +68,7 @@ def test_reentrainement_publie_seulement_apres_le_duel(dagbag):
 
 
 def test_derive_declenche_le_reentrainement(dagbag):
-    dag = dagbag.get_dag("cryptobot_derive")
+    dag = dagbag.dags["cryptobot_derive"]
     declencheur = dag.get_task("declencher_reentrainement")
     assert declencheur.trigger_dag_id == "cryptobot_reentrainement"
 

@@ -20,6 +20,7 @@ import json
 import socket
 import subprocess
 import sys
+import time
 import urllib.error
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
@@ -110,7 +111,14 @@ def supervision() -> None:
     print("\nSupervision")
     statut, _, corps = lire("http://127.0.0.1:9090/api/v1/targets")
     if verifier(statut == 200, "Prometheus repond"):
-        cibles = json.loads(corps)["data"]["activeTargets"]
+        # Juste apres un demarrage, certaines cibles n'ont pas encore ete lues
+        # (etat "unknown" : l'exportateur n'est lu qu'une fois par minute).
+        # On attend leur premier passage au lieu de parier sur un delai fixe.
+        for _ in range(24):
+            cibles = json.loads(lire("http://127.0.0.1:9090/api/v1/targets")[2])["data"]["activeTargets"]
+            if all(c["health"] != "unknown" for c in cibles):
+                break
+            time.sleep(5)
         en_panne = [c["labels"].get("service", c["labels"]["job"])
                     for c in cibles if c["health"] != "up"]
         verifier(not en_panne, f"{len(cibles)} cibles lues, en echec : {en_panne or 'aucune'}")
