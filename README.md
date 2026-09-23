@@ -30,7 +30,8 @@ Choix des bases de données et modèle de données.
 ### Démarrer les bases
 
 ```bash
-docker compose up -d              # TimescaleDB + MongoDB
+python -m scripts.generer_secrets # une fois : crée .env (voir étape 4)
+docker compose up -d              # toute l'application, dont les deux bases
 python -m scripts.load_to_db --check   # vérifier les connexions
 python -m scripts.load_to_db           # charger les 35 jeux de données
 python -m scripts.check_db             # état des deux bases
@@ -41,8 +42,8 @@ des conteneurs. Pour les rejouer après modification : `docker compose down -v`.
 
 ### Regarder les données dans le navigateur
 
-`docker compose up -d` démarre aussi deux interfaces web, pratiques pour
-explorer les bases ou faire une capture d'écran :
+`docker compose up -d` démarre aussi deux interfaces web (profil `outils`),
+pratiques pour explorer les bases ou faire une capture d'écran :
 
 | Interface | Adresse | Contenu |
 |---|---|---|
@@ -54,8 +55,8 @@ Le serveur PostgreSQL est déjà enregistré dans pgAdmin
 de passe `cryptobot` à la première connexion.
 
 Ces deux interfaces ne servent **qu'à regarder** : aucun script du projet n'en
-dépend. Elles n'écoutent que sur la machine locale et utilisent les
-identifiants de développement ; sur un vrai serveur, il faudrait les protéger.
+dépend. Elles n'écoutent que sur cette machine (`127.0.0.1`), jamais sur le
+réseau.
 
 | Fichier | Rôle |
 |---|---|
@@ -163,20 +164,34 @@ python scripts/make_notebook.py              # régénérer le notebook
 
 ## Étape 4 — Déploiement ✅
 
-API du modèle et des bases, conteneurisée, testée, avec mesure de la dérive
-des données.
+API du modèle et des bases, sécurisée, conteneurisée avec son interface,
+testée, avec mesure de la dérive des données.
 
 **Livrable** : [`docs/rapport_etape4.pdf`](docs/rapport_etape4.pdf)
 
 ### Lancer l'ensemble
 
 ```bash
-docker compose up -d        # bases + API + interfaces web
+python -m scripts.generer_secrets   # une fois : crée .env avec des secrets aléatoires
+docker compose up -d --build        # toute l'application (16 services)
+python scripts/verifier_deploiement.py --profils pipeline supervision
 ```
 
-L'API répond sur <http://localhost:8000>, avec sa documentation interactive
-sur <http://localhost:8000/docs> (générée automatiquement, on peut y essayer
-chaque route depuis le navigateur).
+| Service | Adresse | Rôle |
+|---|---|---|
+| Interface | <http://localhost:8080> | le terminal : bougies en direct, décisions, carnet de trades |
+| Documentation de l'API | <http://localhost:8080/api/docs> | chaque route, essayable depuis le navigateur |
+| Airflow | <http://localhost:8088> | les trois DAG de l'étape 5 |
+| MLflow | <http://localhost:5000> | expériences et registre des modèles |
+| Grafana | <http://localhost:3000> | le tableau de bord de production |
+| Prometheus | <http://localhost:9090> | métriques brutes, règles d'alerte |
+
+Les identifiants d'Airflow et de Grafana sont dans `.env` ;
+`python -m scripts.generer_secrets --afficher` les rappelle.
+
+Les services sont rangés en **profils** (`COMPOSE_PROFILES` dans `.env`) :
+le produit seul (bases, API, interface) démarre toujours ; `pipeline`,
+`supervision` et `outils` s'ajoutent.
 
 | Route | Ce qu'elle fait |
 |---|---|
@@ -187,45 +202,107 @@ chaque route depuis le navigateur).
 | `GET /couverture` | volume et retard de collecte par jeu de données |
 | `POST /prediction` | acheter / vendre / attendre, selon le style choisi |
 | `GET /derive` | les données récentes ressemblent-elles à celles de l'entraînement ? |
-
-Exemple :
-
-```bash
-curl -X POST http://localhost:8000/prediction \
-     -H "Content-Type: application/json" \
-     -d '{"symbole":"BTCUSDT","interval":"1h","style":"conservateur"}'
-```
+| `GET /graphique/{paire}` | bougies + décision du modèle pour chacune (l'interface) |
+| `GET /ordre/{paire}` | l'ordre projeté : entrée, take profit, stop loss |
+| `POST /positions/{paire}` | un tour du carnet de positions virtuelles |
+| `GET /metrics` | métriques Prometheus (réseau Docker interne seulement) |
 
 Le **style** est le bouton conservateur / agressif : il fixe la probabilité
 minimale à partir de laquelle le bot agit. En dessous, il répond `attendre`.
 
-**Sécurité** : si `CRYPTOBOT_API_KEY` est renseignée dans `.env`, toutes les
-routes sauf `/` et `/health` exigent l'en-tête `X-API-Key`. Sans cette
-variable, l'API reste ouverte, ce qui convient en développement seulement.
+### Sécurité
+
+| Mesure | Où |
+|---|---|
+| Une clé d'API **par client** (interface, Airflow), comparée en temps constant | `api/securite.py` |
+| API **fermée par défaut** : sans clé configurée, 503 plutôt que s'ouvrir | `api/securite.py` |
+| La clé de l'interface est ajoutée par le **proxy nginx**, jamais envoyée au navigateur | `interface/snippets/proxy_api.conf` |
+| L'API n'est **pas publiée** sur la machine : seuls nginx, Airflow et Prometheus la joignent | `docker-compose.yml` |
+| Réseaux Docker séparés : l'interface ne peut pas atteindre les bases | `docker-compose.yml` |
+| Paires, pas de temps et styles validés par **liste blanche** avant tout appel à Binance | `api/main.py` |
+| **Limitation de débit** (10 req/s par IP) et en-têtes de sécurité (CSP, anti-cadre) | `interface/nginx.conf.template` |
+| Conteneurs **sans droits root** (API, interface) | `Dockerfile.api`, `interface/Dockerfile` |
+| Secrets générés aléatoirement, jamais versionnés ; ports limités à `127.0.0.1` | `scripts/generer_secrets.py` |
+
+Pourquoi des clés plutôt que des jetons JWT : nos clients sont des
+**services**, pas des personnes qui se connectent avec un mot de passe.
+
+Pour lancer l'API seule, sans Docker ni clé, en développement :
+
+```bash
+CRYPTOBOT_ACCES_LIBRE=1 uvicorn api.main:app --reload
+```
 
 ### Tests
 
 ```bash
-pytest tests/ -q        # 91 tests, quelques secondes
+pytest tests/ -q                               # 149 tests, une dizaine de secondes
+python scripts/verifier_deploiement.py         # 21 vérifications sur la pile qui tourne
 ```
 
-Les tests de l'API n'ont besoin ni des bases ni du modèle de 100 Mo : les
-accès extérieurs sont remplacés par des doublures, pour qu'un échec désigne un
-bug de l'API et non une base éteinte.
+Les tests n'ont besoin ni des bases ni du modèle de 100 Mo : les accès
+extérieurs sont remplacés par des doublures, pour qu'un échec désigne un bug
+du code et non une base éteinte. Ce qui ne se voit qu'une fois assemblé
+(clé injectée par nginx, API invisible de l'extérieur, limitation de débit)
+est vérifié par `scripts/verifier_deploiement.py`, sur la pile démarrée.
 
 ### Dérive des données
 
 ```bash
 python -m scripts.reference_derive          # photographie des données d'entraînement
 python -m scripts.mesurer_derive            # mesure du jour, archivée dans docs/
-curl "http://localhost:8000/derive?symbole=BTCUSDT&interval=1h"
 ```
 
 La mesure utilise l'indice PSI : pour chaque variable, on compare la
 répartition actuelle à celle de l'entraînement. En dessous de 0,10 c'est
 stable, au-delà de 0,25 un réentraînement est conseillé. La comparaison se
-fait **par paire et par pas de temps**, sans quoi on mesure des différences
-d'unités plutôt qu'une dérive.
+fait **par paire et par pas de temps**, sur **la même durée** pour chaque pas
+de temps (90 jours), sans quoi on mesure des différences d'unités ou de
+période plutôt qu'une dérive.
+
+## Étape 5 — Automatisation et supervision ✅
+
+L'application tourne seule, en continu, et se surveille.
+
+### Airflow : trois DAG
+
+| DAG | Quand | Ce qu'il fait |
+|---|---|---|
+| `cryptobot_collecte` | toutes les 15 min (à :01, :16, :31, :46) | bougies Binance → MongoDB → PostgreSQL, contrôle qualité, variables techniques, **un tour du bot** pour chaque paire, pas de temps et style |
+| `cryptobot_derive` | chaque jour à 6 h 30 UTC | dérive par paire et pas de temps ; déclenche le réentraînement si 8 séries sur 15 dérivent fortement |
+| `cryptobot_reentrainement` | chaque dimanche à 3 h UTC (ou sur dérive) | extrait figé et signé → nouveau modèle → **duel** contre le modèle en service sur 21 jours jamais vus → publication seulement s'il fait au moins aussi bien |
+
+Airflow **orchestre**, il ne calcule pas : chaque tâche lance une commande du
+projet (`python -m scripts.xxx`) dans son propre environnement Python. Ce sont
+les mêmes commandes qu'à la main :
+
+```bash
+python -m scripts.ingestion_continue              # bougies manquantes, en base
+python -m scripts.controle_qualite                # fraîcheur, trous, incohérences
+python -m scripts.load_features --contexte --jours 2
+python -m scripts.mesurer_derive --enregistrer
+python -m scripts.reentrainer figer|entrainer|publier --date 2026-09-27
+```
+
+Le modèle promu remplace l'ancien en une opération atomique ; l'API le
+recharge d'elle-même, sans redémarrer. L'ancien est archivé dans
+`models/archives/`, et le registre MLflow déplace l'alias `champion`.
+
+### Intégration continue (GitHub Actions)
+
+À chaque envoi : analyse statique (ruff), tests (pytest + couverture),
+chargement des DAG, validation des règles Prometheus et de nginx, puis
+**déploiement de bout en bout** vérifié de l'extérieur. Si tout est vert, les
+images `api`, `interface` et `airflow` sont publiées sur `ghcr.io`. Mettre à
+jour une machine : `docker compose pull && docker compose up -d`.
+
+### Supervision
+
+| Outil | Rôle |
+|---|---|
+| Prometheus | lit les métriques de l'API et de l'exportateur, sonde chaque page web, évalue **12 règles d'alerte** (`monitoring/prometheus/alertes.yml`) |
+| Exportateur | traduit l'état du pipeline en métriques : retard des données, dérive, âge du dernier tour du bot, issue du dernier duel |
+| Grafana | tableau « CryptoBot – production », provisionné depuis `monitoring/grafana/` |
 
 ## Profils de trading
 
@@ -333,6 +410,6 @@ def normalize_klines(raw: list[list], symbol: str, interval: str) -> pd.DataFram
 | 1 | Récupération des données | 24 août | ✅ |
 | 2 | Organisation des données (SQL + NoSQL, UML) | 4 septembre | ✅ |
 | 3 | Consommation — modèle de ML | 11 septembre | ✅ |
-| 4 | Déploiement — API, Docker, dérive | 21 septembre | — |
-| 5 | Automatisation & monitoring — CI, Airflow | soutenance | — |
+| 4 | Déploiement — API, Docker, dérive | 21 septembre | ✅ |
+| 5 | Automatisation & monitoring — CI, Airflow | soutenance | ✅ |
 | 6 | Soutenance | semaine du 5 octobre | — |

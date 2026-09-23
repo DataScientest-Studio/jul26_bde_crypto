@@ -30,7 +30,9 @@ def dagbag():
     from airflow.models import DagBag
 
     sys.path.insert(0, str(DOSSIER_DAGS))
-    return DagBag(dag_folder=str(DOSSIER_DAGS), include_examples=False)
+    # Les exemples d'Airflow sont exclus par la configuration
+    # (AIRFLOW__CORE__LOAD_EXAMPLES=false), plus par un argument depuis Airflow 3.
+    return DagBag(dag_folder=str(DOSSIER_DAGS))
 
 
 def test_aucune_erreur_d_import(dagbag):
