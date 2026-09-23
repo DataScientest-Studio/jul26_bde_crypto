@@ -45,7 +45,6 @@ FRAIS = 0.002
 def preparer(paire: str, interval: str, style: str, bougies_max: int = 1000) -> pd.DataFrame:
     """Une ligne par bougie : sa volatilite, la decision du modele, le resultat."""
     from src.features import FAMILLES, ajouter_contexte_lent, construire_groupes
-    from src.preprocessing import INTERVAL_SECONDS
 
     bougies = donnees.bougies_binance(paire, bougies_max)
     decisions = modele.predire_serie(bougies, paire, interval, style, limite=bougies_max)

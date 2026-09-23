@@ -1,0 +1,86 @@
+# =============================================================================
+#  Interface CryptoBot : page statique + proxy vers l'API
+#
+#  Ce fichier est un MODELE : au demarrage, l'image nginx remplace les
+#  ${VARIABLES} par leur valeur d'environnement (et seulement celles-la :
+#  les variables nginx comme $host restent intactes).
+#
+#  Pourquoi un proxy plutot que d'appeler l'API directement depuis la page :
+#    1. la cle d'API reste ICI, cote serveur. Tout ce qui est envoye au
+#       navigateur peut etre lu par n'importe qui ;
+#    2. l'API n'est pas publiee sur la machine : ce proxy est la seule porte
+#       d'entree, et c'est lui qui decide ce qui passe (pas /metrics) ;
+#    3. une seule origine pour la page et les donnees : aucun CORS a ouvrir.
+# =============================================================================
+
+# Limitation de debit par adresse IP. Au-dela, nginx repond 429 sans meme
+# deranger l'API. Chaque appel de l'interface peut declencher des appels a
+# Binance : sans limite, un script en boucle epuiserait notre quota.
+#   api   : 10 requetes/s, rafale de 40 (un chargement "1 an" en fait 3)
+#   lourd : 6 requetes/min pour la derive, qui lit jusqu'a 15 000 bougies
+limit_req_zone $binary_remote_addr zone=api:10m rate=10r/s;
+limit_req_zone $binary_remote_addr zone=lourd:10m rate=6r/m;
+limit_req_status 429;
+
+upstream api_cryptobot {
+    server ${CRYPTOBOT_API_HOTE}:8000;
+    keepalive 16;
+}
+
+server {
+    listen 8080;
+    server_name _;
+    # Ne pas annoncer la version de nginx : inutile de faciliter la recherche
+    # de failles connues.
+    server_tokens off;
+    root /usr/share/nginx/html;
+
+    # Sonde de sante du conteneur lui-meme (Docker, Prometheus).
+    location = /sante {
+        access_log off;
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+
+    # La page. no-store : sans cela, le navigateur garde l'ancienne version
+    # apres une mise a jour et on croit a un bug.
+    location = / {
+        include /etc/nginx/conf.d/snippets/securite.conf;
+        add_header Cache-Control "no-store" always;
+        try_files /index.html =404;
+    }
+
+    location /static/ {
+        include /etc/nginx/conf.d/snippets/securite.conf;
+        add_header Cache-Control "public, max-age=86400" always;
+    }
+
+    # --- API ------------------------------------------------------------------
+
+    # Les metriques sont lues par Prometheus DANS le reseau Docker. Depuis
+    # l'exterieur, elles n'existent pas.
+    location = /api/metrics {
+        return 404;
+    }
+
+    # La documentation interactive charge Swagger UI depuis jsdelivr : elle a
+    # besoin d'une politique de contenu un peu plus large que le reste.
+    location ~ ^/api/(docs|redoc|openapi\.json)$ {
+        limit_req zone=api burst=20 nodelay;
+        include /etc/nginx/conf.d/snippets/proxy_api.conf;
+        include /etc/nginx/conf.d/snippets/entetes_communs.conf;
+        add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https://fastapi.tiangolo.com; connect-src 'self'; frame-ancestors 'none'" always;
+    }
+
+    location /api/derive {
+        limit_req zone=lourd burst=3 nodelay;
+        include /etc/nginx/conf.d/snippets/proxy_api.conf;
+        include /etc/nginx/conf.d/snippets/securite.conf;
+    }
+
+    location /api/ {
+        limit_req zone=api burst=40 nodelay;
+        include /etc/nginx/conf.d/snippets/proxy_api.conf;
+        include /etc/nginx/conf.d/snippets/securite.conf;
+    }
+}

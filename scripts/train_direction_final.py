@@ -39,7 +39,6 @@ Usage :
 """
 from __future__ import annotations
 
-import hashlib
 import json
 import logging
 import sys
@@ -159,7 +158,6 @@ def main():
                        calibration[colonnes], calibration["label"])
     log.info("Modele entraine et calibre en %.0f s", time.time() - debut)
 
-    confiance_seuils = np.abs(modele.predict_proba(periode_seuils[colonnes])[:, 1] - 0.5)
     proba = modele.predict_proba(recentes[colonnes])[:, 1]
     y = recentes["label"].to_numpy()
     rendements = recentes["rendement_suivant"].to_numpy()
@@ -239,6 +237,9 @@ def main():
             "sklearn.isotonic.IsotonicRegression",
             "sklearn.frozen._frozen.FrozenEstimator",
             "sklearn.preprocessing._label.LabelEncoder",
+            # Les arbres de la foret : types de scikit-learn lui-meme. skops 0.15
+            # ne les accepte plus sans declaration explicite.
+            "sklearn.tree._tree.Tree",
         ])
 
         MODELES.mkdir(exist_ok=True)

@@ -1,0 +1,27 @@
+# Analyse statique (ruff), lancee par la CI a chaque envoi.
+#
+# Regles retenues : celles qui trouvent de VRAIS defauts (erreurs de syntaxe,
+# noms inconnus, imports ou variables inutilises, redefinitions), pas celles
+# qui discutent du style. Le style du projet (commentaires en francais,
+# alignements dans les tableaux de valeurs) est un choix, pas une erreur.
+target-version = "py313"
+line-length = 110
+extend-exclude = ["notebooks"]
+
+[lint]
+select = ["E9", "F", "B"]
+ignore = [
+    "B905",   # zip() sans strict= : les longueurs sont garanties par construction
+    "B904",   # raise ... from : les messages HTTP n'ont pas a exposer la cause
+]
+
+[lint.per-file-ignores]
+# Les scripts ajoutent la racine du projet au chemin AVANT leurs imports.
+"scripts/*.py" = ["E402"]
+"api/*.py" = ["E402"]
+"tests/*.py" = ["E402"]
+
+[lint.flake8-bugbear]
+# Query(...), Depends(...) en valeur par defaut : c'est la syntaxe voulue par
+# FastAPI, pas l'erreur que B008 cherche (un objet mutable partage).
+extend-immutable-calls = ["fastapi.Query", "fastapi.Depends", "fastapi.Header", "fastapi.Path"]

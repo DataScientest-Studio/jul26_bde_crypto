@@ -51,7 +51,7 @@ for paire, sens, n, pv in sorted(lignes, key=lambda x:-x[1]):
     print(f'{paire:<10}{sens:>10.4f}{n:>9,}{pv:>10.4f}{pc:>12.4f}   {verdict}')
 
 # --- B. Un modele DEDIE par paire ---
-print(f"\nUn modele ENTRAINE sur une seule paire fait-il mieux ?\n")
+print("\nUn modele ENTRAINE sur une seule paire fait-il mieux ?\n")
 print(f"{'paire':<10}{'commun':>10}{'dedie':>10}{'ecart':>9}{'lignes':>10}")
 print('-'*49)
 for paire in sorted(jeu['symbol'].unique()):

@@ -38,7 +38,7 @@ import numpy as np
 import pandas as pd
 
 from src import config
-from scripts.pistes_amelioration import RECENTES, colonnes_de, construire, construire_colonnes_seules
+from scripts.pistes_amelioration import RECENTES, construire, construire_colonnes_seules
 from scripts.profils_de_risque import wilson
 
 warnings.filterwarnings("ignore")

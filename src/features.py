@@ -211,7 +211,7 @@ def ajouter_contexte_lent(
     )
     morceaux = []
 
-    for symbole, groupe_symbole in variables.groupby("symbol", sort=False):
+    for _symbole, groupe_symbole in variables.groupby("symbol", sort=False):
         for rang, pas in enumerate(pas_tries):
             rapide = groupe_symbole[groupe_symbole["interval"] == pas].sort_values(
                 "open_time"

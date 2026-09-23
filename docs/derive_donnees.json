@@ -24,10 +24,41 @@
         "XRPUSDT|1h"
       ],
       "verdict": "reentrainement conseille : ETHUSDT|15m, ETHUSDT|1h, BNBUSDT|15m, BNBUSDT|1h, SOLUSDT|15m, SOLUSDT|1h, SOLUSDT|4h, XRPUSDT|15m, XRPUSDT|1h"
+    },
+    {
+      "mesure_le": "2026-09-23T09:25:36.238978+00:00",
+      "fenetre_jours": 90,
+      "source": "base",
+      "reference": {
+        "periode": [
+          "2024-08-29 00:00:00+00:00",
+          "2026-02-01 13:45:00+00:00"
+        ],
+        "lignes": 326751
+      },
+      "groupes_analyses": 15,
+      "groupes_en_derive_forte": [
+        "BTCUSDT|15m",
+        "BTCUSDT|1h",
+        "BTCUSDT|4h",
+        "ETHUSDT|15m",
+        "ETHUSDT|1h",
+        "ETHUSDT|4h",
+        "BNBUSDT|15m",
+        "BNBUSDT|1h",
+        "BNBUSDT|4h",
+        "SOLUSDT|15m",
+        "SOLUSDT|1h",
+        "SOLUSDT|4h",
+        "XRPUSDT|15m",
+        "XRPUSDT|1h",
+        "XRPUSDT|4h"
+      ],
+      "verdict": "reentrainement conseille : BTCUSDT|15m, BTCUSDT|1h, BTCUSDT|4h, ETHUSDT|15m, ETHUSDT|1h, ETHUSDT|4h, BNBUSDT|15m, BNBUSDT|1h, BNBUSDT|4h, SOLUSDT|15m, SOLUSDT|1h, SOLUSDT|4h, XRPUSDT|15m, XRPUSDT|1h, XRPUSDT|4h"
     }
   ],
   "derniere_mesure": {
-    "mesure_le": "2026-09-18T07:58:43.913534+00:00",
+    "mesure_le": "2026-09-23T09:25:36.238978+00:00",
     "fenetre_jours": 90,
     "source": "base",
     "reference": {
@@ -39,17 +70,23 @@
     },
     "groupes_analyses": 15,
     "groupes_en_derive_forte": [
+      "BTCUSDT|15m",
+      "BTCUSDT|1h",
+      "BTCUSDT|4h",
       "ETHUSDT|15m",
       "ETHUSDT|1h",
+      "ETHUSDT|4h",
       "BNBUSDT|15m",
       "BNBUSDT|1h",
+      "BNBUSDT|4h",
       "SOLUSDT|15m",
       "SOLUSDT|1h",
       "SOLUSDT|4h",
       "XRPUSDT|15m",
-      "XRPUSDT|1h"
+      "XRPUSDT|1h",
+      "XRPUSDT|4h"
     ],
-    "verdict": "reentrainement conseille : ETHUSDT|15m, ETHUSDT|1h, BNBUSDT|15m, BNBUSDT|1h, SOLUSDT|15m, SOLUSDT|1h, SOLUSDT|4h, XRPUSDT|15m, XRPUSDT|1h",
+    "verdict": "reentrainement conseille : BTCUSDT|15m, BTCUSDT|1h, BTCUSDT|4h, ETHUSDT|15m, ETHUSDT|1h, ETHUSDT|4h, BNBUSDT|15m, BNBUSDT|1h, BNBUSDT|4h, SOLUSDT|15m, SOLUSDT|1h, SOLUSDT|4h, XRPUSDT|15m, XRPUSDT|1h, XRPUSDT|4h",
     "detail_par_groupe": {
       "BTCUSDT|15m": {
         "reference": {
@@ -61,27 +98,27 @@
           "extrait_sha256": "e7313c3291b11fba2abc3ea9b4fd83e13b00ef0fffacb2ec1b827bd6a6e0c2f0",
           "portee": "BTCUSDT|15m"
         },
-        "bougies_analysees": 8640,
-        "psi_median": 0.0116,
-        "psi_maximum": 0.1292,
-        "variables_en_derive_forte": 0,
-        "variables_en_derive_moderee": 2,
-        "verdict": "derive moderee isolee : sans consequence immediate",
+        "bougies_analysees": 8639,
+        "psi_median": 0.0384,
+        "psi_maximum": 0.4076,
+        "variables_en_derive_forte": 3,
+        "variables_en_derive_moderee": 5,
+        "verdict": "derive forte : reentrainement conseille",
         "variables_les_plus_derivantes": [
           {
             "variable": "atr_relatif_ctx_4h",
-            "psi": 0.1292,
-            "statut": "derive moderee"
+            "psi": 0.4076,
+            "statut": "derive forte"
           },
           {
             "variable": "ecart_sma_30_ctx_4h",
-            "psi": 0.1041,
-            "statut": "derive moderee"
+            "psi": 0.303,
+            "statut": "derive forte"
           },
           {
             "variable": "atr_relatif_ctx_1h",
-            "psi": 0.0919,
-            "statut": "stable"
+            "psi": 0.2669,
+            "statut": "derive forte"
           }
         ]
       },
@@ -95,27 +132,27 @@
           "extrait_sha256": "e7313c3291b11fba2abc3ea9b4fd83e13b00ef0fffacb2ec1b827bd6a6e0c2f0",
           "portee": "BTCUSDT|1h"
         },
-        "bougies_analysees": 8640,
-        "psi_median": 0.0081,
-        "psi_maximum": 0.1716,
-        "variables_en_derive_forte": 0,
-        "variables_en_derive_moderee": 1,
-        "verdict": "derive moderee isolee : sans consequence immediate",
+        "bougies_analysees": 2159,
+        "psi_median": 0.058,
+        "psi_maximum": 0.4072,
+        "variables_en_derive_forte": 5,
+        "variables_en_derive_moderee": 5,
+        "verdict": "derive forte : reentrainement conseille",
         "variables_les_plus_derivantes": [
           {
-            "variable": "taille_trade_moyen",
-            "psi": 0.1716,
-            "statut": "derive moderee"
-          },
-          {
-            "variable": "part_acheteuse_moy_12",
-            "psi": 0.0745,
-            "statut": "stable"
+            "variable": "atr_relatif_ctx_4h",
+            "psi": 0.4072,
+            "statut": "derive forte"
           },
           {
             "variable": "ecart_sma_30_ctx_4h",
-            "psi": 0.0382,
-            "statut": "stable"
+            "psi": 0.3026,
+            "statut": "derive forte"
+          },
+          {
+            "variable": "atr_relatif",
+            "psi": 0.2674,
+            "statut": "derive forte"
           }
         ]
       },
@@ -129,27 +166,27 @@
           "extrait_sha256": "e7313c3291b11fba2abc3ea9b4fd83e13b00ef0fffacb2ec1b827bd6a6e0c2f0",
           "portee": "BTCUSDT|4h"
         },
-        "bougies_analysees": 4261,
-        "psi_median": 0.0028,
-        "psi_maximum": 0.0309,
-        "variables_en_derive_forte": 0,
-        "variables_en_derive_moderee": 0,
-        "verdict": "stable : les donnees ressemblent a celles de l'entrainement",
+        "bougies_analysees": 539,
+        "psi_median": 0.1128,
+        "psi_maximum": 0.5824,
+        "variables_en_derive_forte": 7,
+        "variables_en_derive_moderee": 8,
+        "verdict": "derive forte : reentrainement conseille",
         "variables_les_plus_derivantes": [
           {
             "variable": "part_acheteuse_moy_12",
-            "psi": 0.0309,
-            "statut": "stable"
+            "psi": 0.5824,
+            "statut": "derive forte"
           },
           {
-            "variable": "part_acheteuse",
-            "psi": 0.0068,
-            "statut": "stable"
+            "variable": "atr_relatif",
+            "psi": 0.4259,
+            "statut": "derive forte"
           },
           {
-            "variable": "adx",
-            "psi": 0.0065,
-            "statut": "stable"
+            "variable": "vol_24",
+            "psi": 0.386,
+            "statut": "derive forte"
           }
         ]
       },
@@ -163,26 +200,26 @@
           "extrait_sha256": "e7313c3291b11fba2abc3ea9b4fd83e13b00ef0fffacb2ec1b827bd6a6e0c2f0",
           "portee": "ETHUSDT|15m"
         },
-        "bougies_analysees": 8640,
-        "psi_median": 0.0689,
-        "psi_maximum": 0.7088,
-        "variables_en_derive_forte": 5,
-        "variables_en_derive_moderee": 4,
+        "bougies_analysees": 8639,
+        "psi_median": 0.1297,
+        "psi_maximum": 2.3301,
+        "variables_en_derive_forte": 9,
+        "variables_en_derive_moderee": 10,
         "verdict": "derive forte : reentrainement conseille",
         "variables_les_plus_derivantes": [
           {
             "variable": "atr_relatif_ctx_4h",
-            "psi": 0.7088,
+            "psi": 2.3301,
             "statut": "derive forte"
           },
           {
             "variable": "atr_relatif_ctx_1h",
-            "psi": 0.498,
+            "psi": 1.0193,
             "statut": "derive forte"
           },
           {
-            "variable": "taille_trade_moyen",
-            "psi": 0.4362,
+            "variable": "atr_relatif",
+            "psi": 0.6601,
             "statut": "derive forte"
           }
         ]
@@ -197,27 +234,27 @@
           "extrait_sha256": "e7313c3291b11fba2abc3ea9b4fd83e13b00ef0fffacb2ec1b827bd6a6e0c2f0",
           "portee": "ETHUSDT|1h"
         },
-        "bougies_analysees": 8640,
-        "psi_median": 0.0285,
-        "psi_maximum": 0.8679,
-        "variables_en_derive_forte": 1,
-        "variables_en_derive_moderee": 3,
+        "bougies_analysees": 2159,
+        "psi_median": 0.1688,
+        "psi_maximum": 2.3339,
+        "variables_en_derive_forte": 9,
+        "variables_en_derive_moderee": 8,
         "verdict": "derive forte : reentrainement conseille",
         "variables_les_plus_derivantes": [
           {
-            "variable": "taille_trade_moyen",
-            "psi": 0.8679,
+            "variable": "atr_relatif_ctx_4h",
+            "psi": 2.3339,
             "statut": "derive forte"
           },
           {
-            "variable": "atr_relatif_ctx_4h",
-            "psi": 0.244,
-            "statut": "derive moderee"
+            "variable": "atr_relatif",
+            "psi": 1.0213,
+            "statut": "derive forte"
           },
           {
-            "variable": "atr_relatif",
-            "psi": 0.1678,
-            "statut": "derive moderee"
+            "variable": "vol_24",
+            "psi": 0.7507,
+            "statut": "derive forte"
           }
         ]
       },
@@ -231,27 +268,27 @@
           "extrait_sha256": "e7313c3291b11fba2abc3ea9b4fd83e13b00ef0fffacb2ec1b827bd6a6e0c2f0",
           "portee": "ETHUSDT|4h"
         },
-        "bougies_analysees": 4261,
-        "psi_median": 0.0037,
-        "psi_maximum": 0.0681,
-        "variables_en_derive_forte": 0,
-        "variables_en_derive_moderee": 0,
-        "verdict": "stable : les donnees ressemblent a celles de l'entrainement",
+        "bougies_analysees": 539,
+        "psi_median": 0.2152,
+        "psi_maximum": 2.3455,
+        "variables_en_derive_forte": 12,
+        "variables_en_derive_moderee": 7,
+        "verdict": "derive forte : reentrainement conseille",
         "variables_les_plus_derivantes": [
           {
-            "variable": "taille_trade_moyen",
-            "psi": 0.0681,
-            "statut": "stable"
-          },
-          {
             "variable": "atr_relatif",
-            "psi": 0.0345,
-            "statut": "stable"
+            "psi": 2.3455,
+            "statut": "derive forte"
           },
           {
-            "variable": "vol_24",
-            "psi": 0.0233,
-            "statut": "stable"
+            "variable": "ecart_sma_100",
+            "psi": 1.6436,
+            "statut": "derive forte"
+          },
+          {
+            "variable": "taille_trade_moyen",
+            "psi": 1.1276,
+            "statut": "derive forte"
           }
         ]
       },
@@ -265,26 +302,26 @@
           "extrait_sha256": "e7313c3291b11fba2abc3ea9b4fd83e13b00ef0fffacb2ec1b827bd6a6e0c2f0",
           "portee": "BNBUSDT|15m"
         },
-        "bougies_analysees": 8640,
-        "psi_median": 0.0645,
-        "psi_maximum": 0.6811,
-        "variables_en_derive_forte": 5,
-        "variables_en_derive_moderee": 4,
+        "bougies_analysees": 8639,
+        "psi_median": 0.1153,
+        "psi_maximum": 1.9613,
+        "variables_en_derive_forte": 7,
+        "variables_en_derive_moderee": 13,
         "verdict": "derive forte : reentrainement conseille",
         "variables_les_plus_derivantes": [
           {
-            "variable": "taille_trade_moyen",
-            "psi": 0.6811,
-            "statut": "derive forte"
-          },
-          {
             "variable": "atr_relatif_ctx_4h",
-            "psi": 0.4392,
+            "psi": 1.9613,
             "statut": "derive forte"
           },
           {
             "variable": "atr_relatif_ctx_1h",
-            "psi": 0.3738,
+            "psi": 0.7542,
+            "statut": "derive forte"
+          },
+          {
+            "variable": "taille_trade_moyen",
+            "psi": 0.716,
             "statut": "derive forte"
           }
         ]
@@ -299,27 +336,27 @@
           "extrait_sha256": "e7313c3291b11fba2abc3ea9b4fd83e13b00ef0fffacb2ec1b827bd6a6e0c2f0",
           "portee": "BNBUSDT|1h"
         },
-        "bougies_analysees": 8640,
-        "psi_median": 0.01,
-        "psi_maximum": 1.3802,
-        "variables_en_derive_forte": 1,
-        "variables_en_derive_moderee": 0,
+        "bougies_analysees": 2159,
+        "psi_median": 0.1217,
+        "psi_maximum": 1.9569,
+        "variables_en_derive_forte": 7,
+        "variables_en_derive_moderee": 11,
         "verdict": "derive forte : reentrainement conseille",
         "variables_les_plus_derivantes": [
           {
-            "variable": "taille_trade_moyen",
-            "psi": 1.3802,
+            "variable": "atr_relatif_ctx_4h",
+            "psi": 1.9569,
             "statut": "derive forte"
           },
           {
-            "variable": "atr_relatif_ctx_4h",
-            "psi": 0.0851,
-            "statut": "stable"
+            "variable": "taille_trade_moyen",
+            "psi": 1.1878,
+            "statut": "derive forte"
           },
           {
             "variable": "atr_relatif",
-            "psi": 0.0627,
-            "statut": "stable"
+            "psi": 0.7504,
+            "statut": "derive forte"
           }
         ]
       },
@@ -333,27 +370,27 @@
           "extrait_sha256": "e7313c3291b11fba2abc3ea9b4fd83e13b00ef0fffacb2ec1b827bd6a6e0c2f0",
           "portee": "BNBUSDT|4h"
         },
-        "bougies_analysees": 4261,
-        "psi_median": 0.005,
-        "psi_maximum": 0.1285,
-        "variables_en_derive_forte": 0,
-        "variables_en_derive_moderee": 1,
-        "verdict": "derive moderee isolee : sans consequence immediate",
+        "bougies_analysees": 539,
+        "psi_median": 0.171,
+        "psi_maximum": 2.5709,
+        "variables_en_derive_forte": 8,
+        "variables_en_derive_moderee": 9,
+        "verdict": "derive forte : reentrainement conseille",
         "variables_les_plus_derivantes": [
           {
             "variable": "taille_trade_moyen",
-            "psi": 0.1285,
-            "statut": "derive moderee"
-          },
-          {
-            "variable": "part_acheteuse_moy_12",
-            "psi": 0.0331,
-            "statut": "stable"
+            "psi": 2.5709,
+            "statut": "derive forte"
           },
           {
             "variable": "atr_relatif",
-            "psi": 0.0248,
-            "statut": "stable"
+            "psi": 1.9621,
+            "statut": "derive forte"
+          },
+          {
+            "variable": "vol_24",
+            "psi": 1.5755,
+            "statut": "derive forte"
           }
         ]
       },
@@ -367,26 +404,26 @@
           "extrait_sha256": "e7313c3291b11fba2abc3ea9b4fd83e13b00ef0fffacb2ec1b827bd6a6e0c2f0",
           "portee": "SOLUSDT|15m"
         },
-        "bougies_analysees": 8640,
-        "psi_median": 0.0958,
-        "psi_maximum": 2.1417,
-        "variables_en_derive_forte": 7,
-        "variables_en_derive_moderee": 9,
+        "bougies_analysees": 8639,
+        "psi_median": 0.1791,
+        "psi_maximum": 2.6473,
+        "variables_en_derive_forte": 11,
+        "variables_en_derive_moderee": 8,
         "verdict": "derive forte : reentrainement conseille",
         "variables_les_plus_derivantes": [
           {
-            "variable": "taille_trade_moyen",
-            "psi": 2.1417,
-            "statut": "derive forte"
-          },
-          {
             "variable": "atr_relatif_ctx_4h",
-            "psi": 1.0517,
+            "psi": 2.6473,
             "statut": "derive forte"
           },
           {
-            "variable": "atr_relatif_ctx_1h",
-            "psi": 0.7779,
+            "variable": "taille_trade_moyen",
+            "psi": 2.1107,
+            "statut": "derive forte"
+          },
+          {
+            "variable": "ecart_sma_30_ctx_4h",
+            "psi": 1.3234,
             "statut": "derive forte"
           }
         ]
@@ -401,26 +438,26 @@
           "extrait_sha256": "e7313c3291b11fba2abc3ea9b4fd83e13b00ef0fffacb2ec1b827bd6a6e0c2f0",
           "portee": "SOLUSDT|1h"
         },
-        "bougies_analysees": 8640,
-        "psi_median": 0.0401,
-        "psi_maximum": 0.8103,
-        "variables_en_derive_forte": 4,
-        "variables_en_derive_moderee": 2,
+        "bougies_analysees": 2159,
+        "psi_median": 0.1961,
+        "psi_maximum": 4.2434,
+        "variables_en_derive_forte": 10,
+        "variables_en_derive_moderee": 7,
         "verdict": "derive forte : reentrainement conseille",
         "variables_les_plus_derivantes": [
           {
             "variable": "taille_trade_moyen",
-            "psi": 0.8103,
+            "psi": 4.2434,
             "statut": "derive forte"
           },
           {
             "variable": "atr_relatif_ctx_4h",
-            "psi": 0.4456,
+            "psi": 2.6426,
             "statut": "derive forte"
           },
           {
-            "variable": "atr_relatif",
-            "psi": 0.3429,
+            "variable": "ecart_sma_30_ctx_4h",
+            "psi": 1.324,
             "statut": "derive forte"
           }
         ]
@@ -435,27 +472,27 @@
           "extrait_sha256": "e7313c3291b11fba2abc3ea9b4fd83e13b00ef0fffacb2ec1b827bd6a6e0c2f0",
           "portee": "SOLUSDT|4h"
         },
-        "bougies_analysees": 4261,
-        "psi_median": 0.0054,
-        "psi_maximum": 0.2868,
-        "variables_en_derive_forte": 1,
-        "variables_en_derive_moderee": 0,
+        "bougies_analysees": 539,
+        "psi_median": 0.2742,
+        "psi_maximum": 6.3736,
+        "variables_en_derive_forte": 14,
+        "variables_en_derive_moderee": 4,
         "verdict": "derive forte : reentrainement conseille",
         "variables_les_plus_derivantes": [
           {
             "variable": "taille_trade_moyen",
-            "psi": 0.2868,
+            "psi": 6.3736,
+            "statut": "derive forte"
+          },
+          {
+            "variable": "ecart_sma_100",
+            "psi": 3.7371,
             "statut": "derive forte"
           },
           {
             "variable": "atr_relatif",
-            "psi": 0.0831,
-            "statut": "stable"
-          },
-          {
-            "variable": "vol_24",
-            "psi": 0.0569,
-            "statut": "stable"
+            "psi": 2.6519,
+            "statut": "derive forte"
           }
         ]
       },
@@ -469,26 +506,26 @@
           "extrait_sha256": "e7313c3291b11fba2abc3ea9b4fd83e13b00ef0fffacb2ec1b827bd6a6e0c2f0",
           "portee": "XRPUSDT|15m"
         },
-        "bougies_analysees": 8640,
-        "psi_median": 0.0949,
-        "psi_maximum": 0.8161,
+        "bougies_analysees": 8639,
+        "psi_median": 0.0961,
+        "psi_maximum": 0.9337,
         "variables_en_derive_forte": 7,
         "variables_en_derive_moderee": 8,
         "verdict": "derive forte : reentrainement conseille",
         "variables_les_plus_derivantes": [
           {
             "variable": "atr_relatif_ctx_4h",
-            "psi": 0.8161,
+            "psi": 0.9337,
             "statut": "derive forte"
           },
           {
             "variable": "taille_trade_moyen",
-            "psi": 0.6658,
+            "psi": 0.8621,
             "statut": "derive forte"
           },
           {
             "variable": "atr_relatif_ctx_1h",
-            "psi": 0.5714,
+            "psi": 0.5379,
             "statut": "derive forte"
           }
         ]
@@ -503,26 +540,26 @@
           "extrait_sha256": "e7313c3291b11fba2abc3ea9b4fd83e13b00ef0fffacb2ec1b827bd6a6e0c2f0",
           "portee": "XRPUSDT|1h"
         },
-        "bougies_analysees": 8640,
-        "psi_median": 0.0507,
-        "psi_maximum": 0.5342,
-        "variables_en_derive_forte": 4,
-        "variables_en_derive_moderee": 4,
+        "bougies_analysees": 2159,
+        "psi_median": 0.1006,
+        "psi_maximum": 1.438,
+        "variables_en_derive_forte": 6,
+        "variables_en_derive_moderee": 9,
         "verdict": "derive forte : reentrainement conseille",
         "variables_les_plus_derivantes": [
           {
             "variable": "taille_trade_moyen",
-            "psi": 0.5342,
+            "psi": 1.438,
             "statut": "derive forte"
           },
           {
             "variable": "atr_relatif_ctx_4h",
-            "psi": 0.3924,
+            "psi": 0.946,
             "statut": "derive forte"
           },
           {
             "variable": "atr_relatif",
-            "psi": 0.303,
+            "psi": 0.5331,
             "statut": "derive forte"
           }
         ]
@@ -537,27 +574,27 @@
           "extrait_sha256": "e7313c3291b11fba2abc3ea9b4fd83e13b00ef0fffacb2ec1b827bd6a6e0c2f0",
           "portee": "XRPUSDT|4h"
         },
-        "bougies_analysees": 4261,
-        "psi_median": 0.0089,
-        "psi_maximum": 0.1106,
-        "variables_en_derive_forte": 0,
-        "variables_en_derive_moderee": 1,
-        "verdict": "derive moderee isolee : sans consequence immediate",
+        "bougies_analysees": 539,
+        "psi_median": 0.131,
+        "psi_maximum": 2.8155,
+        "variables_en_derive_forte": 8,
+        "variables_en_derive_moderee": 8,
+        "verdict": "derive forte : reentrainement conseille",
         "variables_les_plus_derivantes": [
           {
             "variable": "taille_trade_moyen",
-            "psi": 0.1106,
-            "statut": "derive moderee"
+            "psi": 2.8155,
+            "statut": "derive forte"
           },
           {
             "variable": "atr_relatif",
-            "psi": 0.0607,
-            "statut": "stable"
+            "psi": 0.9374,
+            "statut": "derive forte"
           },
           {
             "variable": "vol_24",
-            "psi": 0.0472,
-            "statut": "stable"
+            "psi": 0.6163,
+            "statut": "derive forte"
           }
         ]
       }

@@ -1,0 +1,17 @@
+# Ce que la sonde attend de chaque page.
+modules:
+  http_2xx:
+    prober: http
+    timeout: 10s
+    http:
+      valid_status_codes: [200]
+
+  # Airflow repond 200 meme quand son planificateur est arrete : le code HTTP
+  # ne suffit pas, il faut lire l'etat annonce dans la reponse.
+  airflow_sain:
+    prober: http
+    timeout: 10s
+    http:
+      valid_status_codes: [200]
+      fail_if_body_not_matches_regexp:
+        - '"scheduler":\s*\{[^}]*"status":\s*"healthy"'

@@ -63,8 +63,8 @@ for k in communs[-3:]:
 rho, pv = stats.spearmanr([rangs1[k] for k in communs],[rangs2[k] for k in communs])
 print()
 print(f"Correlation des rangs entre les deux periodes : rho = {rho:+.3f}  (p = {pv:.3f})")
-print(f"  rho = +1 : le classement se reproduit parfaitement")
-print(f"  rho =  0 : le classement d hier ne dit RIEN sur demain")
+print("  rho = +1 : le classement se reproduit parfaitement")
+print("  rho =  0 : le classement d hier ne dit RIEN sur demain")
 print()
 gagnant_A = communs[0]
 print(f"Le gagnant de la periode A ({gagnant_A[0]} sur {gagnant_A[1]}) finit {rangs2[gagnant_A]}e sur {len(communs)} en periode B.")

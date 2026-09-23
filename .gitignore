@@ -24,3 +24,8 @@ data/extract/*
 models/*.joblib
 mlartifacts/
 mlflow.db
+
+# Extraits figes du reentrainement automatique (etape 5) : regenerables.
+data/reentrainement/
+# Artefacts MLflow crees par un lancement local hors serveur MLflow.
+mlruns/

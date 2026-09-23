@@ -48,7 +48,6 @@ import pandas as pd
 
 from src import config
 from src.labeling import volatilite_glissante
-from src.preprocessing import INTERVAL_SECONDS
 from api import donnees, modele
 from api.ordre import FENETRE_VOLATILITE, charger_barrieres
 

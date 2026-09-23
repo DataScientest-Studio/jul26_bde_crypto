@@ -1,0 +1,30 @@
+# Sources de donnees de Grafana, declarees comme du code : rien a cliquer
+# apres un `docker compose up`, et rien de perdu apres un `down -v`.
+apiVersion: 1
+
+datasources:
+  # Les metriques en temps reel (API, pipeline, sondes, alertes).
+  - name: Prometheus
+    type: prometheus
+    uid: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    jsonData:
+      timeInterval: 15s
+
+  # L'historique : trades du carnet, duels de reentrainement, mesures de derive.
+  # Compte grafana_lecture : SELECT seulement (voir sql/09_pipeline.sql).
+  - name: CryptoBot PostgreSQL
+    type: grafana-postgresql-datasource
+    uid: cryptobot-postgres
+    access: proxy
+    url: postgres:5432
+    user: grafana_lecture
+    jsonData:
+      database: $POSTGRES_DB
+      sslmode: disable
+      postgresVersion: 1600
+      timescaledb: true
+    secureJsonData:
+      password: $GRAFANA_DB_PASSWORD

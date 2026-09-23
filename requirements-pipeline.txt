@@ -1,0 +1,25 @@
+# Dependances des taches Airflow (collecte, variables, derive, reentrainement).
+#
+# Installees dans un environnement virtuel SEPARE de celui d'Airflow
+# (voir airflow/Dockerfile) : Airflow fige ses propres versions de centaines
+# de bibliotheques, et scikit-learn ou MLflow en exigent d'autres. Deux
+# environnements = aucun conflit, et le modele est entraine avec exactement
+# les memes versions que celles de l'API qui le charge.
+requests>=2.32
+pandas>=2.2
+pyarrow>=15.0
+numpy>=1.26
+# Meme version que l'API (requirements-api.txt) : un modele entraine avec
+# une version et charge avec une autre peut predire differemment.
+scikit-learn==1.9.0
+ta>=0.11
+scipy>=1.11
+joblib>=1.3
+psycopg2-binary>=2.9
+pymongo>=4.6
+# Client MLflow aligne sur la version du serveur (docker-compose.yml).
+mlflow==3.16.1
+# Format de sauvegarde des modeles scikit-learn dans MLflow. Version FIGEE :
+# la 0.15 a durci la liste des types acceptes, ce qui a fait echouer
+# l'enregistrement du modele sans prevenir.
+skops==0.15.0

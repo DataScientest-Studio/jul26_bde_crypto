@@ -1,0 +1,13 @@
+apiVersion: 1
+
+providers:
+  - name: cryptobot
+    folder: CryptoBot
+    type: file
+    # Le tableau est versionne dans git : une modification faite dans
+    # l'interface de Grafana serait perdue au prochain demarrage. On modifie
+    # le fichier JSON, pas l'ecran.
+    allowUiUpdates: false
+    disableDeletion: true
+    options:
+      path: /var/lib/grafana/dashboards

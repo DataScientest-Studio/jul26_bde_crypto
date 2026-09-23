@@ -1,17 +1,98 @@
-# Les deux bases du projet, telles que decrites dans docs/architecture_etape2.pdf
+# =============================================================================
+#  CryptoBot : toute l'application, conteneurisee
 #
-#   TimescaleDB (PostgreSQL) : couche exploitable, les bougies nettoyees
-#   MongoDB                  : couche brute, les reponses API telles quelles
+#  Premier lancement :
+#      python -m scripts.generer_secrets      # cree .env (secrets aleatoires)
+#      docker compose up -d --build
 #
-# Demarrage :  docker compose up -d
-# Arret      :  docker compose down            (les donnees survivent)
-# Remise a zero : docker compose down -v       (supprime les volumes)
+#  Les services sont ranges en PROFILS (variable COMPOSE_PROFILES de .env) :
+#
+#    (toujours)    postgres, mongo, api, interface        le produit
+#    pipeline      airflow-*, mlflow                      l'automatisation
+#    supervision   prometheus, grafana, blackbox,         la surveillance
+#                  exportateur
+#    outils        pgadmin, mongo-express                 pour regarder les bases
+#
+#  Adresses (toutes limitees a cette machine, 127.0.0.1) :
+#    interface  http://localhost:8080          documentation API : /api/docs
+#    airflow    http://localhost:8088          mlflow   http://localhost:5000
+#    grafana    http://localhost:3000          prometheus http://localhost:9090
+#
+#  Arret :          docker compose down        (les donnees survivent)
+#  Remise a zero :  docker compose down -v     (supprime les volumes)
+# =============================================================================
+
+# --- Blocs reutilises ---------------------------------------------------------
+
+x-bases-projet: &bases-projet
+  # Les conteneurs se parlent par le NOM du service, jamais par localhost
+  # (qui designerait le conteneur lui-meme).
+  POSTGRES_HOST: postgres
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: ${POSTGRES_DB:-cryptobot}
+  POSTGRES_USER: ${POSTGRES_USER:-cryptobot}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cryptobot}
+  MONGO_HOST: mongo
+  MONGO_PORT: "27017"
+  MONGO_DB: ${MONGO_DB:-cryptobot}
+  MONGO_USER: ${MONGO_USER:-cryptobot}
+  MONGO_PASSWORD: ${MONGO_PASSWORD:-cryptobot}
+
+x-image-api: &image-api
+  build:
+    context: .
+    dockerfile: Dockerfile.api
+  # Meme nom que l'image publiee par la CI : `docker compose pull` recupere
+  # la version construite et testee sur GitHub au lieu de la reconstruire.
+  image: ${CRYPTOBOT_REGISTRE:-ghcr.io/datascientest-studio/jul26_bde_crypto}/api:${CRYPTOBOT_VERSION:-latest}
+
+x-airflow: &airflow
+  build:
+    context: .
+    dockerfile: airflow/Dockerfile
+  image: ${CRYPTOBOT_REGISTRE:-ghcr.io/datascientest-studio/jul26_bde_crypto}/airflow:${CRYPTOBOT_VERSION:-latest}
+  profiles: [pipeline]
+  restart: unless-stopped
+  user: "50000:0"
+  environment: &airflow-env
+    <<: *bases-projet
+    # LocalExecutor : les taches tournent comme sous-processus du
+    # planificateur. Suffisant pour quelques taches toutes les 15 minutes ;
+    # Celery (plusieurs machines) ajouterait Redis et des workers pour rien.
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${AIRFLOW_DB_PASSWORD:?Lancer d'abord - python -m scripts.generer_secrets}@airflow-db/airflow
+    AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW_FERNET_KEY}
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "false"
+    AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    AIRFLOW__CORE__DEFAULT_TIMEZONE: utc
+    AIRFLOW__CORE__EXECUTION_API_SERVER_URL: http://airflow-apiserver:8080/execution/
+    AIRFLOW__API_AUTH__JWT_SECRET: ${AIRFLOW_JWT_SECRET}
+    AIRFLOW__API__SECRET_KEY: ${AIRFLOW_API_SECRET_KEY}
+    AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: "true"
+    # Connexion a la base du projet, utilisee par les taches qui l'interrogent
+    # directement (derive forte ou non ?).
+    AIRFLOW_CONN_CRYPTOBOT_POSTGRES: postgresql://${POSTGRES_USER:-cryptobot}:${POSTGRES_PASSWORD:-cryptobot}@postgres:5432/${POSTGRES_DB:-cryptobot}
+    CRYPTOBOT_API_URL: http://api:8000
+    CRYPTOBOT_CLE_AIRFLOW: ${CRYPTOBOT_CLE_AIRFLOW}
+    MLFLOW_TRACKING_URI: http://mlflow:5000
+    MLFLOW_DISABLE_AGENT_HINT: "1"
+  volumes:
+    # Le code est dans l'image ; seuls les modeles et les extraits figes
+    # vivent sur le disque, partages avec l'API.
+    - ./models:/opt/airflow/projet/models
+    - ./data/reentrainement:/opt/airflow/projet/data/reentrainement
+    - airflow_logs:/opt/airflow/logs
+  networks: [airflow, donnees, services]
 
 services:
 
+  # ===========================================================================
+  #  Le produit
+  # ===========================================================================
+
   postgres:
-    # Image TimescaleDB : c'est un PostgreSQL complet avec l'extension deja
-    # installee. On garde donc psycopg2, psql et tout l'ecosysteme habituel.
+    # TimescaleDB : un PostgreSQL complet avec l'extension deja installee.
     image: timescale/timescaledb:latest-pg16
     container_name: crypto_postgres
     restart: unless-stopped
@@ -19,24 +100,27 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-cryptobot}
       POSTGRES_USER: ${POSTGRES_USER:-cryptobot}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cryptobot}
-      # Fuseau force a UTC : toutes nos donnees sont en UTC depuis l'etape 1,
-      # un serveur en heure de Paris decalerait les horodatages a l'affichage.
+      # Lu par sql/09_pipeline.sql pour creer le compte de lecture de Grafana.
+      GRAFANA_DB_PASSWORD: ${GRAFANA_DB_PASSWORD:-}
+      # UTC partout depuis l'etape 1 : un serveur a l'heure de Paris
+      # decalerait les horodatages a l'affichage.
       TZ: UTC
       PGTZ: UTC
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      # 127.0.0.1 : joignable par les scripts lances sur cette machine, jamais
+      # depuis le reseau.
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      # Tout script place ici est execute UNE SEULE FOIS, a la creation du
-      # volume. Pour les rejouer, il faut `docker compose down -v`.
+      # Execute UNE SEULE FOIS, a la creation du volume.
       - ./sql:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      # Le pipeline attend que la base reponde vraiment avant d'ecrire.
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cryptobot} -d ${POSTGRES_DB:-cryptobot}"]
       interval: 5s
       timeout: 5s
       retries: 12
       start_period: 20s
+    networks: [donnees]
 
   mongo:
     image: mongo:7
@@ -48,7 +132,7 @@ services:
       MONGO_INITDB_DATABASE: ${MONGO_DB:-cryptobot}
       TZ: UTC
     ports:
-      - "${MONGO_PORT:-27017}:27017"
+      - "127.0.0.1:${MONGO_PORT:-27017}:27017"
     volumes:
       - mongo_data:/data/db
       - ./mongo:/docker-entrypoint-initdb.d:ro
@@ -58,96 +142,308 @@ services:
       timeout: 5s
       retries: 12
       start_period: 20s
-
-  # ---------------------------------------------------------------------------
-  #  API du modele (etape 4)
-  # ---------------------------------------------------------------------------
+    networks: [donnees]
 
   api:
-    build:
-      context: .
-      dockerfile: Dockerfile.api
+    <<: *image-api
     container_name: crypto_api
     restart: unless-stopped
     environment:
-      # Les conteneurs se parlent par le NOM du service, pas par localhost.
-      POSTGRES_HOST: postgres
-      MONGO_HOST: mongo
-      POSTGRES_DB: ${POSTGRES_DB:-cryptobot}
-      POSTGRES_USER: ${POSTGRES_USER:-cryptobot}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cryptobot}
-      MONGO_USER: ${MONGO_USER:-cryptobot}
-      MONGO_PASSWORD: ${MONGO_PASSWORD:-cryptobot}
-      # Vide = API ouverte (developpement). Renseignee = en-tete X-API-Key exige.
-      CRYPTOBOT_API_KEY: ${CRYPTOBOT_API_KEY:-}
-    ports:
-      - "${API_PORT:-8000}:8000"
+      <<: *bases-projet
+      # Une cle par client. Sans elles, l'API refuse de servir (fermee par
+      # defaut) : le :? arrete `docker compose` avec un message clair.
+      CRYPTOBOT_CLES_API: "interface:${CRYPTOBOT_CLE_INTERFACE:?Lancer d'abord - python -m scripts.generer_secrets},airflow:${CRYPTOBOT_CLE_AIRFLOW:?Lancer d'abord - python -m scripts.generer_secrets}"
+      # Publiee par nginx sous /api : la documentation doit le savoir.
+      CRYPTOBOT_PREFIXE: /api
+    # AUCUN port publie : l'API n'est joignable que dans le reseau Docker,
+    # par nginx (interface), Airflow et Prometheus.
+    expose: ["8000"]
     volumes:
-      # Modele et reference de derive montes en lecture seule : les
-      # reentrainer ne demande pas de reconstruire l'image.
+      # Lecture seule : l'API ne modifie jamais un modele. Airflow les
+      # remplace, l'API les recharge d'elle-meme.
       - ./models:/app/models:ro
     depends_on:
       postgres:
         condition: service_healthy
       mongo:
         condition: service_healthy
+    networks: [donnees, services]
 
-  # ---------------------------------------------------------------------------
-  #  Interfaces web d'exploration
+  interface:
+    build:
+      context: ./interface
+    image: ${CRYPTOBOT_REGISTRE:-ghcr.io/datascientest-studio/jul26_bde_crypto}/interface:${CRYPTOBOT_VERSION:-latest}
+    container_name: crypto_interface
+    restart: unless-stopped
+    environment:
+      # Injectee par nginx dans chaque appel a l'API, jamais envoyee au navigateur.
+      CRYPTOBOT_CLE_INTERFACE: ${CRYPTOBOT_CLE_INTERFACE}
+    ports:
+      - "${INTERFACE_ECOUTE:-127.0.0.1}:${INTERFACE_PORT:-8080}:8080"
+    depends_on:
+      api:
+        condition: service_healthy
+    # Le seul reseau de l'interface : elle joint l'API, jamais les bases.
+    networks: [services]
+
+  # ===========================================================================
+  #  Pipeline : Airflow + MLflow (profil "pipeline")
+  # ===========================================================================
+
+  airflow-db:
+    # Base de METADONNEES d'Airflow (etat des DAG et des taches). Separee de
+    # la base du projet : Airflow gere lui-meme son schema et ses migrations.
+    image: postgres:16-alpine
+    container_name: crypto_airflow_db
+    profiles: [pipeline]
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: ${AIRFLOW_DB_PASSWORD}
+      POSTGRES_DB: airflow
+    volumes:
+      - airflow_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks: [airflow]
+
+  airflow-init:
+    <<: *airflow
+    container_name: crypto_airflow_init
+    restart: "no"
+    # L'image officielle fait le travail : migration du schema et creation du
+    # compte administrateur, pilotees par les variables ci-dessous.
+    command: version
+    environment:
+      <<: *airflow-env
+      _AIRFLOW_DB_MIGRATE: "true"
+      _AIRFLOW_WWW_USER_CREATE: "true"
+      _AIRFLOW_WWW_USER_USERNAME: ${AIRFLOW_ADMIN_USER:-admin}
+      _AIRFLOW_WWW_USER_PASSWORD: ${AIRFLOW_ADMIN_PASSWORD}
+    depends_on:
+      airflow-db:
+        condition: service_healthy
+
+  airflow-apiserver:
+    <<: *airflow
+    container_name: crypto_airflow_apiserver
+    command: api-server
+    ports:
+      - "127.0.0.1:${AIRFLOW_PORT:-8088}:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/api/v2/monitor/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-scheduler:
+    <<: *airflow
+    container_name: crypto_airflow_scheduler
+    command: scheduler
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8974/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+      api:
+        condition: service_healthy
+
+  airflow-dag-processor:
+    <<: *airflow
+    container_name: crypto_airflow_dag_processor
+    command: dag-processor
+    healthcheck:
+      test: ["CMD-SHELL", 'airflow jobs check --job-type DagProcessorJob --hostname "$${HOSTNAME}"']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+
+  mlflow:
+    # Serveur de suivi des experiences ET registre des modeles : chaque
+    # challenger y devient une version, l'alias "champion" suit le modele en
+    # service.
+    image: ghcr.io/mlflow/mlflow:v3.16.1
+    container_name: crypto_mlflow
+    profiles: [pipeline]
+    restart: unless-stopped
+    command: >
+      mlflow server --host 0.0.0.0 --port 5000
+      --backend-store-uri sqlite:////mlflow/mlflow.db
+      --artifacts-destination /mlflow/artifacts --serve-artifacts
+      --allowed-hosts mlflow,mlflow:5000,localhost,localhost:*,127.0.0.1,127.0.0.1:*
+    ports:
+      - "127.0.0.1:${MLFLOW_PORT:-5000}:5000"
+    volumes:
+      - mlflow_data:/mlflow
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks: [services]
+
+  # ===========================================================================
+  #  Supervision (profil "supervision")
+  # ===========================================================================
+
+  exportateur:
+    # Meme image que l'API, autre commande : traduit l'etat du pipeline
+    # (fraicheur, derive, bot, reentrainements) en metriques Prometheus.
+    <<: *image-api
+    container_name: crypto_exportateur
+    profiles: [supervision]
+    restart: unless-stopped
+    command: ["python", "-m", "api.exportateur"]
+    environment:
+      <<: *bases-projet
+    expose: ["9101"]
+    volumes:
+      - ./models:/app/models:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9101/metrics')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [donnees, services]
+
+  blackbox:
+    # Sonde les pages web de chaque service de l'exterieur, comme le ferait
+    # un utilisateur : "le service repond-il vraiment ?"
+    image: prom/blackbox-exporter:v0.28.0
+    container_name: crypto_blackbox
+    profiles: [supervision]
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/blackbox/blackbox.yml:/etc/blackbox_exporter/config.yml:ro
+    networks: [services]
+
+  prometheus:
+    image: prom/prometheus:v3.13.3
+    container_name: crypto_prometheus
+    profiles: [supervision]
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=30d
+    ports:
+      - "127.0.0.1:${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./monitoring/prometheus:/etc/prometheus:ro
+      - prometheus_data:/prometheus
+    networks: [services]
+
+  grafana:
+    image: grafana/grafana:13.2
+    container_name: crypto_grafana
+    profiles: [supervision]
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_NEWS_NEWS_FEED_ENABLED: "false"
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/cryptobot.json
+      # Lus par le fichier de provisionnement des sources de donnees.
+      POSTGRES_DB: ${POSTGRES_DB:-cryptobot}
+      GRAFANA_DB_PASSWORD: ${GRAFANA_DB_PASSWORD}
+    ports:
+      - "127.0.0.1:${GRAFANA_PORT:-3000}:3000"
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    depends_on: [prometheus]
+    # donnees : Grafana lit aussi PostgreSQL, avec un compte en lecture seule.
+    networks: [services, donnees]
+
+  # ===========================================================================
+  #  Outils d'exploration (profil "outils")
   #
-  #  Elles ne servent QU'A REGARDER les donnees : aucun script du projet n'en
-  #  depend, le pipeline fonctionne sans elles. Elles sont pratiques pour une
-  #  demonstration ou une capture d'ecran.
-  #
-  #  Les deux n'ecoutent que sur la machine locale, avec les identifiants de
-  #  developpement. Sur un vrai serveur, il faudrait une authentification.
-  # ---------------------------------------------------------------------------
+  #  Pour regarder les donnees, jamais utilises par le pipeline. Limites a
+  #  cette machine (127.0.0.1).
+  # ===========================================================================
 
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: crypto_pgadmin
+    profiles: [outils]
     restart: unless-stopped
     environment:
-      # Identifiant de connexion, jamais utilise pour envoyer un courriel.
       # Le domaine doit exister (pgAdmin refuse .local, .test et compagnie).
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@cryptobot.fr}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-cryptobot}
-      # Mode bureau : ni ecran de connexion, ni mot de passe maitre. On arrive
-      # directement sur la base, ce qui evite deux clics avant chaque capture.
+      # Mode bureau : pas d'ecran de connexion. Acceptable UNIQUEMENT parce
+      # que le port n'ecoute que sur 127.0.0.1.
       PGADMIN_CONFIG_SERVER_MODE: "False"
       PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
     ports:
-      - "${PGADMIN_PORT:-5050}:80"
+      - "127.0.0.1:${PGADMIN_PORT:-5050}:80"
     volumes:
       - pgadmin_data:/var/lib/pgadmin
-      # Serveur deja enregistre : voir docker/pgadmin/servers.json
       - ./docker/pgadmin/servers.json:/pgadmin4/servers.json:ro
     depends_on:
       postgres:
         condition: service_healthy
+    networks: [donnees]
 
   mongo-express:
     image: mongo-express:1.0.2
     container_name: crypto_mongo_express
+    profiles: [outils]
     restart: unless-stopped
     environment:
-      # `mongo` est le nom du service : les conteneurs se parlent par ce nom,
-      # pas par localhost, qui designerait le conteneur lui-meme.
       ME_CONFIG_MONGODB_SERVER: mongo
       ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_USER:-cryptobot}
       ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_PASSWORD:-cryptobot}
       ME_CONFIG_MONGODB_ENABLE_ADMIN: "true"
-      # Pas de seconde authentification par-dessus : interface locale seulement.
       ME_CONFIG_BASICAUTH: "false"
     ports:
-      - "${MONGO_EXPRESS_PORT:-8081}:8081"
+      - "127.0.0.1:${MONGO_EXPRESS_PORT:-8081}:8081"
     depends_on:
       mongo:
         condition: service_healthy
+    networks: [donnees]
+
+# --- Reseaux : chacun ne voit que ce dont il a besoin --------------------------
+#   donnees   les bases, et ceux qui les lisent (API, Airflow, exportateur...)
+#   services  les services web entre eux (interface -> API, Prometheus...)
+#   airflow   Airflow et sa base de metadonnees, isolee de tout le reste
+# L'interface, exposee aux navigateurs, n'est QUE sur "services" : meme
+# compromise, elle ne peut pas atteindre une base de donnees.
+networks:
+  donnees:
+  services:
+  airflow:
 
 volumes:
-  # Volumes nommes : les donnees survivent a un `docker compose down`.
   postgres_data:
   mongo_data:
-  # Preferences de pgAdmin (serveurs enregistres, mise en page).
   pgadmin_data:
+  airflow_db_data:
+  airflow_logs:
+  mlflow_data:
+  prometheus_data:
+  grafana_data:

@@ -19,6 +19,7 @@ Usage :
     python -m scripts.mesurer_derive
     python -m scripts.mesurer_derive --pairs BTCUSDT --jours 120
     python -m scripts.mesurer_derive --source extrait   # sans base de donnees
+    python -m scripts.mesurer_derive --enregistrer      # + table derive_mesures (Airflow)
 """
 from __future__ import annotations
 
@@ -59,12 +60,37 @@ def bougies_depuis_extrait(paire: str, bougies: int) -> pd.DataFrame:
               .tail(bougies).reset_index(drop=True))
 
 
+def enregistrer(groupes: dict, jours: int) -> None:
+    """Une ligne par paire et pas de temps : c'est la TENDANCE qui compte.
+
+    Grafana trace ces lignes dans le temps. Une derive qui monte semaine
+    apres semaine dit bien plus qu'une valeur isolee.
+    """
+    from src.database import postgres_connection
+
+    with postgres_connection() as conn, conn.cursor() as cur:
+        for cle, resultat in groupes.items():
+            paire, interval = cle.split("|")
+            cur.execute(
+                """INSERT INTO derive_mesures
+                       (symbol, interval, fenetre_jours, bougies_analysees, psi_median,
+                        psi_maximum, variables_en_derive_forte, variables_en_derive_moderee,
+                        verdict)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                (paire, interval, jours, resultat["bougies_analysees"], resultat["psi_median"],
+                 resultat["psi_maximum"], resultat["variables_en_derive_forte"],
+                 resultat["variables_en_derive_moderee"], resultat.get("verdict")))
+    log.info("%d mesures enregistrees dans derive_mesures", len(groupes))
+
+
 def main():
     parser = argparse.ArgumentParser(description="Derive des donnees")
     parser.add_argument("--pairs", nargs="+", default=config.PAIRS)
     parser.add_argument("--jours", type=int, default=90,
                         help="Fenetre analysee, en jours (90 par defaut)")
     parser.add_argument("--source", choices=["base", "extrait"], default="base")
+    parser.add_argument("--enregistrer", action="store_true",
+                        help="Ecrire chaque mesure dans la table derive_mesures (Grafana)")
     args = parser.parse_args()
 
     lecture = bougies_depuis_base if args.source == "base" else bougies_depuis_extrait
@@ -80,6 +106,11 @@ def main():
             log.warning("%s : aucune donnee", paire)
             continue
         variables = ajouter_contexte_lent(construire_groupes(brut, FAMILLES))
+        # La fenetre est la MEME duree pour chaque pas de temps. Sans ce
+        # filtre, le 1h et le 4h etaient mesures sur 360 jours et 2 ans : la
+        # quantite de bougies lue est calee sur le 15m, le plus fin.
+        limite = pd.Timestamp.now(tz="UTC") - pd.Timedelta(days=args.jours)
+        variables = variables[variables["open_time"] >= limite]
 
         for interval in INTERVALLES:
             resultat = module_derive.mesurer(variables, reference, paire, interval)
@@ -108,6 +139,9 @@ def main():
         "detail_par_groupe": groupes,
     }
     log.info("VERDICT : %s", mesure["verdict"])
+
+    if args.enregistrer:
+        enregistrer(groupes, args.jours)
 
     historique = {"mesures": []}
     if HISTORIQUE.exists():

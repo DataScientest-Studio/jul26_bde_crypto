@@ -1,0 +1,52 @@
+# Prometheus : ce qu'il vient lire, et a quel rythme.
+#
+# Principe "pull" : c'est Prometheus qui interroge chaque service, les
+# services n'envoient rien. Un service qui tombe se voit donc tout de suite :
+# sa cible passe a up == 0.
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 30s
+
+rule_files:
+  - alertes.yml
+
+scrape_configs:
+  - job_name: api
+    static_configs:
+      - targets: ["api:8000"]
+
+  # L'etat du pipeline change au plus toutes les 15 minutes, et chaque
+  # lecture interroge la base : une minute suffit largement.
+  - job_name: exportateur
+    scrape_interval: 60s
+    static_configs:
+      - targets: ["exportateur:9101"]
+
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # Sondes "de l'exterieur" : chaque page repond-elle vraiment, et avec le
+  # bon contenu ? Le module choisit ce qu'on attend de la reponse.
+  - job_name: sondes
+    metrics_path: /probe
+    static_configs:
+      - targets: ["http://interface:8080/sante"]
+        labels: {service: interface, module: http_2xx}
+      - targets: ["http://interface:8080/api/health"]
+        labels: {service: api-via-proxy, module: http_2xx}
+      - targets: ["http://airflow-apiserver:8080/api/v2/monitor/health"]
+        labels: {service: airflow, module: airflow_sain}
+      - targets: ["http://mlflow:5000/health"]
+        labels: {service: mlflow, module: http_2xx}
+    relabel_configs:
+      # L'adresse sondee devient un parametre, et la requete part vers blackbox.
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [module]
+        target_label: __param_module
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox:9115

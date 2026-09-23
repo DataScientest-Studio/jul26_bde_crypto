@@ -684,8 +684,13 @@ function placerJauge(decision) {
   $("seuil-achat").textContent = (decision.seuil_achat * 100).toFixed(1) + " %";
 }
 
+// Toutes les donnees passent par /api, que le proxy nginx transmet a l'API en
+// y ajoutant la cle. La page elle-meme ne connait AUCUNE cle : ce qui est
+// envoye au navigateur peut etre lu par n'importe qui.
+const API = "/api";
+
 async function appeler(chemin, parametres, methode = "GET") {
-  const reponse = await fetch(`${chemin}?${new URLSearchParams(parametres)}`, { method: methode });
+  const reponse = await fetch(`${API}${chemin}?${new URLSearchParams(parametres)}`, { method: methode });
   if (!reponse.ok) {
     const corps = await reponse.json().catch(() => ({}));
     throw new Error(corps.detail || `erreur ${reponse.status}`);

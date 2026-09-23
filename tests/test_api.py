@@ -24,9 +24,12 @@ from fastapi.testclient import TestClient
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from api import derive as module_derive
-from api import donnees, main, modele
+from api import donnees, main, modele, securite
 from api import ordre as module_ordre
 from api import positions as module_positions
+
+# Cle de test : aleatoire en apparence, et assez longue pour etre acceptee.
+CLE_DE_TEST = "0123456789abcdef0123456789abcdef"
 
 
 # ---------------------------------------------------------------------------
@@ -95,7 +98,16 @@ def client(monkeypatch):
     paquet["colonnes"] = [c for c in variables.columns
                           if c not in ("symbol", "interval", "open_time")] + ["pas_de_temps"]
 
-    monkeypatch.setattr(main, "CLE_ATTENDUE", None)
+    # L'API est fermee par defaut : le client de test s'identifie comme un
+    # vrai client, avec une cle, sur chaque requete.
+    monkeypatch.setattr(securite, "CLES", {CLE_DE_TEST: "tests"})
+    monkeypatch.setattr(securite, "ACCES_LIBRE", False)
+    return TestClient(main.app, headers={"X-API-Key": CLE_DE_TEST})
+
+
+@pytest.fixture
+def anonyme(client):
+    """Meme API, mais un client qui ne presente aucune cle."""
     return TestClient(main.app)
 
 
@@ -227,34 +239,129 @@ def test_paires_listees(client):
 #  Cle d'API
 # ---------------------------------------------------------------------------
 
-def test_sans_cle_configuree_l_acces_est_libre(client):
+def test_sans_cle_l_acces_est_refuse(anonyme):
+    reponse = anonyme.get("/modele")
+    assert reponse.status_code == 401
+    assert reponse.headers["www-authenticate"] == "ApiKey"
+
+
+def test_cle_invalide_refusee_avec_le_meme_message(anonyme):
+    """Absente ou fausse : meme reponse, rien a apprendre pour un attaquant."""
+    absente = anonyme.get("/modele")
+    fausse = anonyme.get("/modele", headers={"X-API-Key": "f" * 32})
+    assert fausse.status_code == 401
+    assert fausse.json() == absente.json()
+
+
+def test_bonne_cle_acceptee(client):
     assert client.get("/modele").status_code == 200
 
 
-def test_avec_cle_configuree_l_acces_est_refuse_sans_en_tete(client, monkeypatch):
-    monkeypatch.setattr(main, "CLE_ATTENDUE", "secret")
-    assert client.get("/modele").status_code == 401
-    assert client.get("/modele", headers={"X-API-Key": "mauvaise"}).status_code == 401
-    assert client.get("/modele", headers={"X-API-Key": "secret"}).status_code == 200
+def test_api_fermee_si_aucune_cle_configuree(anonyme, monkeypatch):
+    """Un oubli de configuration ne doit jamais OUVRIR l'API."""
+    monkeypatch.setattr(securite, "CLES", {})
+    reponse = anonyme.get("/modele", headers={"X-API-Key": CLE_DE_TEST})
+    assert reponse.status_code == 503
+    assert "aucune cle" in reponse.json()["detail"]
 
 
-def test_cle_vide_laisse_l_acces_libre(monkeypatch):
-    """Cas rencontre en vrai : docker-compose transmet une variable VIDE.
-
-    Sans le `or None` dans main.py, l'API exigeait une cle egale a "" et
-    refusait toutes les requetes, y compris celles qui fournissaient la bonne.
-    """
-    import importlib
-
-    monkeypatch.setenv("CRYPTOBOT_API_KEY", "")
-    importlib.reload(main)
-    assert main.CLE_ATTENDUE is None
+def test_acces_libre_seulement_sur_demande_explicite(anonyme, monkeypatch):
+    monkeypatch.setattr(securite, "CLES", {})
+    monkeypatch.setattr(securite, "ACCES_LIBRE", True)
+    assert anonyme.get("/modele").status_code == 200
 
 
-def test_health_reste_accessible_sans_cle(client, monkeypatch):
+def test_chaque_client_a_sa_cle():
+    cles = securite.lire_cles("interface:" + "a" * 32 + ", airflow:" + "b" * 32)
+    assert cles == {"a" * 32: "interface", "b" * 32: "airflow"}
+
+
+def test_cles_trop_courtes_ou_mal_formees_ecartees():
+    """Mieux vaut une cle refusee au demarrage qu'une cle faible acceptee."""
+    cles = securite.lire_cles("interface:courte,sans-separateur," + ":" + "c" * 32)
+    assert cles == {}
+
+
+def test_variable_vide_ne_donne_aucune_cle():
+    """Cas reel : docker-compose transmet une variable VIDE si elle manque."""
+    assert securite.lire_cles("") == {}
+    assert securite.lire_cles(None) == {}
+
+
+def test_identification_du_client(monkeypatch):
+    monkeypatch.setattr(securite, "CLES", {"a" * 32: "interface", "b" * 32: "airflow"})
+    assert securite.identifier("b" * 32) == "airflow"
+    assert securite.identifier("a" * 31 + "x") is None
+    assert securite.identifier(None) is None
+
+
+def test_health_reste_accessible_sans_cle(anonyme):
     """Sinon Docker ne pourrait pas verifier que le service est en vie."""
-    monkeypatch.setattr(main, "CLE_ATTENDUE", "secret")
-    assert client.get("/health").status_code == 200
+    assert anonyme.get("/health").status_code == 200
+
+
+def test_documentation_accessible_sans_cle(anonyme):
+    assert anonyme.get("/openapi.json").status_code == 200
+
+
+def test_toutes_les_routes_de_donnees_sont_protegees(anonyme):
+    """Garde-fou : une route ajoutee sans la dependance serait detectee ici."""
+    publiques = {"/", "/health", "/metrics", "/openapi.json", "/docs",
+                 "/docs/oauth2-redirect", "/redoc"}
+    for route in main.app.routes:
+        if route.path in publiques:
+            continue
+        chemin = route.path.replace("{symbole}", "BTCUSDT")
+        methode = sorted(route.methods)[0]
+        reponse = anonyme.request(methode, chemin)
+        assert reponse.status_code == 401, f"{methode} {route.path} accessible sans cle"
+
+
+# ---------------------------------------------------------------------------
+#  Validation des entrees
+# ---------------------------------------------------------------------------
+
+def test_paire_inconnue_refusee_avant_binance(client, monkeypatch):
+    """Une paire hors liste ne doit jamais partir dans une URL Binance."""
+    appels = []
+    monkeypatch.setattr(donnees, "bougies_binance",
+                        lambda *a, **k: appels.append(a) or bougies_factices())
+    reponse = client.get("/graphique/DOGEUSDT")
+    assert reponse.status_code == 404
+    assert "paire inconnue" in reponse.json()["detail"]
+    assert appels == []
+
+
+def test_paire_en_minuscules_acceptee(client):
+    assert client.get("/graphique/btcusdt?interval=1h").status_code == 200
+
+
+def test_pas_de_temps_hors_liste_refuse(client):
+    assert client.get("/graphique/BTCUSDT?interval=1m").status_code == 422
+    assert client.get("/ordre/BTCUSDT?style=kamikaze").status_code == 422
+
+
+def test_prediction_paire_inconnue_refusee(client):
+    reponse = client.post("/prediction", json={"symbole": "ABCDEUSDT"})
+    assert reponse.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+#  Metriques
+# ---------------------------------------------------------------------------
+
+def test_metriques_exposees_pour_prometheus(client):
+    client.post("/prediction", json={"symbole": "BTCUSDT", "style": "agressif"})
+    texte = client.get("/metrics").text
+    assert "cryptobot_decisions_total" in texte
+    assert "cryptobot_appels_authentifies_total" in texte
+    assert "http_request_duration" in texte
+
+
+def test_refus_comptes_dans_les_metriques(client, anonyme):
+    anonyme.get("/modele")
+    texte = client.get("/metrics").text
+    assert 'cryptobot_appels_refuses_total{raison="cle_absente"}' in texte
 
 
 # ---------------------------------------------------------------------------
@@ -368,22 +475,6 @@ def test_graphique_binance_indisponible_donne_503(client, monkeypatch):
     assert client.get("/graphique/BTCUSDT").status_code == 503
 
 
-def test_interface_sert_une_page_html(client):
-    """La page est servie par l'API : meme origine, donc aucun CORS a regler."""
-    reponse = client.get("/interface")
-    assert reponse.status_code == 200
-    assert "text/html" in reponse.headers["content-type"]
-    # La bibliotheque est servie par le projet, jamais par un site exterieur.
-    assert '/static/lightweight-charts.js' in reponse.text
-    assert 'id="graphique"' in reponse.text
-    assert "cdn" not in reponse.text.lower()
-
-
-def test_interface_accessible_sans_cle(client, monkeypatch):
-    monkeypatch.setattr(main, "CLE_ATTENDUE", "secret")
-    assert client.get("/interface").status_code == 200
-
-
 def test_les_deux_cotes_peuvent_se_declencher(client):
     """Le modele doit pouvoir acheter ET vendre.
 
@@ -458,12 +549,6 @@ def test_ordre_sans_modele_a_barrieres_donne_503(client, monkeypatch):
 
     monkeypatch.setattr(module_ordre, "charger_barrieres", absent)
     assert client.get("/ordre/BTCUSDT").status_code == 503
-
-
-def test_fichier_statique_refuse_de_sortir_du_dossier(client):
-    """Sans ce controle, un nom comme ../../.env sortirait du dossier statique."""
-    assert client.get("/static/lightweight-charts.js").status_code == 200
-    assert client.get("/static/..%2F..%2FREADME.md").status_code == 404
 
 
 def test_graphique_separe_la_bougie_en_cours(client, monkeypatch):

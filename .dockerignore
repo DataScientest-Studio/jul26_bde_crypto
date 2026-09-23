@@ -1,0 +1,15 @@
+# Ce qui n'entre JAMAIS dans une image : sans ce fichier, chaque construction
+# enverrait a Docker les 2 Go de data/ et les secrets de .env.
+.git
+.env
+data/
+models/
+mlartifacts/
+mlflow.db
+notebooks/
+docs/
+samples/
+**/__pycache__
+**/*.pyc
+.pytest_cache
+.venv

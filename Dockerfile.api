@@ -1,4 +1,4 @@
-# Image de l'API CryptoBot.
+# Image de l'API CryptoBot (et de l'exportateur de metriques, meme code).
 #
 # Le MODELE n'est pas copie dans l'image : il pese une centaine de Mo et
 # change a chaque reentrainement. Il est monte depuis ./models au demarrage
@@ -18,6 +18,12 @@ COPY api/ api/
 
 ENV PYTHONPATH=/app \
     PYTHONUNBUFFERED=1
+
+# Utilisateur sans droits : si une faille permettait d'executer du code dans
+# l'API, il n'aurait pas les droits root du conteneur. Le code et le modele
+# (monte en lecture seule) restent lisibles, rien n'est modifiable.
+RUN useradd --uid 10001 --no-create-home --shell /usr/sbin/nologin cryptobot
+USER cryptobot
 
 EXPOSE 8000
 

@@ -5,14 +5,20 @@ scripts/train_direction_final.py. Le fichier contient tout ce qu'il faut pour
 predire sans rien recalculer ailleurs : le modele calibre, la liste EXACTE des
 variables dans le bon ordre, et les deux seuils du bouton.
 
-Il est charge UNE SEULE FOIS au demarrage : le fichier pese une centaine de
-mega-octets, le recharger a chaque appel rendrait l'API inutilisable.
+Il est charge une fois, puis garde en memoire : le fichier pese une centaine
+de mega-octets, le recharger a chaque appel rendrait l'API inutilisable.
+
+RECHARGEMENT A CHAUD
+    Quand Airflow promeut un nouveau modele, il REMPLACE le fichier (en une
+    operation atomique, jamais un fichier a moitie ecrit). A l'appel suivant,
+    l'API voit que la date de modification a change et recharge : un
+    reentrainement se met en service sans redemarrer ni reconstruire l'API.
 """
 from __future__ import annotations
 
 import logging
 import os
-from functools import lru_cache
+import threading
 from pathlib import Path
 
 import pandas as pd
@@ -35,20 +41,37 @@ class ModeleIndisponible(RuntimeError):
     """Le fichier du modele est absent : l'API repond mais ne predit pas."""
 
 
-@lru_cache(maxsize=1)
+_EN_MEMOIRE: dict = {"signature": None, "paquet": None}
+# Deux requetes simultanees ne doivent pas charger deux fois 100 Mo.
+_VERROU = threading.Lock()
+
+
 def charger() -> dict:
-    """Charge le modele une fois pour toutes."""
+    """Le modele en service ; relu seulement si le fichier a change."""
     if not CHEMIN_MODELE.exists():
         raise ModeleIndisponible(
             f"{CHEMIN_MODELE} introuvable. Lancer d'abord : "
             "python -m scripts.train_direction_final"
         )
-    import joblib
+    etat = CHEMIN_MODELE.stat()
+    signature = (etat.st_mtime_ns, etat.st_size)
+    if _EN_MEMOIRE["signature"] == signature:
+        return _EN_MEMOIRE["paquet"]
 
-    paquet = joblib.load(CHEMIN_MODELE)
-    logger.info("Modele charge : %s (%d variables, seuils %s)",
-                CHEMIN_MODELE.name, len(paquet["colonnes"]), paquet["styles"])
-    return paquet
+    with _VERROU:
+        if _EN_MEMOIRE["signature"] != signature:
+            import joblib
+
+            from api import metriques
+
+            paquet = joblib.load(CHEMIN_MODELE)
+            nouveau = _EN_MEMOIRE["paquet"] is not None
+            _EN_MEMOIRE.update(signature=signature, paquet=paquet)
+            metriques.signaler_modele(paquet)
+            logger.info("Modele %s : %s (%d variables, entraine le %s, seuils %s)",
+                        "RECHARGE" if nouveau else "charge", CHEMIN_MODELE.name,
+                        len(paquet["colonnes"]), paquet.get("entraine_le"), paquet["styles"])
+    return _EN_MEMOIRE["paquet"]
 
 
 def metadonnees() -> dict:
@@ -61,6 +84,7 @@ def metadonnees() -> dict:
         "styles": paquet["styles"],
         "style_le_plus_prudent": paquet.get("style_le_plus_prudent", "conservateur"),
         "entraine_le": paquet["entraine_le"],
+        "version": paquet.get("version", "initiale"),
         "extrait_sha256": paquet["extrait_sha256"],
         "accuracy_globale": paquet.get("accuracy_globale"),
         "mesures": paquet.get("mesures", {}),

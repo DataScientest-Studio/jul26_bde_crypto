@@ -197,6 +197,35 @@ def load_raw_to_mongo(symbol: str, interval: str) -> str | None:
     return f"{symbol}/{interval}"
 
 
+def upsert_candles(cur, table: str, records: list[tuple]) -> None:
+    """Ecrit des bougies (tuples dans l'ordre de CANDLE_COLUMNS).
+
+    Idempotent : une bougie deja presente est MISE A JOUR, jamais doublee.
+    C'est ce qui permet de relancer une collecte - ou de la faire tourner
+    toutes les 15 minutes - sans jamais corrompre la table. Partage par le
+    chargement initial (fichiers) et l'ingestion continue (Airflow).
+    """
+    from psycopg2.extras import execute_values
+
+    execute_values(
+        cur,
+        f"""
+        INSERT INTO {table} ({", ".join(CANDLE_COLUMNS)})
+        VALUES %s
+        ON CONFLICT (symbol, interval, open_time) DO UPDATE SET
+            close      = EXCLUDED.close,
+            high       = EXCLUDED.high,
+            low        = EXCLUDED.low,
+            volume     = EXCLUDED.volume,
+            nb_trades  = EXCLUDED.nb_trades,
+            source     = EXCLUDED.source,
+            raw_ref    = EXCLUDED.raw_ref
+        """,
+        records,
+        page_size=5000,
+    )
+
+
 def load_candles_to_postgres(conn, symbol: str, interval: str, raw_ref: str | None) -> dict:
     """Charge un fichier Parquet dans la table de faits du bon profil.
 
@@ -204,7 +233,6 @@ def load_candles_to_postgres(conn, symbol: str, interval: str, raw_ref: str | No
     doublon et met a jour les bougies deja presentes. C'est indispensable
     pour une collecte qui tournera en continu a l'etape 5.
     """
-    from psycopg2.extras import execute_values
 
     path = config.DATA_PROCESSED / f"{symbol}_{interval}.parquet"
     if not path.exists():
@@ -241,23 +269,7 @@ def load_candles_to_postgres(conn, symbol: str, interval: str, raw_ref: str | No
         )
         run_id = cur.fetchone()[0]
 
-        execute_values(
-            cur,
-            f"""
-            INSERT INTO {table} ({", ".join(CANDLE_COLUMNS)})
-            VALUES %s
-            ON CONFLICT (symbol, interval, open_time) DO UPDATE SET
-                close      = EXCLUDED.close,
-                high       = EXCLUDED.high,
-                low        = EXCLUDED.low,
-                volume     = EXCLUDED.volume,
-                nb_trades  = EXCLUDED.nb_trades,
-                source     = EXCLUDED.source,
-                raw_ref    = EXCLUDED.raw_ref
-            """,
-            records,
-            page_size=5000,
-        )
+        upsert_candles(cur, table, records)
 
         # ATTENTION : apres execute_values, cur.rowcount ne compte que le
         # DERNIER lot envoye (page_size), pas le total. Sur 70 124 lignes il

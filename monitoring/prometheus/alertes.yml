@@ -1,0 +1,118 @@
+# Regles d'alerte, ecrites comme du code : versionnees, relues, testees
+# (promtool check rules dans la CI).
+#
+# Chaque alerte repond a une question qu'on se poserait en production, et
+# porte un niveau :
+#   critique       le produit ne fonctionne plus pour l'utilisateur
+#   avertissement  il fonctionne, mais quelque chose se degrade
+#
+# "for" : l'etat doit durer avant de declencher. Un redemarrage de 30
+# secondes ne doit reveiller personne.
+
+groups:
+  - name: service
+    rules:
+      - alert: ApiInjoignable
+        expr: up{job="api"} == 0
+        for: 2m
+        labels: {niveau: critique}
+        annotations:
+          resume: "L'API ne repond plus a Prometheus"
+          detail: "Plus aucune prediction ni carnet. Voir : docker compose logs api"
+
+      - alert: ServiceWebEnPanne
+        expr: probe_success{job="sondes"} == 0
+        for: 3m
+        labels: {niveau: critique}
+        annotations:
+          resume: "{{ $labels.service }} ne repond plus correctement"
+          detail: "Sonde {{ $labels.instance }} en echec depuis 3 minutes"
+
+      - alert: ErreursServeur
+        expr: |
+          sum(rate(http_requests_total{job="api", status="5xx"}[10m]))
+            / clamp_min(sum(rate(http_requests_total{job="api"}[10m])), 0.001) > 0.05
+        for: 10m
+        labels: {niveau: avertissement}
+        annotations:
+          resume: "Plus de 5 % d'erreurs 5xx sur l'API"
+          detail: "Souvent Binance ou une base indisponible : voir le panneau des erreurs de sources"
+
+      - alert: ApiLente
+        expr: |
+          histogram_quantile(0.95, sum by (le) (
+            rate(http_request_duration_seconds_bucket{job="api", handler!~"/metrics|/health"}[10m]))) > 10
+        for: 15m
+        labels: {niveau: avertissement}
+        annotations:
+          resume: "Appels lents : 5 % des reponses de l'API depassent {{ $value | humanizeDuration }}"
+
+      - alert: RefusDeCleEnRafale
+        expr: sum(rate(cryptobot_appels_refuses_total{raison=~"cle_.*"}[5m])) * 60 > 30
+        for: 5m
+        labels: {niveau: avertissement}
+        annotations:
+          resume: "Plus de 30 appels par minute refuses pour cle invalide"
+          detail: "Client mal configure, ou quelqu'un qui essaie des cles"
+
+  - name: donnees
+    rules:
+      - alert: DonneesEnRetard
+        # Seuil : trois intervalles de retard, plus la marge du passage
+        # d'Airflow (15 minutes).
+        expr: |
+          cryptobot_donnees_retard_secondes{interval="15m"} > 3 * 900 + 900
+            or cryptobot_donnees_retard_secondes{interval="1h"} > 3 * 3600 + 900
+            or cryptobot_donnees_retard_secondes{interval="4h"} > 3 * 14400 + 900
+        for: 10m
+        labels: {niveau: critique}
+        annotations:
+          resume: "{{ $labels.symbol }} {{ $labels.interval }} : plus de bougie depuis {{ $value | humanizeDuration }}"
+          detail: "La collecte ne suit plus. Voir le DAG cryptobot_collecte dans Airflow"
+
+      - alert: ControleQualiteEnEchec
+        expr: cryptobot_controle_qualite_statut == 2
+        for: 5m
+        labels: {niveau: avertissement}
+        annotations:
+          resume: "Controle qualite en echec : {{ $labels.symbol }} {{ $labels.interval }}"
+
+      - alert: BaseIlisiblePourLaSupervision
+        expr: cryptobot_base_joignable == 0
+        for: 5m
+        labels: {niveau: critique}
+        annotations:
+          resume: "L'exportateur ne peut plus lire PostgreSQL"
+
+  - name: bot_et_modele
+    rules:
+      - alert: BotArrete
+        expr: min(cryptobot_bot_dernier_tour_age_secondes) > 45 * 60
+        for: 5m
+        labels: {niveau: critique}
+        annotations:
+          resume: "Le bot n'a fait aucun tour de carnet depuis {{ $value | humanizeDuration }}"
+          detail: "Verifier la tache faire_tourner_le_bot du DAG cryptobot_collecte"
+
+      - alert: DeriveForteGeneralisee
+        expr: count(cryptobot_derive_variables_fortes > 0) >= 8
+        for: 1h
+        labels: {niveau: avertissement}
+        annotations:
+          resume: "{{ $value }} groupes sur 15 en derive forte"
+          detail: "Le DAG cryptobot_derive declenche normalement un reentrainement"
+
+      - alert: DeriveNonMesuree
+        expr: time() - cryptobot_derive_mesuree_timestamp_seconds > 2 * 86400
+        for: 1h
+        labels: {niveau: avertissement}
+        annotations:
+          resume: "Aucune mesure de derive depuis plus de 2 jours"
+
+      - alert: ModeleJamaisReentraine
+        # Le dimanche tombe tous les 7 jours : au-dela de 9, un duel a ete manque.
+        expr: time() - cryptobot_reentrainement_dernier_timestamp_seconds > 9 * 86400
+        for: 1h
+        labels: {niveau: avertissement}
+        annotations:
+          resume: "Aucun duel champion / challenger depuis plus de 9 jours"

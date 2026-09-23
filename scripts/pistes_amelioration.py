@@ -50,7 +50,7 @@ from sklearn.preprocessing import StandardScaler
 
 from src import config
 from src.features import colonnes_explicatives
-from scripts.direction_prochaine_bougie import FRAIS_ALLER_RETOUR, preparer_depuis
+from scripts.direction_prochaine_bougie import preparer_depuis
 from scripts.profils_de_risque import mesurer, wilson
 
 warnings.filterwarnings("ignore")

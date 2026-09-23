@@ -15,14 +15,23 @@
                             celles dont une barriere est touchee, ouvre si le
                             modele donne un signal, et rend le bilan
 
-SECURITE
-    Si la variable d'environnement CRYPTOBOT_API_KEY est definie, toutes les
-    routes sauf / et /health exigent l'en-tete `X-API-Key`. Sans cette
-    variable, l'API reste ouverte : pratique en developpement, a ne pas faire
-    sur un serveur accessible.
+    GET  /metrics           metriques Prometheus (reseau Docker interne seulement)
 
-Lancement :
-    uvicorn api.main:app --reload
+SECURITE (detail dans api/securite.py)
+    - toutes les routes sauf /, /health et /docs exigent l'en-tete X-API-Key ;
+    - une cle par client (interface, airflow), comparee en temps constant ;
+    - fermee par defaut : sans cle configuree, les routes protegees repondent
+      503 plutot que de s'ouvrir ;
+    - paires, pas de temps et styles valides par liste blanche AVANT tout
+      appel a Binance ou a la base ;
+    - l'API n'est pas publiee sur la machine : seul le proxy nginx de
+      l'interface (qui injecte la cle) et Airflow la joignent.
+
+L'interface graphique n'est plus servie ici : elle vit dans son propre
+conteneur (interface/), derriere nginx.
+
+Lancement en developpement, sans cle :
+    CRYPTOBOT_ACCES_LIBRE=1 uvicorn api.main:app --reload
     http://localhost:8000/docs  (documentation interactive, generee seule)
 """
 from __future__ import annotations
@@ -35,22 +44,20 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import pandas as pd
-from fastapi import Depends, FastAPI, Header, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
 
 from api import derive as module_derive
-from api import donnees, modele, ordre as module_ordre
+from api import donnees, metriques, modele, ordre as module_ordre
 from api import positions as module_positions
-from api.schemas import DemandeDePrediction, Derive, Prediction, Sante
+from api.schemas import INTERVALLES, STYLES, DemandeDePrediction, Derive, Prediction, Sante
+from api.securite import verifier_cle
+from src import config
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("api")
 
-VERSION = "1.0.0"
-# `or None` : docker-compose transmet une variable VIDE quand elle n'est pas
-# definie. Sans cela, l'API exigerait une cle egale a "" et refuserait tout.
-CLE_ATTENDUE = os.getenv("CRYPTOBOT_API_KEY") or None
+VERSION = "1.1.0"
 
 app = FastAPI(
     title="CryptoBot",
@@ -62,27 +69,49 @@ app = FastAPI(
         "(environ 57 % de bonnes reponses) et n'est PAS rentable une fois les "
         "frais deduits : il est fourni a titre pedagogique."
     ),
+    # Derriere nginx, l'API est publiee sous /api : la documentation /docs
+    # doit alors chercher /api/openapi.json. Les appels directs (Airflow,
+    # Prometheus, tests) continuent de fonctionner sans le prefixe.
+    root_path=os.getenv("CRYPTOBOT_PREFIXE", ""),
 )
 
 
-# L'interface fournie est servie par l'API elle-meme : meme origine, donc pas
-# besoin de CORS pour elle. On l'ouvre quand meme pour qu'un front-end separe
-# (un projet React sur un autre port, par exemple) puisse appeler l'API sans
-# etre bloque par le navigateur. Acceptable ici : l'API n'ecoute qu'en local.
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["GET", "POST"],
-    allow_headers=["*"],
-)
+# Aucune origine autorisee par defaut : l'interface passe par le meme nginx
+# que l'API, elle n'a donc pas besoin de CORS. Un front-end sur un autre
+# domaine devra etre declare explicitement, jamais "*".
+_ORIGINES = [o.strip() for o in os.getenv("CRYPTOBOT_ORIGINES", "").split(",") if o.strip()]
+if _ORIGINES:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=_ORIGINES,
+        allow_methods=["GET", "POST"],
+        allow_headers=["X-API-Key", "Content-Type"],
+    )
 
 
-def verifier_cle(x_api_key: str | None = Header(default=None)) -> None:
-    """Controle la cle d'API quand une cle est configuree."""
-    if CLE_ATTENDUE is None:
-        return
-    if x_api_key != CLE_ATTENDUE:
-        raise HTTPException(status_code=401, detail="cle d'API absente ou invalide")
+# Metriques HTTP generiques (appels, durees, erreurs par route) pour
+# Prometheus. La route /metrics n'est pas documentee : elle n'est pas faite
+# pour les humains, et nginx ne la transmet pas.
+try:
+    from prometheus_fastapi_instrumentator import Instrumentator
+
+    Instrumentator(excluded_handlers=["/metrics", "/health"]).instrument(app).expose(
+        app, endpoint="/metrics", include_in_schema=False)
+except ImportError:                                    # pragma: no cover
+    logger.warning("prometheus-fastapi-instrumentator absent : pas de /metrics")
+
+
+def paire_connue(symbole: str) -> str:
+    """Liste blanche : une paire inconnue ne declenche aucun appel a Binance.
+
+    Sans ce controle, n'importe quelle chaine partait dans une URL Binance et
+    consommait notre quota de requetes.
+    """
+    symbole = symbole.upper()
+    if symbole not in config.PAIRS:
+        raise HTTPException(status_code=404,
+                            detail=f"paire inconnue : {symbole} (disponibles : {', '.join(config.PAIRS)})")
+    return symbole
 
 
 @app.get("/", tags=["general"])
@@ -126,10 +155,10 @@ def paires() -> dict:
 
 
 @app.get("/bougies/{symbole}", tags=["donnees"], dependencies=[Depends(verifier_cle)])
-def bougies(symbole: str, interval: str = Query("1h"),
+def bougies(symbole: str = Depends(paire_connue), interval: INTERVALLES = Query("1h"),
             limite: int = Query(100, ge=1, le=1000)) -> dict:
     try:
-        toutes = donnees.dernieres_bougies(symbole.upper(), par_intervalle=limite)
+        toutes = donnees.dernieres_bougies(symbole, par_intervalle=limite)
     except Exception as exc:
         raise HTTPException(status_code=503, detail=f"base indisponible ({type(exc).__name__})")
 
@@ -155,7 +184,7 @@ def couverture() -> dict:
           dependencies=[Depends(verifier_cle)])
 def prediction(demande: DemandeDePrediction) -> Prediction:
     """Predit le sens de la prochaine bougie a partir des donnees EN BASE."""
-    symbole = demande.symbole.upper()
+    symbole = paire_connue(demande.symbole)
     try:
         bougies_recentes = donnees.dernieres_bougies(symbole,
                                                      par_intervalle=modele.BOUGIES_MINIMUM * 2)
@@ -173,12 +202,14 @@ def prediction(demande: DemandeDePrediction) -> Prediction:
         raise HTTPException(status_code=422, detail=str(exc))
 
     donnees.journaliser_prediction(resultat)
+    metriques.DECISIONS.labels(demande.interval, demande.style, resultat["decision"]).inc()
+    metriques.PROBABILITE_HAUSSE.observe(resultat["probabilite_hausse"])
     return Prediction(**resultat)
 
 
 @app.get("/graphique/{symbole}", tags=["interface"], dependencies=[Depends(verifier_cle)])
-def graphique(symbole: str, interval: str = Query("15m"), limite: int = Query(120, ge=20, le=3000),
-              style: str = Query("conservateur"),
+def graphique(symbole: str = Depends(paire_connue), interval: INTERVALLES = Query("15m"),
+              limite: int = Query(120, ge=20, le=3000), style: STYLES = Query("conservateur"),
               source: str = Query("binance", pattern="^(binance|base)$")) -> dict:
     """Les dernieres bougies AVEC la decision du modele pour chacune.
 
@@ -190,7 +221,6 @@ def graphique(symbole: str, interval: str = Query("15m"), limite: int = Query(12
     puisqu'elle n'est alimentee que lorsqu'on lance la collecte) ;
     `source=base` lit les bougies stockees.
     """
-    symbole = symbole.upper()
     # Large marge : les indicateurs ont besoin de 100 bougies d'historique
     # avant la premiere que l'on affiche.
     profondeur = limite + modele.BOUGIES_MINIMUM * 2
@@ -200,6 +230,7 @@ def graphique(symbole: str, interval: str = Query("15m"), limite: int = Query(12
                   else donnees.dernieres_bougies(symbole, par_intervalle=profondeur))
     except Exception as exc:
         origine = "Binance" if source == "binance" else "base"
+        metriques.ERREURS_SOURCES.labels(source=origine.lower()).inc()
         raise HTTPException(status_code=503, detail=f"{origine} indisponible ({type(exc).__name__})")
 
     # La bougie en cours est mise de cote : le modele ne predit QUE sur des
@@ -236,7 +267,8 @@ def graphique(symbole: str, interval: str = Query("15m"), limite: int = Query(12
 
 
 @app.get("/ordre/{symbole}", tags=["interface"], dependencies=[Depends(verifier_cle)])
-def ordre(symbole: str, interval: str = Query("1h"), style: str = Query("conservateur"),
+def ordre(symbole: str = Depends(paire_connue), interval: INTERVALLES = Query("1h"),
+          style: STYLES = Query("conservateur"),
           source: str = Query("binance", pattern="^(binance|base)$")) -> dict:
     """L'ordre projete a cet instant : niveaux, echeance et pronostic.
 
@@ -244,13 +276,13 @@ def ordre(symbole: str, interval: str = Query("1h"), style: str = Query("conserv
     de l'etape 3, entraine sur les trois barrieres, dit si le take profit ou le
     stop loss serait touche en premier.
     """
-    symbole = symbole.upper()
     profondeur = modele.BOUGIES_MINIMUM * 2
     try:
         bougies_recentes = (donnees.bougies_binance(symbole, profondeur) if source == "binance"
                             else donnees.dernieres_bougies(symbole, par_intervalle=profondeur))
     except Exception as exc:
         origine = "Binance" if source == "binance" else "base"
+        metriques.ERREURS_SOURCES.labels(source=origine.lower()).inc()
         raise HTTPException(status_code=503, detail=f"{origine} indisponible ({type(exc).__name__})")
 
     try:
@@ -265,7 +297,8 @@ def ordre(symbole: str, interval: str = Query("1h"), style: str = Query("conserv
 
 
 @app.post("/positions/{symbole}", tags=["interface"], dependencies=[Depends(verifier_cle)])
-def positions(symbole: str, interval: str = Query("1h"), style: str = Query("conservateur"),
+def positions(symbole: str = Depends(paire_connue), interval: INTERVALLES = Query("1h"),
+              style: STYLES = Query("conservateur"),
               source: str = Query("binance", pattern="^(binance|base)$")) -> dict:
     """Fait vivre le carnet de positions virtuelles, puis en rend l'etat.
 
@@ -274,7 +307,6 @@ def positions(symbole: str, interval: str = Query("1h"), style: str = Query("con
     l'etape 3 - sinon les resultats seraient flattes par des trades qui se
     recouvrent.
     """
-    symbole = symbole.upper()
 
     # Bougies manquees pendant que personne ne regardait (page fermee, Docker
     # arrete) : on les rejoue AVANT le suivi normal, sinon le carnet aurait
@@ -292,6 +324,7 @@ def positions(symbole: str, interval: str = Query("1h"), style: str = Query("con
             rattrapage = module_positions.rattraper(
                 historique, symbole, interval, style,
                 float(barrieres["largeur_barrieres"]), int(barrieres["horizon"]))
+            metriques.POSITIONS_RATTRAPEES.inc(rattrapage["positions_ajoutees"])
     except Exception as exc:
         logger.warning("Rattrapage du carnet impossible (%s) : %s", type(exc).__name__, exc)
 
@@ -302,6 +335,7 @@ def positions(symbole: str, interval: str = Query("1h"), style: str = Query("con
                   else donnees.dernieres_bougies(symbole, par_intervalle=profondeur))
     except Exception as exc:
         origine = "Binance" if source == "binance" else "base"
+        metriques.ERREURS_SOURCES.labels(source=origine.lower()).inc()
         raise HTTPException(status_code=503, detail=f"{origine} indisponible ({type(exc).__name__})")
 
     maintenant = pd.Timestamp.now(tz="UTC")
@@ -314,6 +348,8 @@ def positions(symbole: str, interval: str = Query("1h"), style: str = Query("con
         projection = module_ordre.projeter(cloturees, symbole, interval, decision["sens"])
         mouvement = module_positions.synchroniser(cloturees, symbole, interval, style,
                                                   decision, projection)
+        metriques.DECISIONS.labels(interval, style, decision["decision"]).inc()
+        metriques.PROBABILITE_HAUSSE.observe(decision["probabilite_hausse"])
         etat = module_positions.etat(symbole, interval, style, prix_actuel)
     except (modele.ModeleIndisponible, module_ordre.ModeleBarrieresIndisponible) as exc:
         raise HTTPException(status_code=503, detail=str(exc))
@@ -326,41 +362,9 @@ def positions(symbole: str, interval: str = Query("1h"), style: str = Query("con
             "mouvement": mouvement, "rattrapage": rattrapage, **etat}
 
 
-@app.get("/static/{fichier}", tags=["interface"])
-def fichier_statique(fichier: str):
-    """Sert la bibliotheque de graphiques, installee localement.
-
-    Elle est livree avec le projet plutot que chargee depuis un site
-    exterieur : l'interface fonctionne alors sans acces reseau, et la version
-    ne peut pas changer dans notre dos.
-    """
-    from fastapi.responses import FileResponse
-
-    chemin = (Path(__file__).parent / "static" / fichier).resolve()
-    dossier = (Path(__file__).parent / "static").resolve()
-    # Sans ce controle, un nom de fichier comme ../../.env sortirait du dossier.
-    if dossier not in chemin.parents or not chemin.is_file():
-        raise HTTPException(status_code=404, detail="fichier inconnu")
-    return FileResponse(chemin, media_type="application/javascript")
-
-
-@app.get("/interface", response_class=HTMLResponse, tags=["interface"])
-def interface() -> HTMLResponse:
-    """Page de demonstration, servie par l'API elle-meme.
-
-    Meme origine que les routes qu'elle appelle : rien a configurer, rien a
-    lancer en plus. Elle n'est pas protegee par la cle d'API - c'est la page
-    qui demande la cle a l'utilisateur si l'API en exige une.
-    """
-    # no-store : sans cela, le navigateur garde l'ancienne page et l'utilisateur
-    # ne voit pas les modifications apres un simple rafraichissement.
-    return HTMLResponse((Path(__file__).parent / "interface.html").read_text(encoding="utf-8"),
-                        headers={"Cache-Control": "no-store"})
-
-
 @app.get("/derive", response_model=Derive, tags=["surveillance"],
          dependencies=[Depends(verifier_cle)])
-def derive(symbole: str = Query("BTCUSDT"), interval: str = Query("1h"),
+def derive(symbole: str = Query("BTCUSDT"), interval: INTERVALLES = Query("1h"),
            jours: int = Query(90, ge=7, le=365)) -> Derive:
     """Les donnees recentes ressemblent-elles a celles de l'entrainement ?
 
@@ -374,6 +378,7 @@ def derive(symbole: str = Query("BTCUSDT"), interval: str = Query("1h"),
     from src.preprocessing import INTERVAL_SECONDS
     from src.features import FAMILLES, ajouter_contexte_lent, construire_groupes
 
+    symbole = paire_connue(symbole)
     bougies = min(int(jours * 86400 / INTERVAL_SECONDS[interval]), 15_000)
     try:
         recentes = donnees.dernieres_bougies(symbole.upper(), par_intervalle=bougies)

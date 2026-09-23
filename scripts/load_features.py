@@ -21,6 +21,7 @@ Usage :
     python -m scripts.load_features --contexte            # avec les pas de temps lents
     python -m scripts.load_features --profils swing
     python -m scripts.load_features --etat                # ce qui est deja en base
+    python -m scripts.load_features --contexte --jours 2  # incremental (Airflow)
 
 Volume : compter environ 1 Go pour le scalping (1,6 M de bougies). Le
 day trading, cible actuelle du projet, tient dans ~300 Mo.
@@ -28,7 +29,6 @@ day trading, cible actuelle du projet, tient dans ~300 Mo.
 from __future__ import annotations
 
 import argparse
-import json
 import logging
 import sys
 import time
@@ -87,13 +87,25 @@ def enregistrer_configuration(config_ref: str, contexte: bool, colonnes: list[st
     log.info("MongoDB  feature_configs/%s : %d variables", config_ref, len(colonnes))
 
 
-def lire_bougies(conn, profil: str, pairs: list[str] | None) -> pd.DataFrame:
-    """Charge les bougies du profil depuis sa vue."""
+# Mode incremental : les indicateurs ont besoin d'historique avant la
+# premiere bougie calculee. La plus longue fenetre est la moyenne mobile 100
+# en 4h (17 jours), plus le contexte lent : 30 jours couvrent large.
+JOURS_DE_CHAUFFE = 30
+
+
+def lire_bougies(conn, profil: str, pairs: list[str] | None,
+                 depuis: pd.Timestamp | None = None) -> pd.DataFrame:
+    """Charge les bougies du profil depuis sa vue (toutes, ou depuis une date)."""
     requete = f"SELECT {', '.join(COLONNES_BOUGIES)} FROM {VUES[profil]}"
-    parametres: list = []
+    conditions, parametres = [], []
     if pairs:
-        requete += " WHERE symbol = ANY(%s)"
+        conditions.append("symbol = ANY(%s)")
         parametres.append(pairs)
+    if depuis is not None:
+        conditions.append("open_time >= %s")
+        parametres.append(depuis.to_pydatetime())
+    if conditions:
+        requete += " WHERE " + " AND ".join(conditions)
     requete += " ORDER BY symbol, interval, open_time"
 
     df = pd.read_sql(requete, conn, params=parametres or None)
@@ -174,6 +186,8 @@ def main():
                         help="Ajouter l'etat des pas de temps plus lents")
     parser.add_argument("--etat", action="store_true",
                         help="Afficher ce qui est deja en base et sortir")
+    parser.add_argument("--jours", type=int, default=None,
+                        help="Incremental : ne recalculer que les N derniers jours")
     args = parser.parse_args()
 
     config_ref = identifiant(args.contexte)
@@ -185,12 +199,20 @@ def main():
             return
 
         for profil in args.profils:
-            brut = lire_bougies(conn, profil, args.pairs)
+            depuis = debut_ecriture = None
+            if args.jours:
+                debut_ecriture = pd.Timestamp.now(tz="UTC") - pd.Timedelta(days=args.jours)
+                depuis = debut_ecriture - pd.Timedelta(days=JOURS_DE_CHAUFFE)
+            brut = lire_bougies(conn, profil, args.pairs, depuis)
             if brut.empty:
                 log.warning("%s : aucune bougie, rien a calculer", profil)
                 continue
 
             variables = calculer(brut, args.contexte)
+            if debut_ecriture is not None:
+                # Les jours de chauffe ont servi au calcul ; seuls les
+                # derniers jours sont reecrits.
+                variables = variables[variables["open_time"] >= debut_ecriture]
             colonnes = [c for c in variables.columns
                         if c not in ("symbol", "interval", "open_time")]
 
