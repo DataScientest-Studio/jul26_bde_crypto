@@ -12,6 +12,7 @@
 #    supervision   prometheus, grafana, blackbox,         la surveillance
 #                  exportateur
 #    outils        pgadmin, mongo-express                 pour regarder les bases
+#    deploiement   watchtower                             deploiement continu (CD)
 #
 #  Adresses (toutes limitees a cette machine, 127.0.0.1) :
 #    interface  http://localhost:8080          documentation API : /api/docs
@@ -45,12 +46,16 @@ x-image-api: &image-api
   # Meme nom que l'image publiee par la CI : `docker compose pull` recupere
   # la version construite et testee sur GitHub au lieu de la reconstruire.
   image: ${CRYPTOBOT_REGISTRE:-ghcr.io/datascientest-studio/jul26_bde_crypto}/api:${CRYPTOBOT_VERSION:-latest}
+  labels: &deploiement-continu
+    # Watchtower remplace ce conteneur quand la CI publie une nouvelle image.
+    com.centurylinklabs.watchtower.enable: "true"
 
 x-airflow: &airflow
   build:
     context: .
     dockerfile: airflow/Dockerfile
   image: ${CRYPTOBOT_REGISTRE:-ghcr.io/datascientest-studio/jul26_bde_crypto}/airflow:${CRYPTOBOT_VERSION:-latest}
+  labels: *deploiement-continu
   profiles: [pipeline]
   restart: unless-stopped
   user: "50000:0"
@@ -173,6 +178,7 @@ services:
     build:
       context: ./interface
     image: ${CRYPTOBOT_REGISTRE:-ghcr.io/datascientest-studio/jul26_bde_crypto}/interface:${CRYPTOBOT_VERSION:-latest}
+    labels: *deploiement-continu
     container_name: crypto_interface
     restart: unless-stopped
     environment:
@@ -378,6 +384,48 @@ services:
     depends_on: [prometheus]
     # donnees : Grafana lit aussi PostgreSQL, avec un compte en lecture seule.
     networks: [services, donnees]
+
+  # ===========================================================================
+  #  Deploiement continu (profil "deploiement")
+  #
+  #  La CI publie une image seulement si tous les controles sont verts.
+  #  Watchtower regarde le registre toutes les 5 minutes et, si une image
+  #  etiquetee a change, remplace le conteneur par la nouvelle version, puis
+  #  supprime l'ancienne image. Chaine complete :
+  #      git push -> CI verte -> image publiee -> Watchtower -> en service
+  #
+  #  Mode "pull" : c'est la machine qui va chercher les mises a jour. Rien a
+  #  ouvrir vers l'exterieur, et GitHub n'execute jamais de code ici (le depot
+  #  est public : un runner GitHub sur ce PC pourrait executer le code d'un
+  #  fork).
+  #
+  #  Attention en developpement : une image construite localement
+  #  (docker compose up --build) est remplacee par celle du registre au
+  #  passage suivant. Pour tester du code local, retirer "deploiement" de
+  #  COMPOSE_PROFILES le temps du test.
+  # ===========================================================================
+
+  watchtower:
+    # Fork maintenu : le projet d'origine (containrrr/watchtower) est archive.
+    image: nickfedor/watchtower:1.22.3
+    container_name: crypto_watchtower
+    profiles: [deploiement]
+    restart: unless-stopped
+    environment:
+      # Seuls les conteneurs etiquetes (api, interface, exportateur, airflow)
+      # sont mis a jour : jamais les bases de donnees.
+      WATCHTOWER_LABEL_ENABLE: "true"
+      WATCHTOWER_POLL_INTERVAL: "300"
+      WATCHTOWER_CLEANUP: "true"
+      # Images privees : un jeton GitHub en lecture seule (read:packages).
+      # Vides si les images sont publiques.
+      REPO_USER: ${GHCR_UTILISATEUR:-}
+      REPO_PASS: ${GHCR_JETON:-}
+      TZ: UTC
+    volumes:
+      # Acces au moteur Docker : c'est ce qui lui permet de remplacer des
+      # conteneurs. Droit puissant, reserve a un outil connu et epingle.
+      - /var/run/docker.sock:/var/run/docker.sock
 
   # ===========================================================================
   #  Outils d'exploration (profil "outils")

@@ -612,6 +612,8 @@ function marqueursDesTrades(carnet, serie) {
         color: gagnant ? COULEURS.hausse : COULEURS.baisse,
         shape: "circle",
         text: `${trade.statut} ${pourcent(trade.rendement_net_pct ?? 0, true)}`,
+        // Le gain net reste affiche quoi qu'il arrive : c'est ce qu'on juge.
+        gain: pourcent(trade.rendement_net_pct ?? 0, true),
       });
     }
   });
@@ -621,10 +623,11 @@ function marqueursDesTrades(carnet, serie) {
     if (entree >= debut) marques.push(ouverture(position.sens, entree));
   });
 
-  // Au-dela d'une trentaine de marqueurs, les textes se chevauchent et le
-  // graphique devient illisible : on ne garde alors que les fleches et les
-  // points, le detail restant lisible dans la liste de droite.
-  if (marques.length > 30) marques.forEach((m) => { m.text = ""; });
+  // Au-dela d'une trentaine de marqueurs, les textes se chevauchent : on
+  // retire les mots ("achat", "take profit"...) mais chaque point de
+  // fermeture garde son pourcentage, pour juger chaque trade d'un coup d'oeil.
+  if (marques.length > 30) marques.forEach((m) => { m.text = m.gain || ""; });
+  marques.forEach((m) => { delete m.gain; });
 
   // La bibliotheque exige des marqueurs tries dans le temps.
   return marques.sort((a, b) => a.time - b.time);
