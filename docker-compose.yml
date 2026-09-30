@@ -403,6 +403,14 @@ services:
   #  (docker compose up --build) est remplacee par celle du registre au
   #  passage suivant. Pour tester du code local, retirer "deploiement" de
   #  COMPOSE_PROFILES le temps du test.
+  #
+  #  Piege constate le 30/09 : une image construite par compose porte les
+  #  etiquettes com.docker.compose.project et .service. En la remplacant par
+  #  l'image de la CI, Watchtower retire ces etiquettes du conteneur, et
+  #  `docker compose` ne le reconnait plus ("service is not running"). Sur
+  #  une machine de production, on ne construit donc jamais : on part des
+  #  images de la CI (docker compose pull && docker compose up -d). Si c'est
+  #  arrive : supprimer le conteneur concerne, puis docker compose up -d.
   # ===========================================================================
 
   watchtower:
