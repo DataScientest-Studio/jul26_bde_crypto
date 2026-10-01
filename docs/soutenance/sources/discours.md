@@ -8,37 +8,39 @@ sommaire: 2
 
 ## Déroulé
 
-Deux présentateurs, deux blocs. A porte les données et le machine learning (étapes 1 à 3), B porte le déploiement et l'automatisation (étapes 4 et 5) avec la démonstration. Le bilan revient à B, qui vient de montrer le système en marche ; A conclut et ouvre les questions. Les durées sont indicatives : la démonstration est le seul bloc à tenir à la seconde.
+Deux présentateurs : Ulrich et Célian. Les passages de parole suivent les sujets que chacun maîtrise le mieux : Ulrich porte la collecte, les bases, la fiabilité du service et la chaîne de livraison ; Célian porte l'architecture, le machine learning, l'API, la démonstration, l'automatisation et la conclusion. Chaque changement de présentateur est annoncé dans la transition qui le précède. Les durées sont indicatives : la démonstration est le seul bloc à tenir à la seconde.
 
 | Slide | Sujet | Durée | Présentateur |
 |---|---|---|---|
-| 1 | Titre | 0 min 30 | A |
-| 2 | Le projet | 1 min 00 | A |
-| 3 | Architecture globale | 1 min 30 | A |
-| 4 | Étape 1 : collecter les données | 1 min 15 | A |
-| 5 | Étape 2 : la bonne base pour la bonne forme | 1 min 30 | A |
-| 6 | Étape 3 : apprendre sans tricher | 2 min 00 | A |
-| 7 | Le résultat, sans l'enjoliver | 1 min 30 | A |
-| 8 | Étape 4 : du notebook au service protégé | 1 min 30 | B |
-| 9 | Étape 4 : ce qui fait tenir le service | 1 min 15 | B |
-| 10 | Démonstration en direct | 3 min 00 | B |
-| 11 | Étape 5 : tourner seul, remplacer avec preuve | 1 min 30 | B |
-| 12 | Étape 5 : du commit à la supervision | 1 min 30 | B |
-| 13 | Bilan | 1 min 30 | B |
-| 14 | Merci, questions | 0 min 30 | A |
-| | Total | 20 min 00 | A : 9 min 45, B : 10 min 15 |
+| 1 | Titre | 0 min 30 | Ulrich |
+| 2 | Le projet | 1 min 00 | Ulrich |
+| 3 | Architecture globale | 1 min 30 | Célian |
+| 4 | Étape 1 : collecter les données | 1 min 15 | Ulrich |
+| 5 | Étape 2 : la bonne base pour la bonne forme | 1 min 30 | Ulrich |
+| 6 | Étape 3 : apprendre sans tricher | 2 min 00 | Célian |
+| 7 | Le résultat, sans l'enjoliver | 1 min 30 | Célian |
+| 8 | Étape 4 : du notebook au service protégé | 1 min 30 | Célian |
+| 9 | Étape 4 : ce qui fait tenir le service | 1 min 15 | Ulrich |
+| 10 | Démonstration en direct | 3 min 00 | Célian |
+| 11 | Étape 5 : tourner seul, remplacer avec preuve | 1 min 30 | Célian |
+| 12 | Étape 5 : du commit à la supervision | 1 min 30 | Ulrich |
+| 13 | Bilan | 1 min 30 | Célian |
+| 14 | Merci, questions | 0 min 30 | Célian |
+| | Total | 20 min 00 | Ulrich : 7 min 00, Célian : 13 min 00 |
 
-Repères de temps : A doit passer la main vers 9 min 45. Si la démonstration commence après 12 min 30, raccourcir les slides 11 et 12 à une minute chacune.
+Sept passages de parole : après les slides 2, 3, 5, 8, 9, 11 et 12. Pour qu'ils restent fluides, celui qui finit annonce le suivant par son prénom, et celui qui reprend enchaîne sans nouvelle introduction. Celui qui ne parle pas pilote l'ordinateur : il change de slide et prépare les onglets de la démonstration.
+
+Repères de temps : la démonstration doit commencer vers 12 min 00. Si elle commence après 12 min 45, raccourcir les slides 11 et 12 à une minute chacune.
 
 ## Slide 1 : CryptoBot
 
 ### À dire
 
-Bonjour. Nous allons vous présenter CryptoBot, notre projet de fin de cursus Data Engineer. C'est un bot de trading sur des cryptomonnaies, piloté par un modèle de machine learning. Nous l'avons construit en cinq étapes, de la collecte des données jusqu'à l'automatisation complète. Nous allons nous partager la parole : je présente la partie données et machine learning, puis mon binôme présente l'API, le déploiement, l'automatisation, et vous fera une démonstration en direct. Tout au long de la présentation, nous allons surtout vous expliquer pourquoi nous avons fait chaque choix, et ce que nous avons appris quand un choix s'est révélé faux.
+Bonjour. Nous allons vous présenter CryptoBot, notre projet de fin de cursus Data Engineer. C'est un bot de trading sur des cryptomonnaies, piloté par un modèle de machine learning. Nous l'avons construit en cinq étapes, de la collecte des données jusqu'à l'automatisation complète. Nous allons nous partager la parole selon les sujets : je vous présenterai la collecte, les bases de données, la fiabilité du service et la chaîne de livraison ; Célian vous présentera l'architecture, le modèle, l'API, l'automatisation, et vous fera une démonstration en direct. Tout au long de la présentation, nous allons surtout vous expliquer pourquoi nous avons fait chaque choix, et ce que nous avons appris quand un choix s'est révélé faux.
 
 ### Pourquoi ce choix
 
-- Annoncer le découpage A puis B : le jury sait qui répondra à quoi (plutôt qu'alterner à chaque slide).
+- Annoncer qui porte quoi : le jury sait à qui adresser ses questions, et les passages de parole ne surprennent pas.
 - Annoncer d'emblée qu'on parlera des erreurs : cela prépare la slide 7, qui montre un modèle non rentable.
 
 ### Transition
@@ -59,7 +61,7 @@ Le point de départ est une question simple. Sur cinq paires de Binance, la proc
 
 ### Transition
 
-Avant de détailler chaque étape, voici comment tout s'assemble.
+Avant de détailler chaque étape, Célian va vous montrer comment tout s'assemble.
 
 ## Slide 3 : Architecture globale
 
@@ -75,7 +77,7 @@ Ce schéma se lit en trois bandes. En haut, la livraison du code : de GitHub jus
 
 ### Transition
 
-Remontons au début de la chaîne : d'où viennent les données.
+Remontons au début de la chaîne, d'où viennent les données : je laisse la parole à Ulrich.
 
 ## Slide 4 : Collecter les données
 
@@ -109,7 +111,7 @@ Notre premier réflexe a été de dimensionner. Deux millions de bougies, 132 m�
 
 ### Transition
 
-Avec des données propres et traçables, nous pouvons entraîner un modèle, à condition de ne pas tricher avec le temps.
+Avec des données propres et traçables, nous pouvons entraîner un modèle, à condition de ne pas tricher avec le temps. Célian va vous expliquer comment.
 
 ## Slide 6 : Apprendre sans tricher
 
@@ -143,7 +145,7 @@ Nous nous étions fixé un objectif : 60 % de bonnes réponses sur les bougies o
 
 ### Transition
 
-Ce modèle, il faut maintenant le sortir du notebook. Je laisse la parole à mon binôme pour le déploiement.
+Ce modèle, il faut maintenant le sortir du notebook pour le servir.
 
 ## Slide 8 : Du notebook au service protégé
 
@@ -160,7 +162,7 @@ Pour servir le modèle, nous avons écrit une API avec FastAPI. Le modèle y est
 
 ### Transition
 
-Une API protégée doit aussi tenir dans la durée : voici ce qui la rend fiable.
+Une API protégée doit aussi tenir dans la durée : Ulrich va vous montrer ce qui la rend fiable.
 
 ## Slide 9 : Ce qui fait tenir le service
 
@@ -177,7 +179,7 @@ Trois choses font tenir le service. D'abord les tests : 149 tests unitaires, qui
 
 ### Transition
 
-Plutôt que de le décrire, voyons le service tourner.
+Plutôt que de le décrire, voyons le service tourner : Célian vous fait la démonstration.
 
 ## Slide 10 : Démonstration en direct
 
@@ -231,7 +233,7 @@ L'étape 5 demande que l'application tourne sans que personne ne lance de comman
 
 ### Transition
 
-Reste à faire évoluer le code lui-même, et à savoir quand quelque chose casse.
+Reste à faire évoluer le code lui-même, et à savoir quand quelque chose casse : c'est la partie d'Ulrich.
 
 ## Slide 12 : Du commit à la supervision
 
@@ -252,7 +254,7 @@ Onglet Grafana, tableau « CryptoBot, production ». Montrer de haut en bas : l'
 
 ### Transition
 
-Pour finir, ce que nous retenons de ce projet.
+Pour finir, Célian va vous dire ce que nous retenons de ce projet.
 
 ## Slide 13 : Un système complet, une stratégie à améliorer
 
@@ -268,13 +270,13 @@ Ce qui fonctionne : la chaîne complète, de Binance jusqu'à la décision, tour
 
 ### Transition
 
-Je rends la parole à mon binôme pour conclure.
+Il me reste à vous remercier.
 
 ## Slide 14 : Merci, questions
 
 ### À dire
 
-Merci de nous avoir écoutés. En une phrase : nous avons construit une chaîne de données et de machine learning complète, automatisée et supervisée, et nous l'avons mesurée honnêtement, jusqu'à montrer que la stratégie n'est pas encore rentable. Les quatre mots en bas de la slide résument les blocs auxquels nous pouvons répondre : données, machine learning, API, MLOps. Pour les questions sur la collecte, les bases et le modèle, je répondrai ; pour l'API, le déploiement et l'automatisation, ce sera mon binôme. Si vous voulez revoir une partie du système, l'application tourne toujours sur cette machine et nous pouvons rouvrir l'interface, Grafana, Airflow ou MLflow. Nous sommes à votre écoute.
+Merci de nous avoir écoutés. En une phrase : nous avons construit une chaîne de données et de machine learning complète, automatisée et supervisée, et nous l'avons mesurée honnêtement, jusqu'à montrer que la stratégie n'est pas encore rentable. Les quatre mots en bas de la slide résument les blocs auxquels nous pouvons répondre : données, machine learning, API, MLOps. Pour les questions sur la collecte, les bases, les tests, la CI et la supervision, Ulrich vous répondra ; pour l'architecture, le modèle, l'API et l'automatisation, ce sera moi. Si vous voulez revoir une partie du système, l'application tourne toujours sur cette machine et nous pouvons rouvrir l'interface, Grafana, Airflow ou MLflow. Nous sommes à votre écoute.
 
 ### Pourquoi ce choix
 
