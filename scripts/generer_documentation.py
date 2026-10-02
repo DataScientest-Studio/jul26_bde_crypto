@@ -15,6 +15,7 @@ Chaque source commence par un en-tete :
     modele: fiche                 (fiche : une page, sans garde ni sommaire ;
                                    document : page de garde et sommaire)
     sommaire: 2                   (facultatif, niveaux du sommaire, defaut 2-3)
+    pages_max: 1                  (facultatif, signale un document trop long)
 
 Sans `etape`, les titres ne sont pas numerotes : les documents de soutenance
 ont leurs propres reperes (« Slide 4 », questions).
@@ -245,7 +246,8 @@ def generer(source: Path) -> Path:
     fiche = entete.get("modele") == "fiche"
     rubrique = f"Étape {entete['etape']}" if entete.get("etape") else "Soutenance"
     pages = numeroter(sortie, f"CryptoBot · {rubrique} · {entete['titre']}", garde=not fiche)
-    alerte = "  ATTENTION : une fiche doit tenir sur une page" if fiche and pages > 1 else ""
+    limite = int(entete.get("pages_max", 0))
+    alerte = f"  ATTENTION : plus de {limite} page(s)" if limite and pages > limite else ""
     print(f"{source.stem} : {sortie.relative_to(RACINE)} ({pages} pages){alerte}")
     return sortie
 
