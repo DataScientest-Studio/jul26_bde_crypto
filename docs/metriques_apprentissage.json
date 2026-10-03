@@ -1,0 +1,124 @@
+{
+  "classifieur_final": {
+    "apprentissage": {
+      "bougies": 326751,
+      "accuracy": 0.6835,
+      "roc_auc": 0.745,
+      "log_loss": 0.6658,
+      "brier": 0.2364,
+      "accuracy_selective_conservateur": 0.9182,
+      "ordres_conservateur": 17450
+    },
+    "calibration": {
+      "bougies": 36305,
+      "accuracy": 0.5268,
+      "roc_auc": 0.5372,
+      "log_loss": 0.6907,
+      "brier": 0.2488,
+      "accuracy_selective_conservateur": 0.5817,
+      "ordres_conservateur": 1389
+    },
+    "seuils": {
+      "bougies": 90765,
+      "accuracy": 0.5233,
+      "roc_auc": 0.5355,
+      "log_loss": 0.6922,
+      "brier": 0.2492,
+      "accuracy_selective_conservateur": 0.5724,
+      "ordres_conservateur": 2879
+    },
+    "test_jamais_vu": {
+      "bougies": 14831,
+      "accuracy": 0.5235,
+      "roc_auc": 0.5352,
+      "log_loss": 0.6911,
+      "brier": 0.249,
+      "accuracy_selective_conservateur": 0.5991,
+      "ordres_conservateur": 469
+    }
+  },
+  "regression_reference_day_trading": {
+    "prix": {
+      "ridge": {
+        "entrainement": {
+          "r2": 0.076714,
+          "rmse": 28458.153342,
+          "mae": 22529.540236,
+          "mape_pct": 89813.6792
+        },
+        "test": {
+          "r2": 0.039346,
+          "rmse": 25329.032099,
+          "mae": 21688.351557,
+          "mape_pct": 130684.6799
+        }
+      },
+      "gradient_boosting": {
+        "entrainement": {
+          "r2": 0.987854,
+          "rmse": 3264.064111,
+          "mae": 1368.504978,
+          "mape_pct": 970.0585
+        },
+        "test": {
+          "r2": 0.961384,
+          "rmse": 5078.314168,
+          "mae": 2243.086954,
+          "mape_pct": 1364.9737
+        }
+      },
+      "modele_naif": {
+        "entrainement": {
+          "r2": 0.999984,
+          "rmse": 119.980828,
+          "mae": 33.429033,
+          "mape_pct": 0.2666
+        },
+        "test": {
+          "r2": 0.99999,
+          "rmse": 82.196981,
+          "mae": 20.449133,
+          "mape_pct": 0.1884
+        }
+      }
+    },
+    "rendement": {
+      "ridge": {
+        "entrainement": {
+          "r2": 0.002144,
+          "rmse": 0.004611,
+          "mae": 0.002667
+        },
+        "test": {
+          "r2": -0.014598,
+          "rmse": 0.003754,
+          "mae": 0.001898
+        }
+      },
+      "gradient_boosting": {
+        "entrainement": {
+          "r2": 0.049119,
+          "rmse": 0.004502,
+          "mae": 0.002642
+        },
+        "test": {
+          "r2": -0.022114,
+          "rmse": 0.003767,
+          "mae": 0.001894
+        }
+      },
+      "modele_naif": {
+        "entrainement": {
+          "r2": -9e-05,
+          "rmse": 0.004617,
+          "mae": 0.002665
+        },
+        "test": {
+          "r2": -0.001045,
+          "rmse": 0.003728,
+          "mae": 0.001887
+        }
+      }
+    }
+  }
+}

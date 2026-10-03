@@ -78,6 +78,25 @@ Ils sont dimensionnés pour des milliards de lignes et n'offrent pas les garanti
 
 ## Machine learning (étape 3)
 
+### Comment avez-vous préprocessé les données pour entraîner le modèle ?
+
+En six étapes, toutes dans le code (`scripts/direction_prochaine_bougie.py`, `src/features.py`).
+
+1. Partir de l'extrait figé : les bougies du profil day trading (15 min, 1 h, 4 h, cinq paires), déjà nettoyées à l'étape 1 et signées par une empreinte.
+2. Calculer les variables paire par paire et pas de temps par pas de temps, pour qu'une moyenne mobile ne mélange jamais le BTC et l'ETH. Ce sont 26 indicateurs de la bibliothèque `ta` (tendance, momentum, volatilité, volume, flux acheteur), tous transformés en grandeurs sans unité : écart relatif à une moyenne plutôt que la moyenne, MACD divisé par le prix. Aucun prix brut n'entre dans le modèle.
+3. Ajouter le contexte des pas de temps plus lents (1 h et 4 h), soit 35 variables, en ne prenant que des bougies lentes déjà clôturées.
+4. Construire la cible : 1 si la bougie suivante clôture plus haut, 0 sinon. Les bougies dont la suivante ne bouge pas du tout sont retirées.
+5. Dans le pipeline scikit-learn : remplacer les valeurs manquantes (début de série, quand une moyenne sur 100 bougies n'existe pas encore) par la médiane, puis normaliser. Les deux sont appris sur l'apprentissage seulement.
+6. Découper dans l'ordre du temps : 72 % pour apprendre, 8 % pour calibrer les probabilités, 20 % pour régler les seuils, puis 14 831 bougies postérieures à l'extrait pour la mesure finale.
+
+### Quelles sont les métriques en entraînement et en test ?
+
+Sur toutes les bougies, l'accuracy passe de 68,4 % en entraînement à 52,4 % sur les bougies jamais vues. Le ROC-AUC passe de 0,745 à 0,535 et le log loss de 0,666 à 0,691. Quand le modèle se prononce (style conservateur), on passe de 91,8 % à 59,9 %. L'écart montre que la forêt mémorise une partie du bruit de l'apprentissage. C'est pour cela que nous ne jugeons le modèle que hors entraînement : sur les trois périodes qu'il n'a pas apprises (calibration, seuils, test), les chiffres sont stables, entre 52,3 et 52,7 % d'accuracy et autour de 0,535 d'AUC. Le signal est donc faible mais réel et constant. Les chiffres sont dans `docs/metriques_apprentissage.json`.
+
+### Et le R², le RMSE, la MAPE ?
+
+Ce sont des métriques de régression, qui ne s'appliquent pas à un classifieur. Nous les avons calculées sur notre première approche, qui prédisait le prix de la bougie suivante. Le modèle naïf « prix suivant = prix actuel » obtient en test un R² de 0,99999, un RMSE de 82 dollars et une MAPE de 0,19 %. Nos modèles font moins bien : R² de 0,96 pour le gradient boosting. Ces chiffres impressionnants mesurent seulement que le prix change peu d'une bougie à l'autre. Sur le rendement, plus honnête, le R² tombe à 0 en test pour tous les modèles. C'est ce qui nous a fait passer à la classification du sens.
+
 ### Pourquoi une classification plutôt que prédire le prix ?
 
 Prédire le prix donne un score trompeur. Un modèle naïf qui répond « le prochain prix sera le prix actuel » obtient un R² de 0,999998, et les vrais modèles font moins bien que lui. Ce R² mesure surtout que le bitcoin vaut à peu près le même prix qu'une heure plus tôt. Le sens de la bougie suivante est la question utile pour décider, et elle se mesure honnêtement.
